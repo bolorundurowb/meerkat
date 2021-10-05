@@ -17,8 +17,8 @@
     <PackageReleaseNotes>Initial release</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Company>bolorundurowb</Company>
-    <AssemblyVersion>1.0.0-alpha.1</AssemblyVersion>
-    <FileVersion>1.0.0-alpha.1</FileVersion>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
     <NeutralLanguage>en-NG</NeutralLanguage>
   </PropertyGroup>
 

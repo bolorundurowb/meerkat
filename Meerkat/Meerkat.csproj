@@ -2,6 +2,24 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>meerkat</PackageId>
+    <PackageVersion>1.0.0-alpha.1</PackageVersion>
+    <Title>Meerkat</Title>
+    <Authors>bolorundurowb</Authors>
+    <Description>An ODM for MongoDB</Description>
+    <Copyright>© 2021 , Bolorunduro Winner-Timothy. All Rights reserved.</Copyright>
+    <PackageProjectUrl>https://github.com/bolorundurowb/meerkat</PackageProjectUrl>
+    <PackageLicenseUrl>https://github.com/bolorundurowb/meerkat/blob/master/LICENSE</PackageLicenseUrl>
+    <RepositoryUrl>https://github.com/bolorundurowb/meerkat</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>meerkat, mongodb, mongoose, ODM</PackageTags>
+    <PackageReleaseNotes>Initial release</PackageReleaseNotes>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <Company>bolorundurowb</Company>
+    <AssemblyVersion>1.0.0-alpha.1</AssemblyVersion>
+    <FileVersion>1.0.0-alpha.1</FileVersion>
+    <NeutralLanguage>en-NG</NeutralLanguage>
   </PropertyGroup>
 
   <ItemGroup>

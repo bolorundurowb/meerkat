@@ -32,7 +32,7 @@ namespace Meerkat
         protected Schema() => Id = ObjectId.GenerateNewId();
 
         /// <summary>
-        /// 
+        /// Upserts the current instance in the matched collection
         /// </summary>
         public async Task Save()
         {

@@ -88,5 +88,19 @@ namespace Meerkat
                 .AsQueryable()
                 .FirstOrDefaultAsync(predicate, cancellationToken);
         }
+
+        public async Task RemoveById<TSchema>(object entityId, CancellationToken cancellationToken = default)
+            where TSchema : Schema
+        {
+            var collection = Meerkat.GetCollectionForType(this as TSchema);
+            await collection.DeleteOneAsync(x => x.Id == entityId, cancellationToken);
+        }
+
+        public Task RemoveOne<TSchema>(Expression<Func<TSchema, bool>> predicate,
+            CancellationToken cancellationToken = default) where TSchema : Schema
+        {
+            var collection = Meerkat.GetCollectionForType(this as TSchema);
+            return collection.DeleteOneAsync(predicate, cancellationToken);
+        }
     }
 }

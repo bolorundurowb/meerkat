@@ -105,7 +105,7 @@ namespace meerkat
             return _database.GetCollection<TSchema>(collectionName);
         }
 
-        internal static IMongoCollection<TSchema> GetCollectionForType<TSchema>() where TSchema : Schema
+        private static IMongoCollection<TSchema> GetCollectionForType<TSchema>() where TSchema : Schema
         {
             if (_database == null)
                 throw new InvalidOperationException(

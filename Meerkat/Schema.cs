@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq.Expressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Meerkat.Extensions;
 using MongoDB.Bson;
@@ -60,6 +62,28 @@ namespace Meerkat
 
                 await collection.ReplaceOneAsync(x => x.Id == Id, this);
             }
+        }
+
+        public async Task<TSchema> FindById<TSchema>(object entityId, CancellationToken cancellationToken = default)
+            where TSchema : Schema
+        {
+            var collection = Meerkat.GetCollectionForType(this);
+            var response = await collection
+                .AsQueryable()
+                .FirstOrDefaultAsync(x => x.Id == entityId, cancellationToken);
+
+            return response as TSchema;
+        }
+
+        public async Task<TSchema> FindOne<TSchema>(Expression<Func<Schema, bool>> predicate,
+            CancellationToken cancellationToken = default) where TSchema : Schema
+        {
+            var collection = Meerkat.GetCollectionForType(this);
+            var response = await collection
+                .AsQueryable()
+                .FirstOrDefaultAsync(predicate, cancellationToken);
+
+            return response as TSchema;
         }
     }
 }

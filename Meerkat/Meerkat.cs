@@ -21,15 +21,15 @@ namespace Meerkat
             _database = dbClient.GetDatabase(dbName);
         }
 
-        internal static IMongoCollection<T> GetCollectionForType<T>(T model) where T : Schema
+        internal static IMongoCollection<TSchema> GetCollectionForType<TSchema>(TSchema model) where TSchema : Schema
         {
             if (_database == null)
                 throw new InvalidOperationException(
                     $"The database connection has not been initialized. Call {nameof(Connect)}() before carrying out any operations.");
             
-            var name = typeof(T).GetName();
+            var name = typeof(TSchema).GetName();
             var collectionName = name.Pluralize().ToLowerInvariant();
-            return _database.GetCollection<T>(collectionName);
+            return _database.GetCollection<TSchema>(collectionName);
         }
     }
 }

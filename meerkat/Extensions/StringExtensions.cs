@@ -1,7 +1,7 @@
 ﻿using System;
-using Meerkat.Services;
+using meerkat.Services;
 
-namespace Meerkat.Extensions
+namespace meerkat.Extensions
 {
     internal static class StringExtensions
     {

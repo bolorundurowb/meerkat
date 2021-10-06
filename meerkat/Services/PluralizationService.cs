@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Meerkat.Extensions;
+using meerkat.Extensions;
 
-namespace Meerkat.Services
+namespace meerkat.Services
 {
     internal static class PluralizationService
     {

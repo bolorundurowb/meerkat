@@ -2,12 +2,12 @@
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Meerkat.Extensions;
+using meerkat.Extensions;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
 using MongoUrlParser;
 
-namespace Meerkat
+namespace meerkat
 {
     public class Meerkat
     {

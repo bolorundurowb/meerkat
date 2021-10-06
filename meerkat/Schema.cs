@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Meerkat.Extensions;
+using meerkat.Extensions;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
 
-namespace Meerkat
+namespace meerkat
 {
     public abstract class Schema
     {

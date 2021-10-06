@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Meerkat.Attributes
+namespace meerkat.Attributes
 {
     [AttributeUsage(AttributeTargets.Class)]
     public class CollectionAttribute : Attribute

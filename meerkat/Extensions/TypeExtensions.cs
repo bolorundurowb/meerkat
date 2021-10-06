@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Reflection;
-using Meerkat.Attributes;
+using meerkat.Attributes;
 
-namespace Meerkat.Extensions
+namespace meerkat.Extensions
 {
     internal static class TypeExtensions
     {

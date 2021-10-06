@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>meerkat</PackageId>
-    <PackageVersion>1.0.0-beta.1</PackageVersion>
+    <PackageVersion>1.0.0-beta.2</PackageVersion>
     <Title>Meerkat</Title>
     <Authors>bolorundurowb</Authors>
     <Description>An ODM for MongoDB</Description>
@@ -17,10 +17,10 @@
     <PackageReleaseNotes>Initial release, add find and remove support</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Company>bolorundurowb</Company>
-    <AssemblyVersion>1.0.0.2</AssemblyVersion>
-    <FileVersion>1.0.0.2</FileVersion>
+    <AssemblyVersion>1.0.0.3</AssemblyVersion>
+    <FileVersion>1.0.0.3</FileVersion>
     <NeutralLanguage>en-NG</NeutralLanguage>
-    <RootNamespace>Meerkat</RootNamespace>
+    <AssemblyName>Meerkat</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

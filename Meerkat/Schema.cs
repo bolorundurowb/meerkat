@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Linq.Expressions;
-using System.Threading;
 using System.Threading.Tasks;
 using Meerkat.Extensions;
 using MongoDB.Bson;
@@ -62,45 +60,6 @@ namespace Meerkat
 
                 await collection.ReplaceOneAsync(x => x.Id == Id, this);
             }
-        }
-
-        public static IMongoQueryable<TSchema> Query<TSchema>() where TSchema : Schema
-        {
-            var collection = Meerkat.GetCollectionForType<TSchema>();
-            return collection
-                .AsQueryable();
-        }
-
-        public static Task<TSchema> FindById<TSchema>(object entityId, CancellationToken cancellationToken = default)
-            where TSchema : Schema
-        {
-            var collection = Meerkat.GetCollectionForType<TSchema>();
-            return collection
-                .AsQueryable()
-                .FirstOrDefaultAsync(x => x.Id == entityId, cancellationToken);
-        }
-
-        public static Task<TSchema> FindOne<TSchema>(Expression<Func<TSchema, bool>> predicate,
-            CancellationToken cancellationToken = default) where TSchema : Schema
-        {
-            var collection = Meerkat.GetCollectionForType<TSchema>();
-            return collection
-                .AsQueryable()
-                .FirstOrDefaultAsync(predicate, cancellationToken);
-        }
-
-        public static async Task RemoveById<TSchema>(object entityId, CancellationToken cancellationToken = default)
-            where TSchema : Schema
-        {
-            var collection = Meerkat.GetCollectionForType<TSchema>();
-            await collection.DeleteOneAsync(x => x.Id == entityId, cancellationToken);
-        }
-
-        public static Task RemoveOne<TSchema>(Expression<Func<TSchema, bool>> predicate,
-            CancellationToken cancellationToken = default) where TSchema : Schema
-        {
-            var collection = Meerkat.GetCollectionForType<TSchema>();
-            return collection.DeleteOneAsync(predicate, cancellationToken);
         }
     }
 }

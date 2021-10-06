@@ -40,7 +40,7 @@ namespace Meerkat
         /// <summary>
         /// Search for an entity by id
         /// </summary>
-        /// <param name="entityId">Entity id</param>
+        /// <param name="entityId">The entity id</param>
         /// <param name="cancellationToken">The cancellation token</param>
         /// <typeparam name="TSchema">The type of entity</typeparam>
         /// <returns>The found entity or null if not found</returns>
@@ -69,6 +69,12 @@ namespace Meerkat
                 .FirstOrDefaultAsync(predicate, cancellationToken);
         }
 
+        /// <summary>
+        /// Delete an entity by it's id
+        /// </summary>
+        /// <param name="entityId">The entity id</param>
+        /// <param name="cancellationToken">The cancellation token</param>
+        /// <typeparam name="TSchema">The type of entity</typeparam>
         public static async Task RemoveById<TSchema>(object entityId, CancellationToken cancellationToken = default)
             where TSchema : Schema
         {
@@ -76,6 +82,12 @@ namespace Meerkat
             await collection.DeleteOneAsync(x => x.Id == entityId, cancellationToken);
         }
 
+        /// <summary>
+        /// Delete an entity by a predicate
+        /// </summary>
+        /// <param name="predicate">A function to test each element</param>
+        /// <param name="cancellationToken">The cancellation token</param>
+        /// <typeparam name="TSchema">The type of entity</typeparam>
         public static Task RemoveOne<TSchema>(Expression<Func<TSchema, bool>> predicate,
             CancellationToken cancellationToken = default) where TSchema : Schema
         {
@@ -88,7 +100,7 @@ namespace Meerkat
             if (_database == null)
                 throw new InvalidOperationException(
                     $"The database connection has not been initialized. Call {nameof(Connect)}() before carrying out any operations.");
-            
+
             var collectionName = model.GetType().GetCollectionName().ToLowerInvariant();
             return _database.GetCollection<TSchema>(collectionName);
         }
@@ -98,7 +110,7 @@ namespace Meerkat
             if (_database == null)
                 throw new InvalidOperationException(
                     $"The database connection has not been initialized. Call {nameof(Connect)}() before carrying out any operations.");
-            
+
             var collectionName = typeof(TSchema).GetCollectionName().ToLowerInvariant();
             return _database.GetCollection<TSchema>(collectionName);
         }

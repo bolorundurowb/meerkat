@@ -6,10 +6,10 @@ namespace Meerkat.Extensions
 {
     internal static class TypeExtensions
     {
-        public static string GetName(this Type type)
+        public static string GetCollectionName(this Type type)
         {
             var collectionAttribute = type.GetCustomAttribute<CollectionAttribute>();
-            return collectionAttribute?.Name ?? type.Name;
+            return collectionAttribute?.Name ?? type.Name.Pluralize();
         }
         
         public static bool ShouldTrackTimestamps(this Type type)

@@ -9,7 +9,7 @@ namespace Meerkat.Attributes
 
         public bool TrackTimestamps { get; private set; }
 
-        public CollectionAttribute(string collectionName, bool trackTimestamps)
+        public CollectionAttribute(string collectionName = null, bool trackTimestamps = false)
         {
             Name = collectionName;
             TrackTimestamps = trackTimestamps;

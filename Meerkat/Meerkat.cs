@@ -27,8 +27,17 @@ namespace Meerkat
                 throw new InvalidOperationException(
                     $"The database connection has not been initialized. Call {nameof(Connect)}() before carrying out any operations.");
             
-            var name = typeof(TSchema).GetName();
-            var collectionName = name.Pluralize().ToLowerInvariant();
+            var collectionName = model.GetType().GetCollectionName().ToLowerInvariant();
+            return _database.GetCollection<TSchema>(collectionName);
+        }
+
+        internal static IMongoCollection<TSchema> GetCollectionForType<TSchema>() where TSchema : Schema
+        {
+            if (_database == null)
+                throw new InvalidOperationException(
+                    $"The database connection has not been initialized. Call {nameof(Connect)}() before carrying out any operations.");
+            
+            var collectionName = typeof(TSchema).GetCollectionName().ToLowerInvariant();
             return _database.GetCollection<TSchema>(collectionName);
         }
     }

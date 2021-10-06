@@ -44,7 +44,7 @@ namespace Meerkat
             var trackUpdates = GetType().ShouldTrackTimestamps();
 
             // check to see if the object exists in storage
-            var instance = collection
+            var instance = await collection
                 .AsQueryable()
                 .FirstOrDefaultAsync(x => x.Id == Id);
 
@@ -64,42 +64,42 @@ namespace Meerkat
             }
         }
 
-        public IMongoQueryable<TSchema> Query<TSchema>() where TSchema : Schema
+        public static IMongoQueryable<TSchema> Query<TSchema>() where TSchema : Schema
         {
-            var collection = Meerkat.GetCollectionForType(this as TSchema);
+            var collection = Meerkat.GetCollectionForType<TSchema>();
             return collection
                 .AsQueryable();
         }
 
-        public Task<TSchema> FindById<TSchema>(object entityId, CancellationToken cancellationToken = default)
+        public static Task<TSchema> FindById<TSchema>(object entityId, CancellationToken cancellationToken = default)
             where TSchema : Schema
         {
-            var collection = Meerkat.GetCollectionForType(this as TSchema);
+            var collection = Meerkat.GetCollectionForType<TSchema>();
             return collection
                 .AsQueryable()
                 .FirstOrDefaultAsync(x => x.Id == entityId, cancellationToken);
         }
 
-        public Task<TSchema> FindOne<TSchema>(Expression<Func<TSchema, bool>> predicate,
+        public static Task<TSchema> FindOne<TSchema>(Expression<Func<TSchema, bool>> predicate,
             CancellationToken cancellationToken = default) where TSchema : Schema
         {
-            var collection = Meerkat.GetCollectionForType(this as TSchema);
+            var collection = Meerkat.GetCollectionForType<TSchema>();
             return collection
                 .AsQueryable()
                 .FirstOrDefaultAsync(predicate, cancellationToken);
         }
 
-        public async Task RemoveById<TSchema>(object entityId, CancellationToken cancellationToken = default)
+        public static async Task RemoveById<TSchema>(object entityId, CancellationToken cancellationToken = default)
             where TSchema : Schema
         {
-            var collection = Meerkat.GetCollectionForType(this as TSchema);
+            var collection = Meerkat.GetCollectionForType<TSchema>();
             await collection.DeleteOneAsync(x => x.Id == entityId, cancellationToken);
         }
 
-        public Task RemoveOne<TSchema>(Expression<Func<TSchema, bool>> predicate,
+        public static Task RemoveOne<TSchema>(Expression<Func<TSchema, bool>> predicate,
             CancellationToken cancellationToken = default) where TSchema : Schema
         {
-            var collection = Meerkat.GetCollectionForType(this as TSchema);
+            var collection = Meerkat.GetCollectionForType<TSchema>();
             return collection.DeleteOneAsync(predicate, cancellationToken);
         }
     }

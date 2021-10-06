@@ -64,26 +64,29 @@ namespace Meerkat
             }
         }
 
-        public async Task<TSchema> FindById<TSchema>(object entityId, CancellationToken cancellationToken = default)
-            where TSchema : Schema
+        public IMongoQueryable<TSchema> Query<TSchema>() where TSchema : Schema
         {
-            var collection = Meerkat.GetCollectionForType(this);
-            var response = await collection
-                .AsQueryable()
-                .FirstOrDefaultAsync(x => x.Id == entityId, cancellationToken);
-
-            return response as TSchema;
+            var collection = Meerkat.GetCollectionForType(this as TSchema);
+            return collection
+                .AsQueryable();
         }
 
-        public async Task<TSchema> FindOne<TSchema>(Expression<Func<Schema, bool>> predicate,
+        public Task<TSchema> FindById<TSchema>(object entityId, CancellationToken cancellationToken = default)
+            where TSchema : Schema
+        {
+            var collection = Meerkat.GetCollectionForType(this as TSchema);
+            return collection
+                .AsQueryable()
+                .FirstOrDefaultAsync(x => x.Id == entityId, cancellationToken);
+        }
+
+        public Task<TSchema> FindOne<TSchema>(Expression<Func<TSchema, bool>> predicate,
             CancellationToken cancellationToken = default) where TSchema : Schema
         {
-            var collection = Meerkat.GetCollectionForType(this);
-            var response = await collection
+            var collection = Meerkat.GetCollectionForType(this as TSchema);
+            return collection
                 .AsQueryable()
                 .FirstOrDefaultAsync(predicate, cancellationToken);
-
-            return response as TSchema;
         }
     }
 }

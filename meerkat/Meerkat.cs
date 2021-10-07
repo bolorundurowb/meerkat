@@ -56,13 +56,14 @@ namespace meerkat
         /// <summary>
         /// Search for an entity by a predicate
         /// </summary>
-        /// <param name="predicate">A function to test each element</param>
+        /// <param name="predicate">A function to test each element. If not defined, selects the first collection entity</param>
         /// <param name="cancellationToken">The cancellation token</param>
         /// <typeparam name="TSchema">The type of entity</typeparam>
         /// <returns>The found entity or null if not found</returns>
-        public static Task<TSchema> FindOne<TSchema>(Expression<Func<TSchema, bool>> predicate,
+        public static Task<TSchema> FindOne<TSchema>(Expression<Func<TSchema, bool>> predicate = null,
             CancellationToken cancellationToken = default) where TSchema : Schema
         {
+            predicate ??= schema => true;
             var collection = GetCollectionForType<TSchema>();
             return collection
                 .AsQueryable()

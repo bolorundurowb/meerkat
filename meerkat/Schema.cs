@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using meerkat.Extensions;
 using MongoDB.Bson;
@@ -66,7 +67,7 @@ namespace meerkat
         /// <summary>
         /// Upserts the current instance in the matched collection asynchronously
         /// </summary>
-        public async Task SaveAsync()
+        public async Task SaveAsync(CancellationToken cancellationToken = default)
         {
             var collection = Meerkat.GetCollectionForType(this);
 
@@ -83,7 +84,7 @@ namespace meerkat
                 if (trackUpdates)
                     CreatedAt = UpdatedAt = DateTime.UtcNow;
 
-                await collection.InsertOneAsync(this);
+                await collection.InsertOneAsync(this, cancellationToken);
             }
             else
             {

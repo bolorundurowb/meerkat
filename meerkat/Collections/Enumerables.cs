@@ -13,6 +13,12 @@ namespace meerkat.Collections
             BypassDocumentValidation = true
         };
 
+        /// <summary>
+        /// Persist a collection of entities to the matched collection synchronously
+        /// </summary>
+        /// <param name="entities">A collection of entities to be persisted</param>
+        /// <param name="cancellationToken">The cancellation token</param>
+        /// <typeparam name="TSchema">The type of entity</typeparam>
         public static void SaveAll<TSchema>(this IEnumerable<TSchema> entities,
             CancellationToken cancellationToken = default) where TSchema : Schema
         {
@@ -20,6 +26,12 @@ namespace meerkat.Collections
             collection.InsertMany(entities, BulkInsertOptions, cancellationToken);
         }
 
+        /// <summary>
+        /// Persist a collection of entities to the matched collection asynchronously
+        /// </summary>
+        /// <param name="entities">A collection of entities to be persisted</param>
+        /// <param name="cancellationToken">The cancellation token</param>
+        /// <typeparam name="TSchema">The type of entity</typeparam>
         public static async Task SaveAllAsync<TSchema>(this IEnumerable<TSchema> entities,
             CancellationToken cancellationToken = default) where TSchema : Schema
         {

@@ -42,11 +42,11 @@ namespace meerkat
             var trackUpdates = GetType().ShouldTrackTimestamps();
 
             // check to see if the object exists in storage
-            var instance = await collection
+            var instanceExists = await collection
                 .AsQueryable()
-                .FirstOrDefaultAsync(x => x.Id == Id);
+                .AnyAsync(x => x.Id == Id);
 
-            if (instance == null)
+            if (!instanceExists)
             {
                 if (trackUpdates)
                     CreatedAt = UpdatedAt = DateTime.UtcNow;

@@ -96,6 +96,19 @@ namespace meerkat
             return collection.DeleteOneAsync(predicate, cancellationToken);
         }
 
+        /// <summary>
+        /// Delete an multiple entities by a predicate
+        /// </summary>
+        /// <param name="predicate">A function to test each element</param>
+        /// <param name="cancellationToken">The cancellation token</param>
+        /// <typeparam name="TSchema">The type of entity</typeparam>
+        public static Task Remove<TSchema>(Expression<Func<TSchema, bool>> predicate,
+            CancellationToken cancellationToken = default) where TSchema : Schema
+        {
+            var collection = GetCollectionForType<TSchema>();
+            return collection.DeleteManyAsync(predicate, cancellationToken);
+        }
+
         internal static IMongoCollection<TSchema> GetCollectionForType<TSchema>(TSchema model) where TSchema : Schema
         {
             if (_database == null)

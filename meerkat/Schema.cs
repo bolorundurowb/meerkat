@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using meerkat.Extensions;
 using MongoDB.Bson;
@@ -32,9 +33,40 @@ namespace meerkat
         protected Schema() => Id = ObjectId.GenerateNewId();
 
         /// <summary>
-        /// Upserts the current instance in the matched collection
+        /// Upserts the current instance in the matched collection synchronously
         /// </summary>
-        public async Task Save()
+        public void Save()
+        {
+            var collection = Meerkat.GetCollectionForType(this);
+
+            // check whether to track updates
+            var trackUpdates = GetType().ShouldTrackTimestamps();
+
+            // check to see if the object exists in storage
+            var instanceExists = collection
+                .AsQueryable()
+                .Any(x => x.Id == Id);
+
+            if (!instanceExists)
+            {
+                if (trackUpdates)
+                    CreatedAt = UpdatedAt = DateTime.UtcNow;
+
+                collection.InsertOne(this);
+            }
+            else
+            {
+                if (trackUpdates)
+                    UpdatedAt = DateTime.UtcNow;
+
+                collection.ReplaceOne(x => x.Id == Id, this);
+            }
+        }
+
+        /// <summary>
+        /// Upserts the current instance in the matched collection asynchronously
+        /// </summary>
+        public async Task SaveAsync()
         {
             var collection = Meerkat.GetCollectionForType(this);
 

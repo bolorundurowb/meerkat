@@ -9,7 +9,7 @@ namespace meerkat.Extensions
         public static string GetCollectionName(this Type type)
         {
             var collectionAttribute = type.GetCustomAttribute<CollectionAttribute>();
-            return collectionAttribute?.Name ?? type.Name.Pluralize();
+            return (collectionAttribute?.Name ?? type.Name.Pluralize()).ToLowerInvariant();
         }
         
         public static bool ShouldTrackTimestamps(this Type type)

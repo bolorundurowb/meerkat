@@ -101,7 +101,7 @@ namespace meerkat
                 throw new InvalidOperationException(
                     $"The database connection has not been initialized. Call {nameof(Connect)}() before carrying out any operations.");
 
-            var collectionName = model.GetType().GetCollectionName().ToLowerInvariant();
+            var collectionName = model.GetType().GetCollectionName();
             return _database.GetCollection<TSchema>(collectionName);
         }
 
@@ -111,7 +111,7 @@ namespace meerkat
                 throw new InvalidOperationException(
                     $"The database connection has not been initialized. Call {nameof(Connect)}() before carrying out any operations.");
 
-            var collectionName = typeof(TSchema).GetCollectionName().ToLowerInvariant();
+            var collectionName = typeof(TSchema).GetCollectionName();
             return _database.GetCollection<TSchema>(collectionName);
         }
     }

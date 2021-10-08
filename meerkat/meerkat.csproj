@@ -3,7 +3,7 @@
     <LangVersion>8.0</LangVersion>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>meerkat</PackageId>
-    <PackageVersion>1.0.1</PackageVersion>
+    <PackageVersion>1.0.2</PackageVersion>
     <Title>Meerkat</Title>
     <Authors>bolorundurowb</Authors>
     <Description>An ODM for MongoDB</Description>
@@ -13,7 +13,7 @@
     <RepositoryUrl>https://github.com/bolorundurowb/meerkat</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>meerkat, mongodb, mongoose, ODM</PackageTags>
-    <PackageReleaseNotes>Initial release, finalize API surface</PackageReleaseNotes>
+    <PackageReleaseNotes>Add collection persist support</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Company>bolorundurowb</Company>
     <AssemblyVersion>1.0.2.0</AssemblyVersion>

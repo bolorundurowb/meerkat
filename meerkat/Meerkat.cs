@@ -11,7 +11,10 @@ namespace meerkat
 {
     public class Meerkat
     {
-        private static IMongoDatabase _database;
+        /// <summary>
+        /// The database that we have connected to
+        /// </summary>
+        public static IMongoDatabase Database;
 
         /// <summary>
         /// Connect to the database
@@ -22,7 +25,7 @@ namespace meerkat
             var (dbUrl, dbName) = Parser.Parse(databaseConnectionString);
 
             var dbClient = new MongoClient(dbUrl);
-            _database = dbClient.GetDatabase(dbName);
+            Database = dbClient.GetDatabase(dbName);
         }
 
         /// <summary>
@@ -111,22 +114,22 @@ namespace meerkat
 
         internal static IMongoCollection<TSchema> GetCollectionForType<TSchema>(TSchema model) where TSchema : Schema
         {
-            if (_database == null)
+            if (Database == null)
                 throw new InvalidOperationException(
                     $"The database connection has not been initialized. Call {nameof(Connect)}() before carrying out any operations.");
 
             var collectionName = model.GetType().GetCollectionName();
-            return _database.GetCollection<TSchema>(collectionName);
+            return Database.GetCollection<TSchema>(collectionName);
         }
 
         internal static IMongoCollection<TSchema> GetCollectionForType<TSchema>() where TSchema : Schema
         {
-            if (_database == null)
+            if (Database == null)
                 throw new InvalidOperationException(
                     $"The database connection has not been initialized. Call {nameof(Connect)}() before carrying out any operations.");
 
             var collectionName = typeof(TSchema).GetCollectionName();
-            return _database.GetCollection<TSchema>(collectionName);
+            return Database.GetCollection<TSchema>(collectionName);
         }
     }
 }

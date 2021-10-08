@@ -1,17 +1,18 @@
 ﻿using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using meerkat.Extensions;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
-using MongoDB.Driver.Linq;
 
 namespace meerkat
 {
     public abstract class Schema
     {
+        private readonly ReplaceOptions _replaceOptions = new ReplaceOptions
+            { BypassDocumentValidation = true, IsUpsert = true };
+
         /// <summary>
         /// Can be a value of any type but defaults to ObjectId
         /// </summary>
@@ -43,25 +44,15 @@ namespace meerkat
             // check whether to track updates
             var trackUpdates = GetType().ShouldTrackTimestamps();
 
-            // check to see if the object exists in storage
-            var instanceExists = collection
-                .AsQueryable()
-                .Any(x => x.Id == Id);
-
-            if (!instanceExists)
+            if (trackUpdates)
             {
-                if (trackUpdates)
-                    CreatedAt = UpdatedAt = DateTime.UtcNow;
+                if (!CreatedAt.HasValue)
+                    CreatedAt = DateTime.UtcNow;
 
-                collection.InsertOne(this);
+                UpdatedAt = DateTime.UtcNow;
             }
-            else
-            {
-                if (trackUpdates)
-                    UpdatedAt = DateTime.UtcNow;
 
-                collection.ReplaceOne(x => x.Id == Id, this);
-            }
+            collection.ReplaceOne(x => x.Id == Id, this, _replaceOptions);
         }
 
         /// <summary>
@@ -74,25 +65,15 @@ namespace meerkat
             // check whether to track updates
             var trackUpdates = GetType().ShouldTrackTimestamps();
 
-            // check to see if the object exists in storage
-            var instanceExists = await collection
-                .AsQueryable()
-                .AnyAsync(x => x.Id == Id);
-
-            if (!instanceExists)
+            if (trackUpdates)
             {
-                if (trackUpdates)
-                    CreatedAt = UpdatedAt = DateTime.UtcNow;
+                if (!CreatedAt.HasValue)
+                    CreatedAt = DateTime.UtcNow;
 
-                await collection.InsertOneAsync(this, cancellationToken);
+                UpdatedAt = DateTime.UtcNow;
             }
-            else
-            {
-                if (trackUpdates)
-                    UpdatedAt = DateTime.UtcNow;
 
-                await collection.ReplaceOneAsync(x => x.Id == Id, this);
-            }
+            await collection.ReplaceOneAsync(x => x.Id == Id, this, _replaceOptions, cancellationToken);
         }
     }
 }

@@ -47,14 +47,8 @@ namespace meerkat
         /// <param name="entityId">The entity id</param>
         /// <typeparam name="TSchema">The type of entity</typeparam>
         /// <returns>The found entity or null if not found</returns>
-        public static TSchema FindById<TSchema>(object entityId)
-            where TSchema : Schema
-        {
-            var collection = GetCollectionForType<TSchema>();
-            return collection
-                .AsQueryable()
-                .FirstOrDefault(x => x.Id == entityId);
-        }
+        public static TSchema FindById<TSchema>(object entityId) where TSchema : Schema =>
+            Query<TSchema>().FirstOrDefault(x => x.Id == entityId);
 
         /// <summary>
         /// Search for an entity by id asynchronously
@@ -63,12 +57,11 @@ namespace meerkat
         /// <param name="cancellationToken">The cancellation token</param>
         /// <typeparam name="TSchema">The type of entity</typeparam>
         /// <returns>The found entity or null if not found</returns>
-        public static Task<TSchema> FindByIdAsync<TSchema>(object entityId, CancellationToken cancellationToken = default) where TSchema : Schema
+        public static Task<TSchema> FindByIdAsync<TSchema>(object entityId,
+            CancellationToken cancellationToken = default) where TSchema : Schema
         {
             var collection = GetCollectionForType<TSchema>();
-            return collection
-                .AsQueryable()
-                .FirstOrDefaultAsync(x => x.Id == entityId, cancellationToken);
+            return Query<TSchema>().FirstOrDefaultAsync(x => x.Id == entityId, cancellationToken);
         }
 
         /// <summary>
@@ -81,9 +74,7 @@ namespace meerkat
         {
             predicate ??= schema => true;
             var collection = GetCollectionForType<TSchema>();
-            return collection
-                .AsQueryable()
-                .FirstOrDefault(predicate);
+            return Query<TSchema>().FirstOrDefault(predicate);
         }
 
         /// <summary>
@@ -98,9 +89,7 @@ namespace meerkat
         {
             predicate ??= schema => true;
             var collection = GetCollectionForType<TSchema>();
-            return collection
-                .AsQueryable()
-                .FirstOrDefaultAsync(predicate, cancellationToken);
+            return Query<TSchema>().FirstOrDefaultAsync(predicate, cancellationToken);
         }
 
         /// <summary>

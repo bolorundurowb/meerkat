@@ -137,3 +137,8 @@ To remove all entities that match a predictae
 ```csharp
 await Meerkat.RemoveAsync<Student>(x => x.FirstName == "John"); // or Meerkat.Remove(x => x.LastName == "Jane");
 ```
+
+
+## TODO
+
+Collection support is actually in the codebase but doesnt perform as well as expected hence it's lack of documentation. The next update should make that available.

@@ -2,9 +2,13 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![NuGet Badge](https://buildstats.info/nuget/meerkat)](https://www.nuget.org/packages/meerkat)
 
-An ODM (Object Document Mapper) library aiming to replicate as much as is necessary, functionality in NodeJS's [mongoose](https://www.npmjs.com/package/mongoose). For those who may not know, mongoose is a JavaScript ODM wrapper library around the native MongoDB library that simplifies data access by simplifying the API surface.
+An ODM (Object Document Mapper) library aiming to replicate as much as is necessary, functionality in NodeJS's [mongoose](https://www.npmjs.com/package/mongoose). For those who may not know, mongoose is a JavaScript ODM wrapper library around the native MongoDB library that simplifies data access by simplifying the API surface. 
 
-This library was named `meerkat` as a homage to `mongoose` because a meerkat is a mongoose. I know, I am hilarious like that.
+This library was named `meerkat` as a homage to `mongoose` because a meerkat is a mongoose. I know, I am hilarious like that. Please be sure to star ⭐️ this project if you think it's cool or useful.
+
+## Contributing
+
+There is a lot still to be done, feel free to open new issues to suggest features or report bugs and feel free to open PRs with updates.
 
 ## Installation
 

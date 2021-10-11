@@ -3,9 +3,9 @@
     <LangVersion>8.0</LangVersion>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>meerkat</PackageId>
-    <PackageVersion>1.0.3</PackageVersion>
+    <PackageVersion>1.0.4</PackageVersion>
     <Title>Meerkat</Title>
-    <Authors>bolorundurowb</Authors>
+    <Authors>Winner-Timothy Bolorunduro</Authors>
     <Description>An ODM for MongoDB</Description>
     <Copyright>© 2021 , Bolorunduro Winner-Timothy. All Rights reserved.</Copyright>
     <PackageProjectUrl>https://github.com/bolorundurowb/meerkat</PackageProjectUrl>
@@ -16,8 +16,8 @@
     <PackageReleaseNotes>Add collection persist support</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Company>bolorundurowb</Company>
-    <AssemblyVersion>1.0.3.0</AssemblyVersion>
-    <FileVersion>1.0.3.0</FileVersion>
+    <AssemblyVersion>1.0.4.0</AssemblyVersion>
+    <FileVersion>1.0.4.0</FileVersion>
     <NeutralLanguage>en-NG</NeutralLanguage>
     <AssemblyName>Meerkat</AssemblyName>
     <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>

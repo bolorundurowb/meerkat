@@ -58,11 +58,8 @@ namespace meerkat
         /// <typeparam name="TSchema">The type of entity</typeparam>
         /// <returns>The found entity or null if not found</returns>
         public static Task<TSchema> FindByIdAsync<TSchema>(object entityId,
-            CancellationToken cancellationToken = default) where TSchema : Schema
-        {
-            var collection = GetCollectionForType<TSchema>();
-            return Query<TSchema>().FirstOrDefaultAsync(x => x.Id == entityId, cancellationToken);
-        }
+            CancellationToken cancellationToken = default) where TSchema : Schema =>
+            Query<TSchema>().FirstOrDefaultAsync(x => x.Id == entityId, cancellationToken);
 
         /// <summary>
         /// Search for an entity by a predicate
@@ -73,7 +70,6 @@ namespace meerkat
         public static TSchema FindOne<TSchema>(Expression<Func<TSchema, bool>> predicate = null) where TSchema : Schema
         {
             predicate ??= schema => true;
-            var collection = GetCollectionForType<TSchema>();
             return Query<TSchema>().FirstOrDefault(predicate);
         }
 
@@ -88,7 +84,6 @@ namespace meerkat
             CancellationToken cancellationToken = default) where TSchema : Schema
         {
             predicate ??= schema => true;
-            var collection = GetCollectionForType<TSchema>();
             return Query<TSchema>().FirstOrDefaultAsync(predicate, cancellationToken);
         }
 

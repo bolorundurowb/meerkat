@@ -3,6 +3,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using meerkat.Attributes;
 using meerkat.Extensions;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
@@ -12,6 +13,8 @@ namespace meerkat
 {
     public class Meerkat
     {
+        private static readonly Type UniqueAttributeType = typeof(UniqueAttribute);
+
         /// <summary>
         /// The database that we have connected to
         /// </summary>
@@ -172,7 +175,13 @@ namespace meerkat
                     $"The database connection has not been initialized. Call {nameof(Connect)}() before carrying out any operations.");
 
             var collectionName = model.GetType().GetCollectionName();
-            return Database.GetCollection<TSchema>(collectionName);
+            var collection = Database.GetCollection<TSchema>(collectionName);
+
+            // get properties that have the 
+            var properties = typeof(TSchema).GetProperties()
+                .Where(x => Attribute.IsDefined(x, UniqueAttributeType));
+
+            return collection;
         }
 
         internal static IMongoCollection<TSchema> GetCollectionForType<TSchema>() where TSchema : Schema
@@ -183,6 +192,10 @@ namespace meerkat
 
             var collectionName = typeof(TSchema).GetCollectionName();
             return Database.GetCollection<TSchema>(collectionName);
+        }
+
+        private static void EnsureIndices<TSchema>(IMongoCollection<TSchema> collection) where TSchema : Schema
+        {
         }
     }
 }

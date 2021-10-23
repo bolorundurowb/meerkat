@@ -198,6 +198,32 @@ namespace meerkat
             return collection.CountDocumentsAsync(predicate, cancellationToken: cancellationToken);
         }
 
+        /// <summary>
+        /// Count number of documents that match predicate
+        /// </summary>
+        /// <param name="predicate">A function to test each element</param>
+        /// <typeparam name="TSchema">The type of entity</typeparam>
+        /// <returns>The number of entries that match the predicate</returns>
+        public static bool Exists<TSchema>(Expression<Func<TSchema, bool>> predicate = null) where TSchema : Schema
+        {
+            predicate ??= schema => true;
+            return Query<TSchema>().Any(predicate);
+        }
+
+        /// <summary>
+        /// Count number of documents that match predicate asynchronously
+        /// </summary>
+        /// <param name="predicate">A function to test each element</param>
+        /// <param name="cancellationToken">The cancellation token</param>
+        /// <typeparam name="TSchema">The type of entity</typeparam>
+        /// <returns>The number of entries that match the predicate</returns>
+        public static Task<bool> ExistsAsync<TSchema>(Expression<Func<TSchema, bool>> predicate = null,
+            CancellationToken cancellationToken = default) where TSchema : Schema
+        {
+            predicate ??= schema => true;
+            return Query<TSchema>().AnyAsync(predicate, cancellationToken);
+        }
+
         internal static IMongoCollection<TSchema> GetCollectionForType<TSchema>(TSchema model) where TSchema : Schema
         {
             if (Database == null)

@@ -169,4 +169,11 @@ var count = await Meerkat.CountAsync<Student>(x => x.FirstName.StartsWith("Ja"))
 
 ## Collections
 
-Collection support is actually in the codebase but doesnt perform as well as expected hence it's lack of documentation. The next update should make that available.
+Meerkat allows for collections of entities to be upserted both synchronously and asynchronously
+
+```csharp
+var peter = new Student();
+var paul = new Student();
+var students = new [] {peter, paul};
+await students.SaveAllAsync(); // or students.SaveAll();
+```

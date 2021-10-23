@@ -168,6 +168,34 @@ namespace meerkat
             return collection.DeleteManyAsync(predicate, cancellationToken);
         }
 
+        /// <summary>
+        /// Count number of documents that match predicate
+        /// </summary>
+        /// <param name="predicate">A function to test each element</param>
+        /// <param name="cancellationToken">The cancellation token</param>
+        /// <typeparam name="TSchema">The type of entity</typeparam>
+        /// <returns>The number of entries that match the predicate</returns>
+        public static long Count<TSchema>(Expression<Func<TSchema, bool>> predicate,
+            CancellationToken cancellationToken = default) where TSchema : Schema
+        {
+            var collection = GetCollectionForType<TSchema>();
+            return collection.CountDocuments(predicate, cancellationToken: cancellationToken);
+        }
+
+        /// <summary>
+        /// Count number of documents that match predicate asynchronously
+        /// </summary>
+        /// <param name="predicate">A function to test each element</param>
+        /// <param name="cancellationToken">The cancellation token</param>
+        /// <typeparam name="TSchema">The type of entity</typeparam>
+        /// <returns>The number of entries that match the predicate</returns>
+        public static Task<long> CountAsync<TSchema>(Expression<Func<TSchema, bool>> predicate,
+            CancellationToken cancellationToken = default) where TSchema : Schema
+        {
+            var collection = GetCollectionForType<TSchema>();
+            return collection.CountDocumentsAsync(predicate, cancellationToken: cancellationToken);
+        }
+
         internal static IMongoCollection<TSchema> GetCollectionForType<TSchema>(TSchema model) where TSchema : Schema
         {
             if (Database == null)
@@ -178,8 +206,8 @@ namespace meerkat
             var collection = Database.GetCollection<TSchema>(collectionName);
 
             // get properties that have the 
-            var properties = typeof(TSchema).GetProperties()
-                .Where(x => Attribute.IsDefined(x, UniqueAttributeType));
+            // var properties = typeof(TSchema).GetProperties()
+            //     .Where(x => Attribute.IsDefined(x, UniqueAttributeType));
 
             return collection;
         }

@@ -45,6 +45,8 @@ Meerkat.Connect("<any valid full mongodb connection string>"); // e.g mongodb://
 
 Ensure you have declared the necessary namespace at the head of your class file wherever you want to access meerkat functionality.
 
+NOTE: All async methods support `CancellationToken`s for cancelling the operations.
+
 ### Modelling
 
 All models must inherit from the abstract `Schema` class. The `Schema` class has a `virtual` `Id` property that can be overridden in model. By default the `Id` is an `ObjectId` type.
@@ -126,19 +128,54 @@ To remove an entity by id
 await Meerkat.RemoveByIdAsync<Student>(1234); // or Meerkat.RemoveById<Student>(1234); if you like sync calls
 ```
 
-To remove an entity by a predictae
+To remove an entity by a predicate
 
 ```csharp
 await Meerkat.RemoveOneAsync<Student>(x => x.FirstName == "John"); // or Meerkat.RemoveOne(x => x.LastName == "Jane");
 ```
 
-To remove all entities that match a predictae
+To remove all entities that match a predicate
 
 ```csharp
 await Meerkat.RemoveAsync<Student>(x => x.FirstName == "John"); // or Meerkat.Remove(x => x.LastName == "Jane");
 ```
 
+### Exists
 
-## TODO
+To check if any entities exist in a collection
 
-Collection support is actually in the codebase but doesnt perform as well as expected hence it's lack of documentation. The next update should make that available.
+```csharp
+var exists = await Meerkat.ExistsAsync<Student>(); // or Meerkat.Exists<Student>(); if you like sync calls
+```
+
+To check if any entities exits for a predicate
+
+```csharp
+var exists = await Meerkat.ExistsAsync<Student>(x => x.FirstName.StartsWith("Ja")); // or Meerkat.Exists<Student>(x => x.FirstName.StartsWith("Ja")); if you like sync calls
+```
+
+### Counting
+
+To count all the entities in a collection
+
+```csharp
+var count = await Meerkat.CountAsync<Student>(); // or Meerkat.Count<Student>(); if you like sync calls
+```
+
+To count all entities exits that match a predicate
+
+```csharp
+var count = await Meerkat.CountAsync<Student>(x => x.FirstName.StartsWith("Ja")); // or Meerkat.Count<Student>(x => x.FirstName.StartsWith("Ja")); if you like sync calls
+```
+
+
+## Collections
+
+Meerkat allows for collections of entities to be upserted both synchronously and asynchronously
+
+```csharp
+var peter = new Student();
+var paul = new Student();
+var students = new [] {peter, paul};
+await students.SaveAllAsync(); // or students.SaveAll();
+```

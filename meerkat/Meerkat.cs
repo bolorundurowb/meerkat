@@ -3,6 +3,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using meerkat.Attributes;
 using meerkat.Extensions;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
@@ -12,6 +13,8 @@ namespace meerkat
 {
     public class Meerkat
     {
+        private static readonly Type UniqueAttributeType = typeof(UniqueAttribute);
+
         /// <summary>
         /// The database that we have connected to
         /// </summary>
@@ -165,6 +168,62 @@ namespace meerkat
             return collection.DeleteManyAsync(predicate, cancellationToken);
         }
 
+        /// <summary>
+        /// Count number of documents that match predicate
+        /// </summary>
+        /// <param name="predicate">A function to test each element</param>
+        /// <param name="cancellationToken">The cancellation token</param>
+        /// <typeparam name="TSchema">The type of entity</typeparam>
+        /// <returns>The number of entries that match the predicate</returns>
+        public static long Count<TSchema>(Expression<Func<TSchema, bool>> predicate = null,
+            CancellationToken cancellationToken = default) where TSchema : Schema
+        {
+            predicate ??= schema => true;
+            var collection = GetCollectionForType<TSchema>();
+            return collection.CountDocuments(predicate, cancellationToken: cancellationToken);
+        }
+
+        /// <summary>
+        /// Count number of documents that match predicate asynchronously
+        /// </summary>
+        /// <param name="predicate">A function to test each element</param>
+        /// <param name="cancellationToken">The cancellation token</param>
+        /// <typeparam name="TSchema">The type of entity</typeparam>
+        /// <returns>The number of entries that match the predicate</returns>
+        public static Task<long> CountAsync<TSchema>(Expression<Func<TSchema, bool>> predicate = null,
+            CancellationToken cancellationToken = default) where TSchema : Schema
+        {
+            predicate ??= schema => true;
+            var collection = GetCollectionForType<TSchema>();
+            return collection.CountDocumentsAsync(predicate, cancellationToken: cancellationToken);
+        }
+
+        /// <summary>
+        /// Count number of documents that match predicate
+        /// </summary>
+        /// <param name="predicate">A function to test each element</param>
+        /// <typeparam name="TSchema">The type of entity</typeparam>
+        /// <returns>The number of entries that match the predicate</returns>
+        public static bool Exists<TSchema>(Expression<Func<TSchema, bool>> predicate = null) where TSchema : Schema
+        {
+            predicate ??= schema => true;
+            return Query<TSchema>().Any(predicate);
+        }
+
+        /// <summary>
+        /// Count number of documents that match predicate asynchronously
+        /// </summary>
+        /// <param name="predicate">A function to test each element</param>
+        /// <param name="cancellationToken">The cancellation token</param>
+        /// <typeparam name="TSchema">The type of entity</typeparam>
+        /// <returns>The number of entries that match the predicate</returns>
+        public static Task<bool> ExistsAsync<TSchema>(Expression<Func<TSchema, bool>> predicate = null,
+            CancellationToken cancellationToken = default) where TSchema : Schema
+        {
+            predicate ??= schema => true;
+            return Query<TSchema>().AnyAsync(predicate, cancellationToken);
+        }
+
         internal static IMongoCollection<TSchema> GetCollectionForType<TSchema>(TSchema model) where TSchema : Schema
         {
             if (Database == null)
@@ -172,7 +231,13 @@ namespace meerkat
                     $"The database connection has not been initialized. Call {nameof(Connect)}() before carrying out any operations.");
 
             var collectionName = model.GetType().GetCollectionName();
-            return Database.GetCollection<TSchema>(collectionName);
+            var collection = Database.GetCollection<TSchema>(collectionName);
+
+            // get properties that have the 
+            // var properties = typeof(TSchema).GetProperties()
+            //     .Where(x => Attribute.IsDefined(x, UniqueAttributeType));
+
+            return collection;
         }
 
         internal static IMongoCollection<TSchema> GetCollectionForType<TSchema>() where TSchema : Schema
@@ -183,6 +248,10 @@ namespace meerkat
 
             var collectionName = typeof(TSchema).GetCollectionName();
             return Database.GetCollection<TSchema>(collectionName);
+        }
+
+        private static void EnsureIndices<TSchema>(IMongoCollection<TSchema> collection) where TSchema : Schema
+        {
         }
     }
 }

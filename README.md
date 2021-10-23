@@ -45,6 +45,8 @@ Meerkat.Connect("<any valid full mongodb connection string>"); // e.g mongodb://
 
 Ensure you have declared the necessary namespace at the head of your class file wherever you want to access meerkat functionality.
 
+NOTE: All async methods support `CancellationToken`s for cancelling the operations.
+
 ### Modelling
 
 All models must inherit from the abstract `Schema` class. The `Schema` class has a `virtual` `Id` property that can be overridden in model. By default the `Id` is an `ObjectId` type.

@@ -175,9 +175,10 @@ namespace meerkat
         /// <param name="cancellationToken">The cancellation token</param>
         /// <typeparam name="TSchema">The type of entity</typeparam>
         /// <returns>The number of entries that match the predicate</returns>
-        public static long Count<TSchema>(Expression<Func<TSchema, bool>> predicate,
+        public static long Count<TSchema>(Expression<Func<TSchema, bool>> predicate = null,
             CancellationToken cancellationToken = default) where TSchema : Schema
         {
+            predicate ??= schema => true;
             var collection = GetCollectionForType<TSchema>();
             return collection.CountDocuments(predicate, cancellationToken: cancellationToken);
         }
@@ -189,9 +190,10 @@ namespace meerkat
         /// <param name="cancellationToken">The cancellation token</param>
         /// <typeparam name="TSchema">The type of entity</typeparam>
         /// <returns>The number of entries that match the predicate</returns>
-        public static Task<long> CountAsync<TSchema>(Expression<Func<TSchema, bool>> predicate,
+        public static Task<long> CountAsync<TSchema>(Expression<Func<TSchema, bool>> predicate = null,
             CancellationToken cancellationToken = default) where TSchema : Schema
         {
+            predicate ??= schema => true;
             var collection = GetCollectionForType<TSchema>();
             return collection.CountDocumentsAsync(predicate, cancellationToken: cancellationToken);
         }

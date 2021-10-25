@@ -45,16 +45,9 @@ namespace meerkat
         {
             var collection = Meerkat.GetCollectionForType(this);
 
-            // check whether to track updates
-            var trackUpdates = GetType().ShouldTrackTimestamps();
-
-            if (trackUpdates)
-            {
-                if (!CreatedAt.HasValue)
-                    CreatedAt = DateTime.UtcNow;
-
-                UpdatedAt = DateTime.UtcNow;
-            }
+            HandleTimestamps();
+            HandleLowercaseTransformations();
+            HandleUppercaseTransformations();
 
             collection.ReplaceOne(x => x.Id == Id, this, _replaceOptions);
         }
@@ -66,16 +59,9 @@ namespace meerkat
         {
             var collection = Meerkat.GetCollectionForType(this);
 
-            // check whether to track updates
-            var trackUpdates = GetType().ShouldTrackTimestamps();
-
-            if (trackUpdates)
-            {
-                if (!CreatedAt.HasValue)
-                    CreatedAt = DateTime.UtcNow;
-
-                UpdatedAt = DateTime.UtcNow;
-            }
+            HandleTimestamps();
+            HandleLowercaseTransformations();
+            HandleUppercaseTransformations();
 
             await collection.ReplaceOneAsync(x => x.Id == Id, this, _replaceOptions, cancellationToken);
         }
@@ -105,7 +91,7 @@ namespace meerkat
 
             foreach (var property in properties)
             {
-                var value = (string) property.GetValue(this, null);
+                var value = (string)property.GetValue(this, null);
                 property.SetValue(this, value?.ToLower(CultureInfo.CurrentCulture));
             }
         }
@@ -121,7 +107,7 @@ namespace meerkat
 
             foreach (var property in properties)
             {
-                var value = (string) property.GetValue(this, null);
+                var value = (string)property.GetValue(this, null);
                 property.SetValue(this, value?.ToUpper(CultureInfo.CurrentCulture));
             }
         }

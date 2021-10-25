@@ -11,7 +11,7 @@ using MongoUrlParser;
 
 namespace meerkat
 {
-    public class Meerkat
+    public static class Meerkat
     {
         private static readonly Type UniqueAttributeType = typeof(UniqueAttribute);
 

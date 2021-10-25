@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Globalization;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using meerkat.Attributes;
+using meerkat.Exceptions;
 using meerkat.Extensions;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
@@ -41,16 +45,9 @@ namespace meerkat
         {
             var collection = Meerkat.GetCollectionForType(this);
 
-            // check whether to track updates
-            var trackUpdates = GetType().ShouldTrackTimestamps();
-
-            if (trackUpdates)
-            {
-                if (!CreatedAt.HasValue)
-                    CreatedAt = DateTime.UtcNow;
-
-                UpdatedAt = DateTime.UtcNow;
-            }
+            HandleTimestamps();
+            HandleLowercaseTransformations();
+            HandleUppercaseTransformations();
 
             collection.ReplaceOne(x => x.Id == Id, this, _replaceOptions);
         }
@@ -62,6 +59,15 @@ namespace meerkat
         {
             var collection = Meerkat.GetCollectionForType(this);
 
+            HandleTimestamps();
+            HandleLowercaseTransformations();
+            HandleUppercaseTransformations();
+
+            await collection.ReplaceOneAsync(x => x.Id == Id, this, _replaceOptions, cancellationToken);
+        }
+
+        private void HandleTimestamps()
+        {
             // check whether to track updates
             var trackUpdates = GetType().ShouldTrackTimestamps();
 
@@ -72,8 +78,38 @@ namespace meerkat
 
                 UpdatedAt = DateTime.UtcNow;
             }
+        }
 
-            await collection.ReplaceOneAsync(x => x.Id == Id, this, _replaceOptions, cancellationToken);
+        private void HandleLowercaseTransformations()
+        {
+            var properties = this.AttributedWith<LowercaseAttribute>().ToList();
+
+            if (properties.Any(x => x.PropertyType != ReflectionExtensions.StringType))
+            {
+                throw new InvalidAttributeException("The 'Lowercase' attribute can only be applied to strings.");
+            }
+
+            foreach (var property in properties)
+            {
+                var value = (string)property.GetValue(this, null);
+                property.SetValue(this, value?.ToLower(CultureInfo.CurrentCulture));
+            }
+        }
+
+        private void HandleUppercaseTransformations()
+        {
+            var properties = this.AttributedWith<UppercaseAttribute>().ToList();
+
+            if (properties.Any(x => x.PropertyType != ReflectionExtensions.StringType))
+            {
+                throw new InvalidAttributeException("The 'Uppercase' attribute can only be applied to strings.");
+            }
+
+            foreach (var property in properties)
+            {
+                var value = (string)property.GetValue(this, null);
+                property.SetValue(this, value?.ToUpper(CultureInfo.CurrentCulture));
+            }
         }
     }
 }

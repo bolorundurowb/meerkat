@@ -13,7 +13,7 @@
     <RepositoryUrl>https://github.com/bolorundurowb/meerkat</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>meerkat, mongodb, mongoose, ODM</PackageTags>
-    <PackageReleaseNotes>Add unique constraint</PackageReleaseNotes>
+    <PackageReleaseNotes>Add lowercase and uppercase transformation</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Company>bolorundurowb</Company>
     <AssemblyVersion>1.0.6.0</AssemblyVersion>

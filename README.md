@@ -15,7 +15,7 @@ There is a lot still to be done, feel free to open new issues to suggest feature
 If you are hardcore and want to go the manual route. Then add the following to your `csproj` file:
 
 ```xml
-<PackageReference Include="meerkat" Version="1.0.3"/>
+<PackageReference Include="meerkat" Version="1.0.6"/>
 ```
 
 If you're using the Visual Studio package manager console, then run the following:

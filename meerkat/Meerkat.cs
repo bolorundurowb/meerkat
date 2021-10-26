@@ -92,11 +92,11 @@ namespace meerkat
         }
 
         /// <summary>
-        /// Search for an entity by a predicate
+        /// Search for entities by predicate
         /// </summary>
-        /// <param name="predicate">A function to test each element. If not defined, selects the first collection entity</param>
+        /// <param name="predicate">A function to test each element. If not defined, returns the entire collection</param>
         /// <typeparam name="TSchema">The type of entity</typeparam>
-        /// <returns>The found entity or null if not found</returns>
+        /// <returns>The list of matched entities</returns>
         public static List<TSchema> Find<TSchema>(Expression<Func<TSchema, bool>> predicate = null) where TSchema : Schema
         {
             predicate ??= schema => true;
@@ -104,12 +104,12 @@ namespace meerkat
         }
 
         /// <summary>
-        /// Search for an entity by a predicate asynchronously
+        /// Search for entities by predicate asynchronously
         /// </summary>
-        /// <param name="predicate">A function to test each element. If not defined, selects the first collection entity</param>
+        /// <param name="predicate">A function to test each element. If not defined, returns the entire collection</param>
         /// <param name="cancellationToken">The cancellation token</param>
         /// <typeparam name="TSchema">The type of entity</typeparam>
-        /// <returns>The found entity or null if not found</returns>
+        /// <returns>The list of matched entities</returns>
         public static Task<List<TSchema>> FindAsync<TSchema>(Expression<Func<TSchema, bool>> predicate = null,
             CancellationToken cancellationToken = default) where TSchema : Schema
         {

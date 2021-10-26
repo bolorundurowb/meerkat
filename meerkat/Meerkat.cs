@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
@@ -88,6 +89,32 @@ namespace meerkat
         {
             predicate ??= schema => true;
             return Query<TSchema>().FirstOrDefaultAsync(predicate, cancellationToken);
+        }
+
+        /// <summary>
+        /// Search for entities by predicate
+        /// </summary>
+        /// <param name="predicate">A function to test each element. If not defined, returns the entire collection</param>
+        /// <typeparam name="TSchema">The type of entity</typeparam>
+        /// <returns>The list of matched entities</returns>
+        public static List<TSchema> Find<TSchema>(Expression<Func<TSchema, bool>> predicate = null) where TSchema : Schema
+        {
+            predicate ??= schema => true;
+            return Query<TSchema>().Where(predicate).ToList();
+        }
+
+        /// <summary>
+        /// Search for entities by predicate asynchronously
+        /// </summary>
+        /// <param name="predicate">A function to test each element. If not defined, returns the entire collection</param>
+        /// <param name="cancellationToken">The cancellation token</param>
+        /// <typeparam name="TSchema">The type of entity</typeparam>
+        /// <returns>The list of matched entities</returns>
+        public static Task<List<TSchema>> FindAsync<TSchema>(Expression<Func<TSchema, bool>> predicate = null,
+            CancellationToken cancellationToken = default) where TSchema : Schema
+        {
+            predicate ??= schema => true;
+            return Query<TSchema>().Where(predicate).ToListAsync(cancellationToken);
         }
 
         /// <summary>

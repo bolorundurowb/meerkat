@@ -2,18 +2,13 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using meerkat.Constants;
 using MongoDB.Driver;
 
 namespace meerkat.Collections
 {
     public static class Enumerables
     {
-        private static readonly BulkWriteOptions BulkInsertOptions = new BulkWriteOptions
-        {
-            IsOrdered = false,
-            BypassDocumentValidation = true
-        };
-
         /// <summary>
         /// Persist a collection of entities to the matched collection synchronously
         /// </summary>
@@ -23,7 +18,7 @@ namespace meerkat.Collections
         {
             var collection = Meerkat.GetCollectionForType<TSchema>();
             var operations = GetBulkOps(entities);
-            collection.BulkWrite(operations, BulkInsertOptions);
+            collection.BulkWrite(operations, MongoDbConstants.BulkInsertOptions);
         }
 
         /// <summary>
@@ -37,7 +32,7 @@ namespace meerkat.Collections
         {
             var collection = Meerkat.GetCollectionForType<TSchema>();
             var operations = GetBulkOps(entities);
-            await collection.BulkWriteAsync(operations, BulkInsertOptions, cancellationToken);
+            await collection.BulkWriteAsync(operations, MongoDbConstants.BulkInsertOptions, cancellationToken);
         }
 
         private static List<WriteModel<TSchema>> GetBulkOps<TSchema>(IEnumerable<TSchema> entities)

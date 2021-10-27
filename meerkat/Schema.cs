@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using meerkat.Attributes;
+using meerkat.Constants;
 using meerkat.Exceptions;
 using meerkat.Extensions;
 using MongoDB.Bson;
@@ -14,9 +15,6 @@ namespace meerkat
 {
     public abstract class Schema
     {
-        private readonly ReplaceOptions _replaceOptions = new ReplaceOptions
-            { BypassDocumentValidation = true, IsUpsert = true };
-
         /// <summary>
         /// Can be a value of any type but defaults to ObjectId
         /// </summary>
@@ -49,7 +47,7 @@ namespace meerkat
             HandleLowercaseTransformations();
             HandleUppercaseTransformations();
 
-            collection.ReplaceOne(x => x.Id == Id, this, _replaceOptions);
+            collection.ReplaceOne(x => x.Id == Id, this, MongoDbConstants.ReplaceOptions);
         }
 
         /// <summary>
@@ -63,7 +61,7 @@ namespace meerkat
             HandleLowercaseTransformations();
             HandleUppercaseTransformations();
 
-            await collection.ReplaceOneAsync(x => x.Id == Id, this, _replaceOptions, cancellationToken);
+            await collection.ReplaceOneAsync(x => x.Id == Id, this, MongoDbConstants.ReplaceOptions, cancellationToken);
         }
 
         private void HandleTimestamps()
@@ -84,10 +82,8 @@ namespace meerkat
         {
             var properties = this.AttributedWith<LowercaseAttribute>().ToList();
 
-            if (properties.Any(x => x.PropertyType != ReflectionExtensions.StringType))
-            {
+            if (properties.Any(x => x.PropertyType != TypeConstants.StringType))
                 throw new InvalidAttributeException("The 'Lowercase' attribute can only be applied to strings.");
-            }
 
             foreach (var property in properties)
             {
@@ -100,10 +96,8 @@ namespace meerkat
         {
             var properties = this.AttributedWith<UppercaseAttribute>().ToList();
 
-            if (properties.Any(x => x.PropertyType != ReflectionExtensions.StringType))
-            {
+            if (properties.Any(x => x.PropertyType != TypeConstants.StringType))
                 throw new InvalidAttributeException("The 'Uppercase' attribute can only be applied to strings.");
-            }
 
             foreach (var property in properties)
             {

@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using meerkat.Attributes;
+using meerkat.Constants;
 using meerkat.Extensions;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
@@ -14,7 +16,7 @@ namespace meerkat
 {
     public static class Meerkat
     {
-        private static readonly Type UniqueAttributeType = typeof(UniqueAttribute);
+        private static readonly ConcurrentBag<string> SchemasWithCheckedIndices = new ConcurrentBag<string>();
 
         /// <summary>
         /// The database that we have connected to
@@ -97,7 +99,8 @@ namespace meerkat
         /// <param name="predicate">A function to test each element. If not defined, returns the entire collection</param>
         /// <typeparam name="TSchema">The type of entity</typeparam>
         /// <returns>The list of matched entities</returns>
-        public static List<TSchema> Find<TSchema>(Expression<Func<TSchema, bool>> predicate = null) where TSchema : Schema
+        public static List<TSchema> Find<TSchema>(Expression<Func<TSchema, bool>> predicate = null)
+            where TSchema : Schema
         {
             predicate ??= schema => true;
             return Query<TSchema>().Where(predicate).ToList();
@@ -257,12 +260,11 @@ namespace meerkat
                 throw new InvalidOperationException(
                     $"The database connection has not been initialized. Call {nameof(Connect)}() before carrying out any operations.");
 
-            var collectionName = model.GetType().GetCollectionName();
+            var type = model.GetType();
+            var collectionName = type.GetCollectionName();
             var collection = Database.GetCollection<TSchema>(collectionName);
 
-            // get properties that have the 
-            // var properties = typeof(TSchema).GetProperties()
-            //     .Where(x => Attribute.IsDefined(x, UniqueAttributeType));
+            HandleUniqueIndexing(type, collection);
 
             return collection;
         }
@@ -273,12 +275,39 @@ namespace meerkat
                 throw new InvalidOperationException(
                     $"The database connection has not been initialized. Call {nameof(Connect)}() before carrying out any operations.");
 
-            var collectionName = typeof(TSchema).GetCollectionName();
-            return Database.GetCollection<TSchema>(collectionName);
+            var type = typeof(TSchema);
+            var collectionName = type.GetCollectionName();
+            var collection = Database.GetCollection<TSchema>(collectionName);
+
+            HandleUniqueIndexing(type, collection);
+
+            return collection;
         }
 
-        private static void EnsureIndices<TSchema>(IMongoCollection<TSchema> collection) where TSchema : Schema
+        private static void HandleUniqueIndexing<TSchema>(Type type, IMongoCollection<TSchema> collection) where TSchema : Schema
         {
+            var typeName = type.FullName;
+
+            if (!SchemasWithCheckedIndices.IsEmpty && SchemasWithCheckedIndices.Contains(typeName))
+                return;
+
+            // get properties that have the attribute applied
+            var properties = type.AttributedWith<UniqueAttribute>();
+
+            var indices = properties
+                .Select(x =>
+                {
+                    var field = new StringFieldDefinition<TSchema>(x.Name);
+                    var definition = new IndexKeysDefinitionBuilder<TSchema>().Ascending(field);
+                    return new CreateIndexModel<TSchema>(definition, MongoDbConstants.UniqueIndexOptions);
+                })
+                .ToList();
+            
+            if (indices.Any()) 
+                collection.Indexes.CreateMany(indices);
+
+            // track this indexing
+            SchemasWithCheckedIndices.Add(typeName);
         }
     }
 }

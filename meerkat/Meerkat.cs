@@ -16,8 +16,7 @@ namespace meerkat
     public static class Meerkat
     {
         private static readonly ConcurrentBag<string> SchemasWithCheckedIndices = new ConcurrentBag<string>();
-        
-        private static readonly Type UniqueAttributeType = typeof(UniqueAttribute);
+
         private static readonly CreateIndexOptions UniqueIndexOptions = new CreateIndexOptions
             { Unique = true, Background = false };
 
@@ -293,20 +292,19 @@ namespace meerkat
                 return;
 
             // get properties that have the attribute applied
-            var properties = typeof(TSchema).GetProperties()
-                .Where(x => Attribute.IsDefined(x, UniqueAttributeType));
+            var properties = typeof(TSchema).AttributedWith<UniqueAttribute>();
 
-            var indices = new List<CreateIndexModel<TSchema>>();
+            var indices = properties
+                .Select(x =>
+                {
+                    var field = new StringFieldDefinition<TSchema>(x.Name);
+                    var definition = new IndexKeysDefinitionBuilder<TSchema>().Ascending(field);
+                    return new CreateIndexModel<TSchema>(definition, UniqueIndexOptions);
+                })
+                .ToList();
             
-            foreach (var property in properties)
-            {
-                var field = new StringFieldDefinition<TSchema>(property.Name);
-                var definition = new IndexKeysDefinitionBuilder<TSchema>().Ascending(field);
-                var index = new CreateIndexModel<TSchema>(definition, UniqueIndexOptions);
-                indices.Add(index);
-            }
-
-            collection.Indexes.CreateMany(indices);
+            if (indices.Any()) 
+                collection.Indexes.CreateMany(indices);
 
             // track this indexing
             SchemasWithCheckedIndices.Add(typeName);

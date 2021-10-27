@@ -260,10 +260,11 @@ namespace meerkat
                 throw new InvalidOperationException(
                     $"The database connection has not been initialized. Call {nameof(Connect)}() before carrying out any operations.");
 
-            var collectionName = model.GetType().GetCollectionName();
+            var type = model.GetType();
+            var collectionName = type.GetCollectionName();
             var collection = Database.GetCollection<TSchema>(collectionName);
 
-            HandleUniqueIndexing(collection);
+            HandleUniqueIndexing(type, collection);
 
             return collection;
         }
@@ -274,23 +275,24 @@ namespace meerkat
                 throw new InvalidOperationException(
                     $"The database connection has not been initialized. Call {nameof(Connect)}() before carrying out any operations.");
 
-            var collectionName = typeof(TSchema).GetCollectionName();
+            var type = typeof(TSchema);
+            var collectionName = type.GetCollectionName();
             var collection = Database.GetCollection<TSchema>(collectionName);
 
-            HandleUniqueIndexing(collection);
+            HandleUniqueIndexing(type, collection);
 
             return collection;
         }
 
-        private static void HandleUniqueIndexing<TSchema>(IMongoCollection<TSchema> collection) where TSchema : Schema
+        private static void HandleUniqueIndexing<TSchema>(Type type, IMongoCollection<TSchema> collection) where TSchema : Schema
         {
-            var typeName = typeof(TSchema).FullName;
+            var typeName = type.FullName;
 
             if (!SchemasWithCheckedIndices.IsEmpty && SchemasWithCheckedIndices.Contains(typeName))
                 return;
 
             // get properties that have the attribute applied
-            var properties = typeof(TSchema).AttributedWith<UniqueAttribute>();
+            var properties = type.AttributedWith<UniqueAttribute>();
 
             var indices = properties
                 .Select(x =>

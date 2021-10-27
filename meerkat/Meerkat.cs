@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -14,7 +15,11 @@ namespace meerkat
 {
     public static class Meerkat
     {
+        private static readonly ConcurrentBag<string> SchemasWithCheckedIndices = new ConcurrentBag<string>();
+        
         private static readonly Type UniqueAttributeType = typeof(UniqueAttribute);
+        private static readonly CreateIndexOptions UniqueIndexOptions = new CreateIndexOptions
+            { Unique = true, Background = false };
 
         /// <summary>
         /// The database that we have connected to
@@ -97,7 +102,8 @@ namespace meerkat
         /// <param name="predicate">A function to test each element. If not defined, returns the entire collection</param>
         /// <typeparam name="TSchema">The type of entity</typeparam>
         /// <returns>The list of matched entities</returns>
-        public static List<TSchema> Find<TSchema>(Expression<Func<TSchema, bool>> predicate = null) where TSchema : Schema
+        public static List<TSchema> Find<TSchema>(Expression<Func<TSchema, bool>> predicate = null)
+            where TSchema : Schema
         {
             predicate ??= schema => true;
             return Query<TSchema>().Where(predicate).ToList();
@@ -260,9 +266,7 @@ namespace meerkat
             var collectionName = model.GetType().GetCollectionName();
             var collection = Database.GetCollection<TSchema>(collectionName);
 
-            // get properties that have the 
-            // var properties = typeof(TSchema).GetProperties()
-            //     .Where(x => Attribute.IsDefined(x, UniqueAttributeType));
+            HandleUniqueIndexing(collection);
 
             return collection;
         }
@@ -274,11 +278,38 @@ namespace meerkat
                     $"The database connection has not been initialized. Call {nameof(Connect)}() before carrying out any operations.");
 
             var collectionName = typeof(TSchema).GetCollectionName();
-            return Database.GetCollection<TSchema>(collectionName);
+            var collection = Database.GetCollection<TSchema>(collectionName);
+
+            HandleUniqueIndexing(collection);
+
+            return collection;
         }
 
-        private static void EnsureIndices<TSchema>(IMongoCollection<TSchema> collection) where TSchema : Schema
+        private static void HandleUniqueIndexing<TSchema>(IMongoCollection<TSchema> collection) where TSchema : Schema
         {
+            var typeName = typeof(TSchema).FullName;
+
+            if (!SchemasWithCheckedIndices.IsEmpty && SchemasWithCheckedIndices.Contains(typeName))
+                return;
+
+            // get properties that have the attribute applied
+            var properties = typeof(TSchema).GetProperties()
+                .Where(x => Attribute.IsDefined(x, UniqueAttributeType));
+
+            var indices = new List<CreateIndexModel<TSchema>>();
+            
+            foreach (var property in properties)
+            {
+                var field = new StringFieldDefinition<TSchema>(property.Name);
+                var definition = new IndexKeysDefinitionBuilder<TSchema>().Ascending(field);
+                var index = new CreateIndexModel<TSchema>(definition, UniqueIndexOptions);
+                indices.Add(index);
+            }
+
+            collection.Indexes.CreateMany(indices);
+
+            // track this indexing
+            SchemasWithCheckedIndices.Add(typeName);
         }
     }
 }

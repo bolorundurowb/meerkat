@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using meerkat.Attributes;
+using meerkat.Constants;
 using meerkat.Exceptions;
 using meerkat.Extensions;
 using MongoDB.Bson;
@@ -84,7 +85,7 @@ namespace meerkat
         {
             var properties = this.AttributedWith<LowercaseAttribute>().ToList();
 
-            if (properties.Any(x => x.PropertyType != ReflectionExtensions.StringType))
+            if (properties.Any(x => x.PropertyType != TypeConstants.StringType))
                 throw new InvalidAttributeException("The 'Lowercase' attribute can only be applied to strings.");
 
             foreach (var property in properties)
@@ -98,7 +99,7 @@ namespace meerkat
         {
             var properties = this.AttributedWith<UppercaseAttribute>().ToList();
 
-            if (properties.Any(x => x.PropertyType != ReflectionExtensions.StringType))
+            if (properties.Any(x => x.PropertyType != TypeConstants.StringType))
                 throw new InvalidAttributeException("The 'Uppercase' attribute can only be applied to strings.");
 
             foreach (var property in properties)

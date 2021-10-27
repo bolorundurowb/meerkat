@@ -15,9 +15,6 @@ namespace meerkat
 {
     public abstract class Schema
     {
-        private readonly ReplaceOptions _replaceOptions = new ReplaceOptions
-            { BypassDocumentValidation = true, IsUpsert = true };
-
         /// <summary>
         /// Can be a value of any type but defaults to ObjectId
         /// </summary>
@@ -50,7 +47,7 @@ namespace meerkat
             HandleLowercaseTransformations();
             HandleUppercaseTransformations();
 
-            collection.ReplaceOne(x => x.Id == Id, this, _replaceOptions);
+            collection.ReplaceOne(x => x.Id == Id, this, MongoDbConstants.ReplaceOptions);
         }
 
         /// <summary>
@@ -64,7 +61,7 @@ namespace meerkat
             HandleLowercaseTransformations();
             HandleUppercaseTransformations();
 
-            await collection.ReplaceOneAsync(x => x.Id == Id, this, _replaceOptions, cancellationToken);
+            await collection.ReplaceOneAsync(x => x.Id == Id, this, MongoDbConstants.ReplaceOptions, cancellationToken);
         }
 
         private void HandleTimestamps()

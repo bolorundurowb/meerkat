@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using meerkat.Attributes;
+using meerkat.Constants;
 using meerkat.Extensions;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
@@ -16,9 +17,6 @@ namespace meerkat
     public static class Meerkat
     {
         private static readonly ConcurrentBag<string> SchemasWithCheckedIndices = new ConcurrentBag<string>();
-
-        private static readonly CreateIndexOptions UniqueIndexOptions = new CreateIndexOptions
-            { Unique = true, Background = false };
 
         /// <summary>
         /// The database that we have connected to
@@ -299,7 +297,7 @@ namespace meerkat
                 {
                     var field = new StringFieldDefinition<TSchema>(x.Name);
                     var definition = new IndexKeysDefinitionBuilder<TSchema>().Ascending(field);
-                    return new CreateIndexModel<TSchema>(definition, UniqueIndexOptions);
+                    return new CreateIndexModel<TSchema>(definition, MongoDbConstants.UniqueIndexOptions);
                 })
                 .ToList();
             

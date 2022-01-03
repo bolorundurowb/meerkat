@@ -13,13 +13,20 @@ using MongoDB.Driver;
 
 namespace meerkat
 {
-    public abstract class Schema
+    public abstract class Schema: Schema<ObjectId>
+    {
+        protected Schema(): base(ObjectId.GenerateNewId)
+        {
+        }
+    }
+    
+    public abstract class Schema<T> where T : IEquatable<T>, IComparable, IComparable<T>
     {
         /// <summary>
         /// Can be a value of any type but defaults to ObjectId
         /// </summary>
         [BsonId]
-        public virtual object Id { get; protected set; }
+        public T Id { get; private set; }
 
         /// <summary>
         /// Time when this entity was first persisted to the database
@@ -34,7 +41,12 @@ namespace meerkat
         /// <summary>
         /// Default constructor
         /// </summary>
-        protected Schema() => Id = ObjectId.GenerateNewId();
+        protected Schema(T id) => Id = id;
+
+        /// <summary>
+        /// Default constructor
+        /// </summary>
+        protected Schema(Func<T> idGenerator) => Id = idGenerator();
 
         /// <summary>
         /// Upserts the current instance in the matched collection synchronously

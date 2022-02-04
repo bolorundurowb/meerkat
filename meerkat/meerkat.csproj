@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <LangVersion>8.0</LangVersion>
+    <LangVersion>latestmajor</LangVersion>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>meerkat</PackageId>
     <PackageVersion>1.0.10</PackageVersion>
@@ -21,6 +21,7 @@
     <NeutralLanguage>en-NG</NeutralLanguage>
     <AssemblyName>Meerkat</AssemblyName>
     <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
+    <Nullable>warnings</Nullable>
   </PropertyGroup>
 
   <ItemGroup>

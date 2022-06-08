@@ -47,7 +47,11 @@ namespace meerkat
             HandleLowercaseTransformations();
             HandleUppercaseTransformations();
 
+            PreSave();
+
             collection.ReplaceOne(x => x.Id == Id, this, MongoDbConstants.ReplaceOptions);
+
+            PostSave();
         }
 
         /// <summary>
@@ -61,7 +65,25 @@ namespace meerkat
             HandleLowercaseTransformations();
             HandleUppercaseTransformations();
 
+            PreSave();
+
             await collection.ReplaceOneAsync(x => x.Id == Id, this, MongoDbConstants.ReplaceOptions, cancellationToken);
+
+            PostSave();
+        }
+
+        /// <summary>
+        /// An overridable hook that gets called before the entity is persisted
+        /// </summary>
+        public virtual void PreSave()
+        {
+        }
+
+        /// <summary>
+        /// An overridable hook that gets called after the entity has been persisted
+        /// </summary>
+        public virtual void PostSave()
+        {
         }
 
         private void HandleTimestamps()

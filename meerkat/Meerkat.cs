@@ -53,7 +53,7 @@ namespace meerkat
         /// <param name="entityId">The entity id</param>
         /// <typeparam name="TSchema">The type of entity</typeparam>
         /// <returns>The found entity or null if not found</returns>
-        public static TSchema FindById<TSchema>(object entityId) where TSchema : Schema =>
+        public static TSchema? FindById<TSchema>(object entityId) where TSchema : Schema =>
             Query<TSchema>().FirstOrDefault(x => x.Id == entityId);
 
         /// <summary>
@@ -63,7 +63,7 @@ namespace meerkat
         /// <param name="cancellationToken">The cancellation token</param>
         /// <typeparam name="TSchema">The type of entity</typeparam>
         /// <returns>The found entity or null if not found</returns>
-        public static Task<TSchema> FindByIdAsync<TSchema>(object entityId,
+        public static Task<TSchema?> FindByIdAsync<TSchema>(object entityId,
             CancellationToken cancellationToken = default) where TSchema : Schema =>
             Query<TSchema>().FirstOrDefaultAsync(x => x.Id == entityId, cancellationToken);
 
@@ -73,7 +73,7 @@ namespace meerkat
         /// <param name="predicate">A function to test each element. If not defined, selects the first collection entity</param>
         /// <typeparam name="TSchema">The type of entity</typeparam>
         /// <returns>The found entity or null if not found</returns>
-        public static TSchema FindOne<TSchema>(Expression<Func<TSchema, bool>> predicate = null) where TSchema : Schema
+        public static TSchema? FindOne<TSchema>(Expression<Func<TSchema, bool>> predicate = null) where TSchema : Schema
         {
             predicate ??= schema => true;
             return Query<TSchema>().FirstOrDefault(predicate);
@@ -86,7 +86,7 @@ namespace meerkat
         /// <param name="cancellationToken">The cancellation token</param>
         /// <typeparam name="TSchema">The type of entity</typeparam>
         /// <returns>The found entity or null if not found</returns>
-        public static Task<TSchema> FindOneAsync<TSchema>(Expression<Func<TSchema, bool>> predicate = null,
+        public static Task<TSchema?> FindOneAsync<TSchema>(Expression<Func<TSchema, bool>> predicate = null,
             CancellationToken cancellationToken = default) where TSchema : Schema
         {
             predicate ??= schema => true;
@@ -186,7 +186,7 @@ namespace meerkat
         }
 
         /// <summary>
-        /// Delete an multiple entities by a predicate asynchronously
+        /// Delete multiple entities by a predicate asynchronously
         /// </summary>
         /// <param name="predicate">A function to test each element</param>
         /// <param name="cancellationToken">The cancellation token</param>

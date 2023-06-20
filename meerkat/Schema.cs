@@ -13,13 +13,13 @@ using MongoDB.Driver;
 
 namespace meerkat
 {
-    public abstract class Schema
+    public abstract class Schema<TKey>
     {
         /// <summary>
         /// Can be a value of any type but defaults to ObjectId
         /// </summary>
         [BsonId]
-        public virtual object Id { get; protected set; }
+        public virtual TKey Id { get; protected set; }
 
         /// <summary>
         /// Time when this entity was first persisted to the database

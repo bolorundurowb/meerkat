@@ -26,6 +26,6 @@
 
   <ItemGroup>
     <PackageReference Include="mongo-url-parser" Version="1.1.0" />
-    <PackageReference Include="MongoDB.Driver" Version="2.16.0" />
+    <PackageReference Include="MongoDB.Driver" Version="2.22.0" />
   </ItemGroup>
 </Project>

@@ -3,8 +3,9 @@
     <LangVersion>11</LangVersion>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>meerkat</PackageId>
-    <PackageVersion>1.0.14</PackageVersion>
+    <PackageVersion>1.0.17</PackageVersion>
     <Title>Meerkat</Title>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <Authors>Winner-Timothy Bolorunduro</Authors>
     <Description>An ODM for MongoDB</Description>
     <Copyright>© 2021 , Bolorunduro Winner-Timothy. All Rights reserved.</Copyright>
@@ -27,5 +28,9 @@
   <ItemGroup>
     <PackageReference Include="mongo-url-parser" Version="1.1.0" />
     <PackageReference Include="MongoDB.Driver" Version="2.22.0" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 </Project>

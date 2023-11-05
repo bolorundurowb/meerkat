@@ -22,13 +22,13 @@ namespace meerkat.Extensions
         {
             var cacheKey = type.FullName ?? type.Name;
 
-            if (CollectionNameCache.ContainsKey(cacheKey))
-                return CollectionNameCache[cacheKey];
+            if (CollectionNameCache.TryGetValue(cacheKey, out var collectionName))
+                return collectionName;
 
             var collectionAttribute = type.GetCustomAttribute<CollectionAttribute>();
             var attributeName = collectionAttribute?.Name;
             var name = string.IsNullOrWhiteSpace(attributeName) ? type.Name.Pluralize() : attributeName;
-            var collectionName = Whitespace.Replace(name.ToLowerInvariant(), "_");
+            collectionName = Whitespace.Replace(name.ToLowerInvariant(), "_");
 
             // cache this generated name
             CollectionNameCache[cacheKey] = collectionName;

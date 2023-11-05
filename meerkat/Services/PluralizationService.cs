@@ -57,10 +57,10 @@ namespace meerkat.Services
                 : $"{input}{PluralizedSuffix}";
 
             public bool IsMatch(string input) =>
-                Suffixes?.Any(x => input.EndsWith(x, StringComparison.InvariantCultureIgnoreCase)) ?? false;
+                Suffixes.Any(x => input.EndsWith(x, StringComparison.InvariantCultureIgnoreCase));
 
-            public string Match(string input) =>
-                Suffixes?.FirstOrDefault(x => input.EndsWith(x, StringComparison.InvariantCultureIgnoreCase));
+            public string? Match(string input) =>
+                Suffixes.FirstOrDefault(x => input.EndsWith(x, StringComparison.InvariantCultureIgnoreCase));
         }
     }
 }

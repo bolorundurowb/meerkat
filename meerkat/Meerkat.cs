@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using meerkat.Attributes;
 using meerkat.Constants;
 using meerkat.Extensions;
+using meerkat.Serializers;
+using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
 using MongoUrlParser;
@@ -30,6 +32,11 @@ namespace meerkat
         public static void Connect(string databaseConnectionString)
         {
             var (dbUrl, dbName) = Parser.Parse(databaseConnectionString);
+            
+#if NET6_0 || NET7_0 || NET8_0
+            BsonSerializer.RegisterSerializer(new DocumentDateOnlySerializer());
+            BsonSerializer.RegisterSerializer(new DocumentTimeOnlySerializer());
+#endif
 
             var dbClient = new MongoClient(dbUrl);
             Database = dbClient.GetDatabase(dbName);

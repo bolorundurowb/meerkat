@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <LangVersion>latestmajor</LangVersion>
+    <LangVersion>11</LangVersion>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>meerkat</PackageId>
-    <PackageVersion>1.0.16</PackageVersion>
+    <PackageVersion>1.0.17</PackageVersion>
     <Title>Meerkat</Title>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <Authors>Winner-Timothy Bolorunduro</Authors>
@@ -14,14 +14,12 @@
     <RepositoryUrl>https://github.com/bolorundurowb/meerkat</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>meerkat, mongodb, mongoose, ODM</PackageTags>
-    <PackageReleaseNotes>- bundle the readme</PackageReleaseNotes>
+    <PackageReleaseNotes>- add in DateOnly and TimeOnly support</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Company>bolorundurowb</Company>
-    <AssemblyVersion>1.0.13</AssemblyVersion>
-    <FileVersion>1.0.13</FileVersion>
     <NeutralLanguage>en-NG</NeutralLanguage>
     <AssemblyName>Meerkat</AssemblyName>
-    <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
+    <TargetFrameworks>net6.0;netstandard2.0;netstandard2.1;net7.0;net8.0</TargetFrameworks>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 

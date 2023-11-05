@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![NuGet Badge](https://buildstats.info/nuget/meerkat)](https://www.nuget.org/packages/meerkat) [![Build Status](https://app.travis-ci.com/bolorundurowb/meerkat.svg?branch=master)](https://app.travis-ci.com/bolorundurowb/meerkat)
 
-An ODM (Object Document Mapper) library aiming to replicate as much as is necessary, functionality in NodeJS's [mongoose](https://www.npmjs.com/package/mongoose). For those who may not know, mongoose is a JavaScript ODM wrapper library around the native MongoDB library that simplifies data access by simplifying the API surface. 
+An ODM (Object Document Mapper) library aiming to replicate as much as is necessary, functionality in NodeJS's [mongoose](https://www.npmjs.com/package/mongoose). For those who may not know, mongoose is a JavaScript ODM wrapper library around the native MongoDB library that simplifies data access by simplifying the API surface. meerkat is a wrapper over the official MongoDB client library and aims to simplify common data access logic. This library also adds support for the `DateOnly` and `TimeOnly` introduced in .NET 6.
 
 This library was named `meerkat` as a homage to `mongoose` because a meerkat is a mongoose. I know, I am hilarious like that. Please be sure to star ⭐️ this project if you think it's cool or useful.
 
@@ -90,7 +90,7 @@ var student = new Student
   LastName = "Chukumerije"
 };
 
-await student.SaveAsync(); // or student.Save(); if you like sync calls
+await student.SaveAsync(); // or student.Save(); if you prefer synchronous calls
 ```
 
 It's that simple.

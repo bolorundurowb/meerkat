@@ -40,9 +40,10 @@ namespace meerkat
         /// </summary>
         /// <typeparam name="TSchema">Type to be queried</typeparam>
         /// <returns>The queryable</returns>
-        public static IMongoQueryable<TSchema> Query<TSchema>() where TSchema : Schema
+        public static IMongoQueryable<TSchema> Query<TKey, TSchema>()
+            where TSchema : Schema<TKey> where TKey : IEquatable<TKey>
         {
-            var collection = GetCollectionForType<TSchema>();
+            var collection = GetCollectionForType<TKey, TSchema>();
             return collection
                 .AsQueryable();
         }
@@ -53,8 +54,9 @@ namespace meerkat
         /// <param name="entityId">The entity id</param>
         /// <typeparam name="TSchema">The type of entity</typeparam>
         /// <returns>The found entity or null if not found</returns>
-        public static TSchema FindById<TSchema>(object entityId) where TSchema : Schema =>
-            Query<TSchema>().FirstOrDefault(x => x.Id == entityId);
+        public static TSchema FindById<TKey, TSchema>(object entityId)
+            where TSchema : Schema<TKey> where TKey : IEquatable<TKey> =>
+            Query<TKey, TSchema>().FirstOrDefault(x => x.Id.Equals(entityId));
 
         /// <summary>
         /// Search for an entity by id asynchronously
@@ -63,9 +65,9 @@ namespace meerkat
         /// <param name="cancellationToken">The cancellation token</param>
         /// <typeparam name="TSchema">The type of entity</typeparam>
         /// <returns>The found entity or null if not found</returns>
-        public static Task<TSchema> FindByIdAsync<TSchema>(object entityId,
-            CancellationToken cancellationToken = default) where TSchema : Schema =>
-            Query<TSchema>().FirstOrDefaultAsync(x => x.Id == entityId, cancellationToken);
+        public static Task<TSchema> FindByIdAsync<TKey, TSchema>(object entityId,
+            CancellationToken cancellationToken = default) where TSchema : Schema<TKey> where TKey : IEquatable<TKey> =>
+            Query<TKey, TSchema>().FirstOrDefaultAsync(x => x.Id.Equals(entityId), cancellationToken);
 
         /// <summary>
         /// Search for an entity by a predicate
@@ -73,10 +75,11 @@ namespace meerkat
         /// <param name="predicate">A function to test each element. If not defined, selects the first collection entity</param>
         /// <typeparam name="TSchema">The type of entity</typeparam>
         /// <returns>The found entity or null if not found</returns>
-        public static TSchema FindOne<TSchema>(Expression<Func<TSchema, bool>> predicate = null) where TSchema : Schema
+        public static TSchema FindOne<TKey, TSchema>(Expression<Func<TSchema, bool>> predicate = null)
+            where TSchema : Schema<TKey> where TKey : IEquatable<TKey>
         {
             predicate ??= schema => true;
-            return Query<TSchema>().FirstOrDefault(predicate);
+            return Query<TKey, TSchema>().FirstOrDefault(predicate);
         }
 
         /// <summary>
@@ -86,11 +89,11 @@ namespace meerkat
         /// <param name="cancellationToken">The cancellation token</param>
         /// <typeparam name="TSchema">The type of entity</typeparam>
         /// <returns>The found entity or null if not found</returns>
-        public static Task<TSchema> FindOneAsync<TSchema>(Expression<Func<TSchema, bool>> predicate = null,
-            CancellationToken cancellationToken = default) where TSchema : Schema
+        public static Task<TSchema> FindOneAsync<TKey, TSchema>(Expression<Func<TSchema, bool>> predicate = null,
+            CancellationToken cancellationToken = default) where TSchema : Schema<TKey> where TKey : IEquatable<TKey>
         {
             predicate ??= schema => true;
-            return Query<TSchema>().FirstOrDefaultAsync(predicate, cancellationToken);
+            return Query<TKey, TSchema>().FirstOrDefaultAsync(predicate, cancellationToken);
         }
 
         /// <summary>
@@ -99,11 +102,11 @@ namespace meerkat
         /// <param name="predicate">A function to test each element. If not defined, returns the entire collection</param>
         /// <typeparam name="TSchema">The type of entity</typeparam>
         /// <returns>The list of matched entities</returns>
-        public static List<TSchema> Find<TSchema>(Expression<Func<TSchema, bool>> predicate = null)
-            where TSchema : Schema
+        public static List<TSchema> Find<TKey, TSchema>(Expression<Func<TSchema, bool>> predicate = null)
+            where TSchema : Schema<TKey> where TKey : IEquatable<TKey>
         {
             predicate ??= schema => true;
-            return Query<TSchema>().Where(predicate).ToList();
+            return Query<TKey, TSchema>().Where(predicate).ToList();
         }
 
         /// <summary>
@@ -113,11 +116,11 @@ namespace meerkat
         /// <param name="cancellationToken">The cancellation token</param>
         /// <typeparam name="TSchema">The type of entity</typeparam>
         /// <returns>The list of matched entities</returns>
-        public static Task<List<TSchema>> FindAsync<TSchema>(Expression<Func<TSchema, bool>> predicate = null,
-            CancellationToken cancellationToken = default) where TSchema : Schema
+        public static Task<List<TSchema>> FindAsync<TKey, TSchema>(Expression<Func<TSchema, bool>> predicate = null,
+            CancellationToken cancellationToken = default) where TSchema : Schema<TKey> where TKey : IEquatable<TKey>
         {
             predicate ??= schema => true;
-            return Query<TSchema>().Where(predicate).ToListAsync(cancellationToken);
+            return Query<TKey, TSchema>().Where(predicate).ToListAsync(cancellationToken);
         }
 
         /// <summary>
@@ -126,11 +129,11 @@ namespace meerkat
         /// <param name="entityId">The entity id</param>
         /// <param name="cancellationToken">The cancellation token</param>
         /// <typeparam name="TSchema">The type of entity</typeparam>
-        public static void RemoveById<TSchema>(object entityId, CancellationToken cancellationToken = default)
-            where TSchema : Schema
+        public static void RemoveById<TKey, TSchema>(object entityId, CancellationToken cancellationToken = default)
+            where TSchema : Schema<TKey> where TKey : IEquatable<TKey>
         {
-            var collection = GetCollectionForType<TSchema>();
-            collection.DeleteOne(x => x.Id == entityId, cancellationToken);
+            var collection = GetCollectionForType<TKey, TSchema>();
+            collection.DeleteOne(x => x.Id.Equals(entityId), cancellationToken);
         }
 
         /// <summary>
@@ -139,11 +142,12 @@ namespace meerkat
         /// <param name="entityId">The entity id</param>
         /// <param name="cancellationToken">The cancellation token</param>
         /// <typeparam name="TSchema">The type of entity</typeparam>
-        public static Task RemoveByIdAsync<TSchema>(object entityId, CancellationToken cancellationToken = default)
-            where TSchema : Schema
+        public static Task RemoveByIdAsync<TKey, TSchema>(object entityId,
+            CancellationToken cancellationToken = default)
+            where TSchema : Schema<TKey> where TKey : IEquatable<TKey>
         {
-            var collection = GetCollectionForType<TSchema>();
-            return collection.DeleteOneAsync(x => x.Id == entityId, cancellationToken);
+            var collection = GetCollectionForType<TKey, TSchema>();
+            return collection.DeleteOneAsync(x => x.Id.Equals(entityId), cancellationToken);
         }
 
         /// <summary>
@@ -152,10 +156,10 @@ namespace meerkat
         /// <param name="predicate">A function to test each element</param>
         /// <param name="cancellationToken">The cancellation token</param>
         /// <typeparam name="TSchema">The type of entity</typeparam>
-        public static void RemoveOne<TSchema>(Expression<Func<TSchema, bool>> predicate,
-            CancellationToken cancellationToken = default) where TSchema : Schema
+        public static void RemoveOne<TKey, TSchema>(Expression<Func<TSchema, bool>> predicate,
+            CancellationToken cancellationToken = default) where TSchema : Schema<TKey> where TKey : IEquatable<TKey>
         {
-            var collection = GetCollectionForType<TSchema>();
+            var collection = GetCollectionForType<TKey, TSchema>();
             collection.DeleteOne(predicate, cancellationToken);
         }
 
@@ -165,10 +169,10 @@ namespace meerkat
         /// <param name="predicate">A function to test each element</param>
         /// <param name="cancellationToken">The cancellation token</param>
         /// <typeparam name="TSchema">The type of entity</typeparam>
-        public static Task RemoveOneAsync<TSchema>(Expression<Func<TSchema, bool>> predicate,
-            CancellationToken cancellationToken = default) where TSchema : Schema
+        public static Task RemoveOneAsync<TKey, TSchema>(Expression<Func<TSchema, bool>> predicate,
+            CancellationToken cancellationToken = default) where TSchema : Schema<TKey> where TKey : IEquatable<TKey>
         {
-            var collection = GetCollectionForType<TSchema>();
+            var collection = GetCollectionForType<TKey, TSchema>();
             return collection.DeleteOneAsync(predicate, cancellationToken);
         }
 
@@ -178,10 +182,10 @@ namespace meerkat
         /// <param name="predicate">A function to test each element</param>
         /// <param name="cancellationToken">The cancellation token</param>
         /// <typeparam name="TSchema">The type of entity</typeparam>
-        public static void Remove<TSchema>(Expression<Func<TSchema, bool>> predicate,
-            CancellationToken cancellationToken = default) where TSchema : Schema
+        public static void Remove<TKey, TSchema>(Expression<Func<TSchema, bool>> predicate,
+            CancellationToken cancellationToken = default) where TSchema : Schema<TKey> where TKey : IEquatable<TKey>
         {
-            var collection = GetCollectionForType<TSchema>();
+            var collection = GetCollectionForType<TKey, TSchema>();
             collection.DeleteMany(predicate, cancellationToken);
         }
 
@@ -191,10 +195,10 @@ namespace meerkat
         /// <param name="predicate">A function to test each element</param>
         /// <param name="cancellationToken">The cancellation token</param>
         /// <typeparam name="TSchema">The type of entity</typeparam>
-        public static Task RemoveAsync<TSchema>(Expression<Func<TSchema, bool>> predicate,
-            CancellationToken cancellationToken = default) where TSchema : Schema
+        public static Task RemoveAsync<TKey, TSchema>(Expression<Func<TSchema, bool>> predicate,
+            CancellationToken cancellationToken = default) where TSchema : Schema<TKey> where TKey : IEquatable<TKey>
         {
-            var collection = GetCollectionForType<TSchema>();
+            var collection = GetCollectionForType<TKey, TSchema>();
             return collection.DeleteManyAsync(predicate, cancellationToken);
         }
 
@@ -205,11 +209,11 @@ namespace meerkat
         /// <param name="cancellationToken">The cancellation token</param>
         /// <typeparam name="TSchema">The type of entity</typeparam>
         /// <returns>The number of entries that match the predicate</returns>
-        public static long Count<TSchema>(Expression<Func<TSchema, bool>> predicate = null,
-            CancellationToken cancellationToken = default) where TSchema : Schema
+        public static long Count<TKey, TSchema>(Expression<Func<TSchema, bool>> predicate = null,
+            CancellationToken cancellationToken = default) where TSchema : Schema<TKey> where TKey : IEquatable<TKey>
         {
             predicate ??= schema => true;
-            var collection = GetCollectionForType<TSchema>();
+            var collection = GetCollectionForType<TKey, TSchema>();
             return collection.CountDocuments(predicate, cancellationToken: cancellationToken);
         }
 
@@ -220,11 +224,11 @@ namespace meerkat
         /// <param name="cancellationToken">The cancellation token</param>
         /// <typeparam name="TSchema">The type of entity</typeparam>
         /// <returns>The number of entries that match the predicate</returns>
-        public static Task<long> CountAsync<TSchema>(Expression<Func<TSchema, bool>> predicate = null,
-            CancellationToken cancellationToken = default) where TSchema : Schema
+        public static Task<long> CountAsync<TKey, TSchema>(Expression<Func<TSchema, bool>> predicate = null,
+            CancellationToken cancellationToken = default) where TSchema : Schema<TKey> where TKey : IEquatable<TKey>
         {
             predicate ??= schema => true;
-            var collection = GetCollectionForType<TSchema>();
+            var collection = GetCollectionForType<TKey, TSchema>();
             return collection.CountDocumentsAsync(predicate, cancellationToken: cancellationToken);
         }
 
@@ -234,10 +238,11 @@ namespace meerkat
         /// <param name="predicate">A function to test each element</param>
         /// <typeparam name="TSchema">The type of entity</typeparam>
         /// <returns>The number of entries that match the predicate</returns>
-        public static bool Exists<TSchema>(Expression<Func<TSchema, bool>> predicate = null) where TSchema : Schema
+        public static bool Exists<TKey, TSchema>(Expression<Func<TSchema, bool>> predicate = null)
+            where TSchema : Schema<TKey> where TKey : IEquatable<TKey>
         {
             predicate ??= schema => true;
-            return Query<TSchema>().Any(predicate);
+            return Query<TKey, TSchema>().Any(predicate);
         }
 
         /// <summary>
@@ -247,14 +252,15 @@ namespace meerkat
         /// <param name="cancellationToken">The cancellation token</param>
         /// <typeparam name="TSchema">The type of entity</typeparam>
         /// <returns>The number of entries that match the predicate</returns>
-        public static Task<bool> ExistsAsync<TSchema>(Expression<Func<TSchema, bool>> predicate = null,
-            CancellationToken cancellationToken = default) where TSchema : Schema
+        public static Task<bool> ExistsAsync<TKey, TSchema>(Expression<Func<TSchema, bool>> predicate = null,
+            CancellationToken cancellationToken = default) where TSchema : Schema<TKey> where TKey : IEquatable<TKey>
         {
             predicate ??= schema => true;
-            return Query<TSchema>().AnyAsync(predicate, cancellationToken);
+            return Query<TKey, TSchema>().AnyAsync(predicate, cancellationToken);
         }
 
-        internal static IMongoCollection<TSchema> GetCollectionForType<TSchema>(TSchema model) where TSchema : Schema
+        internal static IMongoCollection<TSchema> GetCollectionForType<TKey, TSchema>(Schema<TKey> model)
+            where TSchema : Schema<TKey> where TKey : IEquatable<TKey>
         {
             if (Database == null)
                 throw new InvalidOperationException(
@@ -264,12 +270,13 @@ namespace meerkat
             var collectionName = type.GetCollectionName();
             var collection = Database.GetCollection<TSchema>(collectionName);
 
-            HandleUniqueIndexing(type, collection);
+            HandleUniqueIndexing<TKey, TSchema>(type, collection);
 
             return collection;
         }
 
-        internal static IMongoCollection<TSchema> GetCollectionForType<TSchema>() where TSchema : Schema
+        internal static IMongoCollection<TSchema> GetCollectionForType<TKey, TSchema>()
+            where TSchema : Schema<TKey> where TKey : IEquatable<TKey>
         {
             if (Database == null)
                 throw new InvalidOperationException(
@@ -279,12 +286,13 @@ namespace meerkat
             var collectionName = type.GetCollectionName();
             var collection = Database.GetCollection<TSchema>(collectionName);
 
-            HandleUniqueIndexing(type, collection);
+            HandleUniqueIndexing<TKey, TSchema>(type, collection);
 
             return collection;
         }
 
-        private static void HandleUniqueIndexing<TSchema>(Type type, IMongoCollection<TSchema> collection) where TSchema : Schema
+        private static void HandleUniqueIndexing<TKey, TSchema>(Type type, IMongoCollection<TSchema> collection)
+            where TSchema : Schema<TKey> where TKey : IEquatable<TKey>
         {
             var typeName = type.FullName;
 
@@ -302,8 +310,8 @@ namespace meerkat
                     return new CreateIndexModel<TSchema>(definition, MongoDbConstants.UniqueIndexOptions);
                 })
                 .ToList();
-            
-            if (indices.Any()) 
+
+            if (indices.Any())
                 collection.Indexes.CreateMany(indices);
 
             // track this indexing

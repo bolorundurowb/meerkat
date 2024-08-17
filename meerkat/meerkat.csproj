@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <LangVersion>11</LangVersion>
+    <LangVersion>12</LangVersion>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>meerkat</PackageId>
-    <PackageVersion>1.0.17</PackageVersion>
+    <PackageVersion>1.0.18</PackageVersion>
     <Title>Meerkat</Title>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <Authors>Winner-Timothy Bolorunduro</Authors>
@@ -14,18 +14,18 @@
     <RepositoryUrl>https://github.com/bolorundurowb/meerkat</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>meerkat, mongodb, mongoose, ODM</PackageTags>
-    <PackageReleaseNotes>- add in DateOnly and TimeOnly support</PackageReleaseNotes>
+    <PackageReleaseNotes>- update underlying mongo client to address vulnerability</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Company>bolorundurowb</Company>
     <NeutralLanguage>en-NG</NeutralLanguage>
     <AssemblyName>Meerkat</AssemblyName>
-    <TargetFrameworks>net6.0;netstandard2.0;netstandard2.1;net7.0;net8.0</TargetFrameworks>
     <Nullable>enable</Nullable>
+    <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="mongo-url-parser" Version="1.1.0" />
-    <PackageReference Include="MongoDB.Driver" Version="2.22.0" />
+    <PackageReference Include="MongoDB.Driver" Version="2.28.0" />
   </ItemGroup>
   
   <ItemGroup>

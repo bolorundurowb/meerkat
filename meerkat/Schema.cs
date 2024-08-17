@@ -13,7 +13,7 @@ using MongoDB.Driver;
 
 namespace meerkat
 {
-    public abstract class Schema<TKey>
+    public abstract class Schema<TKey> where TKey : IEquatable<TKey>
     {
         /// <summary>
         /// Can be a value of any type but defaults to ObjectId
@@ -32,36 +32,31 @@ namespace meerkat
         public DateTime? UpdatedAt { get; private set; }
 
         /// <summary>
-        /// Default constructor
-        /// </summary>
-        protected Schema() => Id = ObjectId.GenerateNewId();
-
-        /// <summary>
         /// Upserts the current instance in the matched collection synchronously
         /// </summary>
-        public void Save()
+        public void Save<TKey, TSchema>() where TSchema : Schema<TKey> where TKey : IEquatable<TKey>
         {
-            var collection = Meerkat.GetCollectionForType(this);
+            var collection = Meerkat.GetCollectionForType<TKey, TSchema>(this);
 
             HandleTimestamps();
             HandleLowercaseTransformations();
             HandleUppercaseTransformations();
 
-            collection.ReplaceOne(x => x.Id == Id, this, MongoDbConstants.ReplaceOptions);
+            collection.ReplaceOne(x => x.Id.Equals(Id), this, MongoDbConstants.ReplaceOptions);
         }
 
         /// <summary>
         /// Upserts the current instance in the matched collection asynchronously
         /// </summary>
-        public async Task SaveAsync(CancellationToken cancellationToken = default)
+        public async Task SaveAsync<TKey, TSchema>(CancellationToken cancellationToken = default) where TSchema : Schema<TKey> where TKey : IEquatable<TKey>
         {
-            var collection = Meerkat.GetCollectionForType(this);
+            var collection = Meerkat.GetCollectionForType<TKey, TSchema>(this);
 
             HandleTimestamps();
             HandleLowercaseTransformations();
             HandleUppercaseTransformations();
 
-            await collection.ReplaceOneAsync(x => x.Id == Id, this, MongoDbConstants.ReplaceOptions, cancellationToken);
+            await collection.ReplaceOneAsync<TSchema>(x => x.Id.Equals(Id), this, MongoDbConstants.ReplaceOptions, cancellationToken);
         }
 
         private void HandleTimestamps()

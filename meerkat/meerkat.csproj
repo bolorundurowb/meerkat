@@ -3,7 +3,7 @@
     <LangVersion>12</LangVersion>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>meerkat</PackageId>
-    <PackageVersion>1.0.18</PackageVersion>
+    <PackageVersion>1.0.19</PackageVersion>
     <Title>Meerkat</Title>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <Authors>Winner-Timothy Bolorunduro</Authors>
@@ -14,7 +14,8 @@
     <RepositoryUrl>https://github.com/bolorundurowb/meerkat</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>meerkat, mongodb, mongoose, ODM</PackageTags>
-    <PackageReleaseNotes>- update underlying mongo client to address vulnerability</PackageReleaseNotes>
+    <PackageReleaseNotes>- update underlying mongo client
+-mark unnecessary attributes as deprecated</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Company>bolorundurowb</Company>
     <NeutralLanguage>en-NG</NeutralLanguage>

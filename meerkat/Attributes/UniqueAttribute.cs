@@ -1,9 +1,6 @@
 ﻿using System;
 
-namespace meerkat.Attributes
-{
-    [AttributeUsage(AttributeTargets.Property)]
-    public class UniqueAttribute : Attribute
-    {
-    }
-}
+namespace meerkat.Attributes;
+
+[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
+public class UniqueAttribute : Attribute { }

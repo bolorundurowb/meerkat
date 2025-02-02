@@ -1,11 +1,10 @@
 ﻿using System;
 
-namespace meerkat.Exceptions
+namespace meerkat.Exceptions;
+
+public sealed class InvalidAttributeException : Exception
 {
-    public sealed class InvalidAttributeException : Exception
+    public InvalidAttributeException(string exceptionMessage) : base(exceptionMessage)
     {
-        public InvalidAttributeException(string exceptionMessage) : base(exceptionMessage)
-        {
-        }
     }
 }

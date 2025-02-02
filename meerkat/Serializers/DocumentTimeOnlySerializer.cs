@@ -1,9 +1,4 @@
-﻿using MongoDB.Bson.Serialization.Serializers;
-using System;
-using MongoDB.Bson.Serialization;
-
-namespace meerkat.Serializers
-{
+﻿namespace meerkat.Serializers;
 #if NET6_0 || NET7_0 || NET8_0
     internal class DocumentTimeOnlySerializer : StructSerializerBase<TimeOnly>
     {
@@ -19,4 +14,3 @@ namespace meerkat.Serializers
             _innerSerializer.Serialize(context, args, value.ToTimeSpan());
     }
 #endif
-}

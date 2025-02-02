@@ -6,57 +6,56 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using meerkat.Attributes;
 
-namespace meerkat.Extensions
+namespace meerkat.Extensions;
+
+internal static class TypeExtensions
 {
-    internal static class TypeExtensions
+    private static readonly ConcurrentDictionary<string, string> CollectionNameCache =
+        new ConcurrentDictionary<string, string>();
+
+    private static readonly ConcurrentDictionary<string, bool> TimestampTrackCache =
+        new ConcurrentDictionary<string, bool>();
+
+    private static readonly Regex Whitespace = new Regex("\\s+", RegexOptions.Compiled);
+
+    public static string GetCollectionName(this Type type)
     {
-        private static readonly ConcurrentDictionary<string, string> CollectionNameCache =
-            new ConcurrentDictionary<string, string>();
+        var cacheKey = type.FullName ?? type.Name;
 
-        private static readonly ConcurrentDictionary<string, bool> TimestampTrackCache =
-            new ConcurrentDictionary<string, bool>();
-
-        private static readonly Regex Whitespace = new Regex("\\s+", RegexOptions.Compiled);
-
-        public static string GetCollectionName(this Type type)
-        {
-            var cacheKey = type.FullName ?? type.Name;
-
-            if (CollectionNameCache.TryGetValue(cacheKey, out var collectionName))
-                return collectionName;
-
-            var collectionAttribute = type.GetCustomAttribute<CollectionAttribute>();
-            var attributeName = collectionAttribute?.Name;
-            var name = string.IsNullOrWhiteSpace(attributeName) ? type.Name.Pluralize() : attributeName;
-            collectionName = Whitespace.Replace(name.ToLowerInvariant(), "_");
-
-            // cache this generated name
-            CollectionNameCache[cacheKey] = collectionName;
-
+        if (CollectionNameCache.TryGetValue(cacheKey, out var collectionName))
             return collectionName;
-        }
 
-        public static bool ShouldTrackTimestamps(this Type type)
-        {
-            var cacheKey = type.FullName ?? type.Name;
+        var collectionAttribute = type.GetCustomAttribute<CollectionAttribute>();
+        var attributeName = collectionAttribute?.Name;
+        var name = string.IsNullOrWhiteSpace(attributeName) ? type.Name.Pluralize() : attributeName;
+        collectionName = Whitespace.Replace(name.ToLowerInvariant(), "_");
 
-            if (TimestampTrackCache.ContainsKey(cacheKey))
-                return TimestampTrackCache[cacheKey];
+        // cache this generated name
+        CollectionNameCache[cacheKey] = collectionName;
 
-            var collectionAttribute = type.GetCustomAttribute<CollectionAttribute>();
-            var shouldTrack = collectionAttribute?.TrackTimestamps ?? false;
+        return collectionName;
+    }
 
-            // cache the tracking option
-            TimestampTrackCache[cacheKey] = shouldTrack;
+    public static bool ShouldTrackTimestamps(this Type type)
+    {
+        var cacheKey = type.FullName ?? type.Name;
 
-            return shouldTrack;
-        }
+        if (TimestampTrackCache.ContainsKey(cacheKey))
+            return TimestampTrackCache[cacheKey];
 
-        public static IEnumerable<PropertyInfo> AttributedWith<TAttribute>(this Type type) where TAttribute : Attribute
-        {
-            var attributeType = typeof(TAttribute);
-            return type.GetProperties()
-                .Where(x => x.CustomAttributes.Any(y => y.AttributeType == attributeType));
-        }
+        var collectionAttribute = type.GetCustomAttribute<CollectionAttribute>();
+        var shouldTrack = collectionAttribute?.TrackTimestamps ?? false;
+
+        // cache the tracking option
+        TimestampTrackCache[cacheKey] = shouldTrack;
+
+        return shouldTrack;
+    }
+
+    public static IEnumerable<PropertyInfo> AttributedWith<TAttribute>(this Type type) where TAttribute : Attribute
+    {
+        var attributeType = typeof(TAttribute);
+        return type.GetProperties()
+            .Where(x => x.CustomAttributes.Any(y => y.AttributeType == attributeType));
     }
 }

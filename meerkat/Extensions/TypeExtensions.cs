@@ -10,13 +10,11 @@ namespace meerkat.Extensions;
 
 internal static class TypeExtensions
 {
-    private static readonly ConcurrentDictionary<string, string> CollectionNameCache =
-        new ConcurrentDictionary<string, string>();
+    private static readonly ConcurrentDictionary<string, string> CollectionNameCache = new();
 
-    private static readonly ConcurrentDictionary<string, bool> TimestampTrackCache =
-        new ConcurrentDictionary<string, bool>();
+    private static readonly ConcurrentDictionary<string, bool> TimestampTrackCache = new();
 
-    private static readonly Regex Whitespace = new Regex("\\s+", RegexOptions.Compiled);
+    private static readonly Regex Whitespace = new("\\s+", RegexOptions.Compiled);
 
     public static string GetCollectionName(this Type type)
     {

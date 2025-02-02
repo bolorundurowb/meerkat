@@ -16,7 +16,7 @@ namespace meerkat;
 
 public static class Meerkat
 {
-    private static readonly ConcurrentBag<string> SchemasWithCheckedIndices = new ConcurrentBag<string>();
+    private static readonly ConcurrentBag<string> SchemasWithCheckedIndices = new();
 
     /// <summary>
     /// The database that we have connected to

@@ -13,15 +13,15 @@ internal static class PluralizationService
     {
         Rules = new List<PluralizationRule>
         {
-            new PluralizationRule("s", false, "th", "ph", "ey"),
-            new PluralizationRule("es", false, "o"),
-            new PluralizationRule("ves", true, "f", "fe"),
-            new PluralizationRule("na", true, "non"),
-            new PluralizationRule("ia", true, "ion"),
-            new PluralizationRule("es", true, "is"),
-            new PluralizationRule("ies", true, "y"),
-            new PluralizationRule("i", true, "us"),
-            new PluralizationRule("ice", true, "ouse")
+            new("s", false, "th", "ph", "ey"),
+            new("es", false, "o"),
+            new("ves", true, "f", "fe"),
+            new("na", true, "non"),
+            new("ia", true, "ion"),
+            new("es", true, "is"),
+            new("ies", true, "y"),
+            new("i", true, "us"),
+            new("ice", true, "ouse")
         };
     }
 

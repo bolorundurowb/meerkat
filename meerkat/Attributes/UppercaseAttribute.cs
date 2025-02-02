@@ -2,5 +2,5 @@
 
 namespace meerkat.Attributes;
 
-[AttributeUsage(AttributeTargets.Property)]
+[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
 public sealed class UppercaseAttribute : Attribute { }

@@ -6,6 +6,9 @@ An ODM (Object Document Mapper) library aiming to replicate as much as is necess
 
 This library was named `meerkat` as a homage to `mongoose` because a meerkat is a mongoose. I know, I am hilarious like that. Please be sure to star ⭐️ this project if you think it's cool or useful.
 
+## Breaking Changes
+With the release of version 1.1.0, the underlying Mongo DB driver was upgraded to 3.1.0 which removes the `IMongoQueryable<T>` interface that is returned by the `Query<TSchema>()` method. This has been replaced with the baked in `IQueryable<T>` interface.
+
 ## Contributing
 
 There is a lot still to be done, feel free to open new issues to suggest features or report bugs and feel free to open PRs with updates.
@@ -15,7 +18,7 @@ There is a lot still to be done, feel free to open new issues to suggest feature
 If you are hardcore and want to go the manual route. Then add the following to your `csproj` file:
 
 ```xml
-<PackageReference Include="meerkat" Version="1.0.17"/>
+<PackageReference Include="meerkat" Version="1.1.0"/>
 ```
 
 If you're using the Visual Studio package manager console, then run the following:

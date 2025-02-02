@@ -34,11 +34,6 @@ public static class Meerkat
     {
         var (dbUrl, dbName) = Parser.Parse(databaseConnectionString);
 
-#if NET6_0 || NET7_0 || NET8_0
-            BsonSerializer.RegisterSerializer(new DocumentDateOnlySerializer());
-            BsonSerializer.RegisterSerializer(new DocumentTimeOnlySerializer());
-#endif
-
         _database = new Lazy<IMongoDatabase>(() =>
         {
             var dbClient = new MongoClient(dbUrl);
@@ -300,7 +295,7 @@ public static class Meerkat
     {
         var typeName = type.FullName;
 
-        if (!SchemasWithCheckedIndices.IsEmpty && SchemasWithCheckedIndices.Contains(typeName))
+        if (SchemasWithCheckedIndices.ContainsKey(typeName))
             return;
 
         // get properties that have the attribute applied

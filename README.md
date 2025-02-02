@@ -1,59 +1,79 @@
-# meerkat
+# 🐾 Meerkat
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) ![NuGet Version](https://img.shields.io/nuget/v/meerkat) [![Build Status](https://app.travis-ci.com/bolorundurowb/meerkat.svg?branch=master)](https://app.travis-ci.com/bolorundurowb/meerkat)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![NuGet Badge](https://buildstats.info/nuget/meerkat)](https://www.nuget.org/packages/meerkat) [![Build Status](https://app.travis-ci.com/bolorundurowb/meerkat.svg?branch=master)](https://app.travis-ci.com/bolorundurowb/meerkat)
 
-An ODM (Object Document Mapper) library aiming to replicate as much as is necessary, functionality in NodeJS's [mongoose](https://www.npmjs.com/package/mongoose). For those who may not know, mongoose is a JavaScript ODM wrapper library around the native MongoDB library that simplifies data access by simplifying the API surface. meerkat is a wrapper over the official MongoDB client library and aims to simplify common data access logic. This library also adds support for the `DateOnly` and `TimeOnly` introduced in .NET 6.
+**Meerkat** is an ODM (Object Document Mapper) library designed to replicate the functionality of NodeJS's [Mongoose](https://www.npmjs.com/package/mongoose) in the .NET ecosystem. 🚀 For those unfamiliar, Mongoose is a JavaScript ODM wrapper library that simplifies data access when working with MongoDB. Similarly, **Meerkat** wraps around the official MongoDB client library for .NET, simplifying common data access patterns. It also adds support for the `DateOnly` and `TimeOnly` types introduced in .NET 6. 📅⏰
 
-This library was named `meerkat` as a homage to `mongoose` because a meerkat is a mongoose. I know, I am hilarious like that. Please be sure to star ⭐️ this project if you think it's cool or useful.
+The name **Meerkat** is a playful homage to Mongoose, as a meerkat is a type of mongoose. 😄 If you find this library cool or useful, don't forget to give it a ⭐️ star!
 
-## Breaking Changes
-With the release of version 1.1.0, the underlying Mongo DB driver was upgraded to 3.1.0 which removes the `IMongoQueryable<T>` interface that is returned by the `Query<TSchema>()` method. This has been replaced with the baked in `IQueryable<T>` interface.
+---
 
-## Contributing
+## 🚨 Breaking Changes
 
-There is a lot still to be done, feel free to open new issues to suggest features or report bugs and feel free to open PRs with updates.
+With the release of **version 1.1.0**, the underlying MongoDB driver was upgraded to **3.1.0**. This removes the `IMongoQueryable<T>` interface returned by the `Query<TSchema>()` method, replacing it with the built-in `IQueryable<T>` interface. 🔄
 
-## Installation
+---
 
-If you are hardcore and want to go the manual route. Then add the following to your `csproj` file:
+## 🤝 Contributing
+
+There’s still a lot to be done! Feel free to:
+- Open new issues to suggest features or report bugs 🐛
+- Submit PRs with updates or improvements 🛠️
+
+---
+
+## 📦 Installation
+
+### Manual Installation (for the hardcore devs 💪)
+Add the following to your `.csproj` file:
 
 ```xml
 <PackageReference Include="meerkat" Version="1.1.0"/>
 ```
 
-If you're using the Visual Studio package manager console, then run the following:
+### Visual Studio Package Manager Console
+Run the following command:
 
 ```cmd
 Install-Package meerkat
 ```
 
-If you are making use of the dotnet CLI, then run the following in your terminal:
+### .NET CLI
+Run the following in your terminal:
 
 ```bash
 dotnet add package meerkat
 ```
 
-## Setup
+---
 
-Before making use of any of meerkat's functions. Initialization must be done. This only needs to happen once.
+## 🛠️ Setup
+
+Before using any of Meerkat's functions, you need to initialize it. This only needs to be done once. 🏁
 
 ```csharp
 using meerkat;
 ...
-Meerkat.Connect("<any valid full mongodb connection string>"); // e.g mongodb://user:password@server-address:port/database-name?other-options
+Meerkat.Connect("<any valid full MongoDB connection string>"); // e.g., mongodb://user:password@server-address:port/database-name?other-options
 ```
 
+---
 
-## Usage
+## 🚀 Usage
 
-Ensure you have declared the necessary namespace at the head of your class file wherever you want to access meerkat functionality.
+Ensure you’ve declared the necessary namespace at the top of your class file:
 
-NOTE: All async methods support `CancellationToken`s for cancelling the operations.
+```csharp
+using meerkat;
+```
 
-### Modelling
+**Note:** All async methods support `CancellationToken` for canceling operations. ⏳
 
-All models must inherit from the abstract `Schema` class. The `Schema` class has a `virtual` `Id` property that can be overridden in model. By default the `Id` is an `ObjectId` type.
+---
 
+### 🧩 Modelling
+
+All models must inherit from the abstract `Schema` class. The `Schema` class has a `virtual` `Id` property that can be overridden in your model. By default, the `Id` is of type `ObjectId`.
 
 ```csharp
 class Student : Schema
@@ -66,13 +86,13 @@ class Student : Schema
   
   public Student()
   {
-    // this is just an example, you'd probably get your entity ids in a saner manner
+    // Example: Generate a random ID (you'd likely use a better method in production)
     Id = (new Random()).Next();
   }
 }
 ```
 
-If you want to specify the collection name to be used or track timestamps for the entity
+To specify a custom collection name or enable timestamp tracking:
 
 ```csharp
 [Collection(Name = "Persons", TrackTimestamps = true)]
@@ -82,9 +102,11 @@ public class Student : Schema
 }
 ```
 
-### Persistence
+---
 
-meerkat aims to save developer time by rolling the create and update parts of CRUD into one simple API. If an entity doesn't exist in the database, the entity is inserted into the collection, and if the entity already exists, it is simply updated
+### 💾 Persistence
+
+Meerkat simplifies CRUD operations by combining **create** and **update** into a single API. If an entity doesn’t exist, it’s inserted; if it does, it’s updated. 🔄
 
 ```csharp
 var student = new Student
@@ -93,92 +115,96 @@ var student = new Student
   LastName = "Chukumerije"
 };
 
-await student.SaveAsync(); // or student.Save(); if you prefer synchronous calls
+await student.SaveAsync(); // or student.Save(); for synchronous calls
 ```
 
-It's that simple.
+It’s that simple! 🎉
 
-### Querying
+---
 
-To find an entity by id
+### 🔍 Querying
 
+#### Find by ID
 ```csharp
-var student = await Meerkat.FindByIdAsync<Student>(1234); // or Meerkat.FindById<Student>(1234); if you like sync calls
+var student = await Meerkat.FindByIdAsync<Student>(1234); // or Meerkat.FindById<Student>(1234); for sync calls
 ```
 
-To find an entity by a predictae
-
+#### Find by Predicate
 ```csharp
 var student = await Meerkat.FindOneAsync<Student>(x => x.FirstName == "John"); // or Meerkat.FindOne(x => x.LastName == "Jane");
 ```
 
-If you want to create complex queries and need access to the underlying `IMongoQueryable` then this helps
+#### Complex Queries
+For complex queries, you can access the underlying `IQueryable`:
 
 ```csharp
 var queryable = Meerkat.Query<Student>();
 
-// do something with your queryable
-var students = queryable
+var students = await queryable
   .Where(x => x.FirstName == "Olubakinde")
   .ToListAsync();
 ```
 
-### Removal
+---
 
-To remove an entity by id
+### 🗑️ Removal
 
+#### Remove by ID
 ```csharp
-await Meerkat.RemoveByIdAsync<Student>(1234); // or Meerkat.RemoveById<Student>(1234); if you like sync calls
+await Meerkat.RemoveByIdAsync<Student>(1234); // or Meerkat.RemoveById<Student>(1234); for sync calls
 ```
 
-To remove an entity by a predicate
-
+#### Remove by Predicate
 ```csharp
 await Meerkat.RemoveOneAsync<Student>(x => x.FirstName == "John"); // or Meerkat.RemoveOne(x => x.LastName == "Jane");
 ```
 
-To remove all entities that match a predicate
-
+#### Remove All Matching Entities
 ```csharp
 await Meerkat.RemoveAsync<Student>(x => x.FirstName == "John"); // or Meerkat.Remove(x => x.LastName == "Jane");
 ```
 
-### Exists
+---
 
-To check if any entities exist in a collection
+### ✅ Existence Checks
 
+#### Check if Any Entities Exist
 ```csharp
-var exists = await Meerkat.ExistsAsync<Student>(); // or Meerkat.Exists<Student>(); if you like sync calls
+var exists = await Meerkat.ExistsAsync<Student>(); // or Meerkat.Exists<Student>(); for sync calls
 ```
 
-To check if any entities exits for a predicate
-
+#### Check if Entities Match a Predicate
 ```csharp
-var exists = await Meerkat.ExistsAsync<Student>(x => x.FirstName.StartsWith("Ja")); // or Meerkat.Exists<Student>(x => x.FirstName.StartsWith("Ja")); if you like sync calls
+var exists = await Meerkat.ExistsAsync<Student>(x => x.FirstName.StartsWith("Ja")); // or Meerkat.Exists<Student>(x => x.FirstName.StartsWith("Ja"));
 ```
 
-### Counting
+---
 
-To count all the entities in a collection
+### 🔢 Counting
 
+#### Count All Entities
 ```csharp
-var count = await Meerkat.CountAsync<Student>(); // or Meerkat.Count<Student>(); if you like sync calls
+var count = await Meerkat.CountAsync<Student>(); // or Meerkat.Count<Student>(); for sync calls
 ```
 
-To count all entities exits that match a predicate
-
+#### Count Entities Matching a Predicate
 ```csharp
-var count = await Meerkat.CountAsync<Student>(x => x.FirstName.StartsWith("Ja")); // or Meerkat.Count<Student>(x => x.FirstName.StartsWith("Ja")); if you like sync calls
+var count = await Meerkat.CountAsync<Student>(x => x.FirstName.StartsWith("Ja")); // or Meerkat.Count<Student>(x => x.FirstName.StartsWith("Ja"));
 ```
 
+---
 
-## Collections
+### 📚 Collections
 
-Meerkat allows for collections of entities to be upserted both synchronously and asynchronously
+Meerkat allows for bulk upsert operations on collections of entities, both synchronously and asynchronously. 📦
 
 ```csharp
 var peter = new Student();
 var paul = new Student();
-var students = new [] {peter, paul};
-await students.SaveAllAsync(); // or students.SaveAll();
+var students = new [] { peter, paul };
+await students.SaveAllAsync(); // or students.SaveAll(); for sync calls
 ```
+
+---
+
+Enjoy using **Meerkat**! 🎉 If you have any questions or feedback, feel free to reach out or contribute to the project. 🚀

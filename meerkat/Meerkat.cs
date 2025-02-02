@@ -16,12 +16,15 @@ namespace meerkat;
 
 public static class Meerkat
 {
-    private static readonly ConcurrentBag<string> SchemasWithCheckedIndices = new();
+    private static readonly ConcurrentDictionary<string, bool> SchemasWithCheckedIndices = new();
+    private static Lazy<IMongoDatabase>? _database;
 
     /// <summary>
     /// The database that we have connected to
     /// </summary>
-    public static IMongoDatabase Database;
+    public static IMongoDatabase Database => _database?.Value ??
+                                             throw new InvalidOperationException(
+                                                 $"The database connection has not been initialized. Call {nameof(Connect)}() before carrying out any operations.");
 
     /// <summary>
     /// Connect to the database
@@ -36,8 +39,11 @@ public static class Meerkat
             BsonSerializer.RegisterSerializer(new DocumentTimeOnlySerializer());
 #endif
 
-        var dbClient = new MongoClient(dbUrl);
-        Database = dbClient.GetDatabase(dbName);
+        _database = new Lazy<IMongoDatabase>(() =>
+        {
+            var dbClient = new MongoClient(dbUrl);
+            return dbClient.GetDatabase(dbName);
+        });
     }
 
     /// <summary>
@@ -312,7 +318,6 @@ public static class Meerkat
         if (indices.Any())
             collection.Indexes.CreateMany(indices);
 
-        // track this indexing
-        SchemasWithCheckedIndices.Add(typeName);
+        SchemasWithCheckedIndices[typeName] = true;
     }
 }

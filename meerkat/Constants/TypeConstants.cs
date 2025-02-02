@@ -1,9 +1,8 @@
 ﻿using System;
 
-namespace meerkat.Constants
+namespace meerkat.Constants;
+
+internal static class TypeConstants
 {
-    internal static class TypeConstants
-    {
-        public static readonly Type StringType = typeof(string);
-    }
+    public static readonly Type StringType = typeof(string);
 }

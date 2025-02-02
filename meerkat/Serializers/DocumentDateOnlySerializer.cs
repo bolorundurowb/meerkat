@@ -1,9 +1,4 @@
-﻿using MongoDB.Bson.Serialization.Serializers;
-using System;
-using MongoDB.Bson.Serialization;
-
-namespace meerkat.Serializers
-{
+﻿namespace meerkat.Serializers;
 #if NET6_0 || NET7_0 || NET8_0
     internal class DocumentDateOnlySerializer : StructSerializerBase<DateOnly>
     {
@@ -14,4 +9,3 @@ namespace meerkat.Serializers
         public override DateOnly Deserialize(BsonDeserializationContext context, BsonDeserializationArgs args) => DateOnly.ParseExact(context.Reader.ReadString(), SerializationFormat);
     }
 #endif
-}

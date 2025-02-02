@@ -16,7 +16,7 @@ namespace meerkat;
 
 public static class Meerkat
 {
-    private static readonly ConcurrentBag<string> SchemasWithCheckedIndices = new ConcurrentBag<string>();
+    private static readonly ConcurrentBag<string> SchemasWithCheckedIndices = new();
 
     /// <summary>
     /// The database that we have connected to
@@ -45,7 +45,7 @@ public static class Meerkat
     /// </summary>
     /// <typeparam name="TSchema">Type to be queried</typeparam>
     /// <returns>The queryable</returns>
-    public static IMongoQueryable<TSchema> Query<TSchema>() where TSchema : Schema
+    public static IQueryable<TSchema> Query<TSchema>() where TSchema : Schema
     {
         var collection = GetCollectionForType<TSchema>();
         return collection
@@ -126,7 +126,7 @@ public static class Meerkat
     }
 
     /// <summary>
-    /// Delete an entity by it's id
+    /// Delete an entity by its id
     /// </summary>
     /// <param name="entityId">The entity id</param>
     /// <param name="cancellationToken">The cancellation token</param>
@@ -139,7 +139,7 @@ public static class Meerkat
     }
 
     /// <summary>
-    /// Delete an entity by it's id asynchronously
+    /// Delete an entity by its id asynchronously
     /// </summary>
     /// <param name="entityId">The entity id</param>
     /// <param name="cancellationToken">The cancellation token</param>

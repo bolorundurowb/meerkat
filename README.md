@@ -1,6 +1,6 @@
 # 🐾 Meerkat
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![NuGet Badge](https://buildstats.info/nuget/meerkat)](https://www.nuget.org/packages/meerkat) [![Build Status](https://app.travis-ci.com/bolorundurowb/meerkat.svg?branch=master)](https://app.travis-ci.com/bolorundurowb/meerkat)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) ![NuGet Version](https://img.shields.io/nuget/v/meerkat) [![Build Status](https://app.travis-ci.com/bolorundurowb/meerkat.svg?branch=master)](https://app.travis-ci.com/bolorundurowb/meerkat)
 
 **Meerkat** is an ODM (Object Document Mapper) library designed to replicate the functionality of NodeJS's [Mongoose](https://www.npmjs.com/package/mongoose) in the .NET ecosystem. 🚀 For those unfamiliar, Mongoose is a JavaScript ODM wrapper library that simplifies data access when working with MongoDB. Similarly, **Meerkat** wraps around the official MongoDB client library for .NET, simplifying common data access patterns. It also adds support for the `DateOnly` and `TimeOnly` types introduced in .NET 6. 📅⏰
 

@@ -13,13 +13,13 @@ using MongoDB.Driver;
 
 namespace meerkat;
 
-public abstract class Schema
+public abstract class Schema<TId> where TId : IEquatable<TId>
 {
     /// <summary>
-    /// Can be a value of any type but defaults to ObjectId
+    /// Can be a value of provided ID type but it is recommended that it be unique.
     /// </summary>
     [BsonId]
-    public virtual object Id { get; protected set; }
+    public TId Id { get; protected set; }
 
     /// <summary>
     /// Time when this entity was first persisted to the database
@@ -32,16 +32,11 @@ public abstract class Schema
     public DateTime? UpdatedAt { get; private set; }
 
     /// <summary>
-    /// Default constructor
-    /// </summary>
-    protected Schema() => Id = ObjectId.GenerateNewId();
-
-    /// <summary>
     /// Upserts the current instance in the matched collection synchronously
     /// </summary>
     public void Save()
     {
-        var collection = Meerkat.GetCollectionForType(this);
+        var collection = Meerkat.GetCollectionForType<Schema<TId>, TId>(this);
 
         HandleTimestamps();
         HandleLowercaseTransformations();
@@ -49,7 +44,7 @@ public abstract class Schema
 
         PreSave();
 
-        collection.ReplaceOne(x => x.Id == Id, this, MongoDbConstants.ReplaceOptions);
+        collection.ReplaceOne(x => x.Id.Equals(Id), this, MongoDbConstants.ReplaceOptions);
 
         PostSave();
     }
@@ -59,7 +54,7 @@ public abstract class Schema
     /// </summary>
     public async Task SaveAsync(CancellationToken cancellationToken = default)
     {
-        var collection = Meerkat.GetCollectionForType(this);
+        var collection = Meerkat.GetCollectionForType<Schema<TId>, TId>(this);
 
         HandleTimestamps();
         HandleLowercaseTransformations();
@@ -67,7 +62,8 @@ public abstract class Schema
 
         PreSave();
 
-        await collection.ReplaceOneAsync(x => x.Id == Id, this, MongoDbConstants.ReplaceOptions, cancellationToken);
+        await collection.ReplaceOneAsync(x => x.Id.Equals(Id), this, MongoDbConstants.ReplaceOptions,
+            cancellationToken);
 
         PostSave();
     }
@@ -75,16 +71,12 @@ public abstract class Schema
     /// <summary>
     /// An overridable hook that gets called before the entity is persisted
     /// </summary>
-    public virtual void PreSave()
-    {
-    }
+    public virtual void PreSave() { }
 
     /// <summary>
     /// An overridable hook that gets called after the entity has been persisted
     /// </summary>
-    public virtual void PostSave()
-    {
-    }
+    public virtual void PostSave() { }
 
     private void HandleTimestamps()
     {

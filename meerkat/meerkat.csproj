@@ -3,7 +3,7 @@
     <LangVersion>12</LangVersion>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>meerkat</PackageId>
-    <PackageVersion>1.1.0</PackageVersion>
+    <PackageVersion>2.0.0</PackageVersion>
     <Title>Meerkat</Title>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <Authors>Winner-Timothy Bolorunduro</Authors>
@@ -14,7 +14,7 @@
     <RepositoryUrl>https://github.com/bolorundurowb/meerkat</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>meerkat, mongodb, mongoose, ODM</PackageTags>
-    <PackageReleaseNotes>- BREAKING CHANGE: this update upgrades the MongoDb driver to v3.1 which contains breaking changes including the removal of the IMongoQueryable interface. It is replaced with the IQueryable interface</PackageReleaseNotes>
+    <PackageReleaseNotes>- Add generic typed key support</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Company>bolorundurowb</Company>
     <NeutralLanguage>en-NG</NeutralLanguage>

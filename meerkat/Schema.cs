@@ -16,10 +16,10 @@ namespace meerkat;
 public abstract class Schema<TId> where TId : IEquatable<TId>
 {
     /// <summary>
-    /// Can be a value of any type but defaults to ObjectId
+    /// Can be a value of provided ID type but it is recommended that it be unique.
     /// </summary>
     [BsonId]
-    public virtual TId Id { get; protected set; }
+    public TId Id { get; protected set; }
 
     /// <summary>
     /// Time when this entity was first persisted to the database

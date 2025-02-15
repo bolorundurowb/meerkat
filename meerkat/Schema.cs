@@ -7,7 +7,6 @@ using meerkat.Attributes;
 using meerkat.Constants;
 using meerkat.Exceptions;
 using meerkat.Extensions;
-using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
 

@@ -5,9 +5,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
-using meerkat.Attributes;
-using meerkat.Constants;
-using meerkat.Extensions;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
 using MongoUrlParser;
@@ -267,37 +264,5 @@ public static partial class Meerkat
     {
         predicate ??= schema => true;
         return Query<TSchema, TId>().AnyAsync(predicate, cancellationToken);
-    }
-
-    internal static IMongoCollection<TSchema> GetCollectionForType<TSchema, TId>(TSchema model)
-        where TSchema : Schema<TId> where TId : IEquatable<TId>
-    {
-        if (Database == null)
-            throw new InvalidOperationException(
-                $"The database connection has not been initialized. Call {nameof(Connect)}() before carrying out any operations.");
-
-        var type = model.GetType();
-        var collectionName = type.GetCollectionName();
-        var collection = Database.GetCollection<TSchema>(collectionName);
-
-        HandleUniqueIndexing<TSchema, TId>(type, collection);
-
-        return collection;
-    }
-
-    internal static IMongoCollection<TSchema> GetCollectionForType<TSchema, TId>()
-        where TSchema : Schema<TId> where TId : IEquatable<TId>
-    {
-        if (Database == null)
-            throw new InvalidOperationException(
-                $"The database connection has not been initialized. Call {nameof(Connect)}() before carrying out any operations.");
-
-        var type = typeof(TSchema);
-        var collectionName = type.GetCollectionName();
-        var collection = Database.GetCollection<TSchema>(collectionName);
-
-        HandleUniqueIndexing<TSchema, TId>(type, collection);
-
-        return collection;
     }
 }

@@ -309,7 +309,7 @@ public static class Meerkat
         if (SchemasWithCheckedIndices.ContainsKey(typeName))
             return;
 
-        var properties = type.AttributedWith<UniqueAttribute>();
+        var properties = type.AttributedWith<UniqueIndexAttribute>();
         var indices = properties
             .Select(x =>
             {

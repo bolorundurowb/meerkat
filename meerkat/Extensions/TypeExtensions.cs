@@ -26,7 +26,11 @@ internal static class TypeExtensions
         var collectionAttribute = type.GetCustomAttribute<CollectionAttribute>();
         var attributeName = collectionAttribute?.Name;
         var name = string.IsNullOrWhiteSpace(attributeName) ? type.Name.Pluralize() : attributeName;
-        collectionName = Whitespace.Replace(name.ToLowerInvariant(), "_");
+
+        if (string.IsNullOrWhiteSpace(name)) 
+            throw new ArgumentNullException(nameof(name), "Failed to generate a collection name for the provided type.");
+
+        collectionName = Whitespace.Replace(name!.ToLowerInvariant(), "_");
 
         // cache this generated name
         CollectionNameCache[cacheKey] = collectionName;
@@ -38,8 +42,8 @@ internal static class TypeExtensions
     {
         var cacheKey = type.FullName ?? type.Name;
 
-        if (TimestampTrackCache.ContainsKey(cacheKey))
-            return TimestampTrackCache[cacheKey];
+        if (TimestampTrackCache.TryGetValue(cacheKey, out var trackTimestamps))
+            return trackTimestamps;
 
         var collectionAttribute = type.GetCustomAttribute<CollectionAttribute>();
         var shouldTrack = collectionAttribute?.TrackTimestamps ?? false;
@@ -55,5 +59,25 @@ internal static class TypeExtensions
         var attributeType = typeof(TAttribute);
         return type.GetProperties()
             .Where(x => x.CustomAttributes.Any(y => y.AttributeType == attributeType));
+    }
+
+    public static List<KeyValuePair<TAttribute, MemberInfo>> GetAttributedMembers<TAttribute>(this Type type) where TAttribute : Attribute
+    {
+        const BindingFlags eligibleBindingFlags = BindingFlags.Public | BindingFlags.Instance;
+        var properties = type.GetProperties(eligibleBindingFlags);
+        var fields = type.GetFields(eligibleBindingFlags);
+        var allMembers = properties.Concat(fields.Cast<MemberInfo>());
+        var attributeMemberPairs = new List<KeyValuePair<TAttribute, MemberInfo>>();
+
+        foreach (var member in allMembers)
+        {
+            // only one attribute of a given type is allowed per member
+            var attribute = member.GetCustomAttribute<TAttribute>( false);
+
+            if (attribute != null) 
+                attributeMemberPairs.Add(new KeyValuePair<TAttribute, MemberInfo>(attribute, member));
+        }
+
+        return attributeMemberPairs;
     }
 }

@@ -2,9 +2,8 @@
 
 namespace meerkat.Exceptions;
 
-public sealed class InvalidAttributeException : Exception
-{
-    public InvalidAttributeException(string exceptionMessage) : base(exceptionMessage)
-    {
-    }
-}
+/// <summary>
+/// Represents an exception that is thrown when an invalid attribute is encountered.
+/// </summary>
+/// <param name="exceptionMessage">The error message describing the invalid attribute usage.</param>
+public sealed class InvalidAttributeException(string exceptionMessage) : Exception(exceptionMessage);

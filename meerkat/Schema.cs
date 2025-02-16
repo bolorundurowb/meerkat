@@ -12,26 +12,31 @@ using MongoDB.Driver;
 
 namespace meerkat;
 
+/// <summary>
+/// Represents a base schema for MongoDB documents with an identifier of type <typeparamref name="TId"/>.
+/// </summary>
+/// <typeparam name="TId">The type of the document's unique identifier, which must implement <see cref="IEquatable{T}"/>.</typeparam>
 public abstract class Schema<TId> where TId : IEquatable<TId>
 {
     /// <summary>
-    /// Can be a value of provided ID type but it is recommended that it be unique.
+    /// Gets the unique identifier of the document.
+    /// It is recommended that this value be unique within the collection.
     /// </summary>
     [BsonId]
     public TId Id { get; protected set; }
 
     /// <summary>
-    /// Time when this entity was first persisted to the database
+    /// Gets the timestamp indicating when the document was first persisted to the database.
     /// </summary>
     public DateTime? CreatedAt { get; private set; }
 
     /// <summary>
-    /// Time when this entity was last updated
+    /// Gets the timestamp indicating when the document was last updated.
     /// </summary>
     public DateTime? UpdatedAt { get; private set; }
 
     /// <summary>
-    /// Upserts the current instance in the matched collection synchronously
+    /// Saves or updates the current instance in the corresponding MongoDB collection synchronously.
     /// </summary>
     public void Save()
     {
@@ -49,8 +54,10 @@ public abstract class Schema<TId> where TId : IEquatable<TId>
     }
 
     /// <summary>
-    /// Upserts the current instance in the matched collection asynchronously
+    /// Saves or updates the current instance in the corresponding MongoDB collection asynchronously.
     /// </summary>
+    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
+    /// <returns>A task representing the asynchronous save operation.</returns>
     public async Task SaveAsync(CancellationToken cancellationToken = default)
     {
         var collection = Meerkat.GetCollectionForType<Schema<TId>, TId>(this);
@@ -68,15 +75,17 @@ public abstract class Schema<TId> where TId : IEquatable<TId>
     }
 
     /// <summary>
-    /// An overridable hook that gets called before the entity is persisted
+    /// A virtual method that is invoked before the entity is persisted.
+    /// Can be overridden to provide custom pre-save logic.
     /// </summary>
     public virtual void PreSave() { }
 
     /// <summary>
-    /// An overridable hook that gets called after the entity has been persisted
+    /// A virtual method that is invoked after the entity has been persisted.
+    /// Can be overridden to provide custom post-save logic.
     /// </summary>
     public virtual void PostSave() { }
-
+    
     private void HandleTimestamps()
     {
         // check whether to track updates

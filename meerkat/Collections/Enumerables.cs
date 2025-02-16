@@ -3,13 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using meerkat.Constants;
 using MongoDB.Driver;
 
 namespace meerkat.Collections;
 
 public static class Enumerables
 {
+    private static readonly BulkWriteOptions BulkInsertOptions = new()
+        { IsOrdered = false, BypassDocumentValidation = false };
+
     /// <summary>
     /// Persist a collection of entities to the matched collection synchronously
     /// </summary>
@@ -19,9 +21,15 @@ public static class Enumerables
     public static void SaveAll<TSchema, TId>(this IEnumerable<TSchema> entities)
         where TSchema : Schema<TId> where TId : IEquatable<TId>
     {
+        var entityList = entities.ToList();
+        var operations = GetBulkOps<TSchema, TId>(entityList);
+
+        ProcessEntitiesPreSave<TSchema, TId>(entityList);
+
         var collection = Meerkat.GetCollectionForType<TSchema, TId>();
-        var operations = GetBulkOps<TSchema, TId>(entities);
-        collection.BulkWrite(operations, MongoDbConstants.BulkInsertOptions);
+        collection.BulkWrite(operations, BulkInsertOptions);
+
+        ProcessEntitiesPostSaves<TSchema, TId>(entityList);
     }
 
     /// <summary>
@@ -35,9 +43,35 @@ public static class Enumerables
         CancellationToken cancellationToken = default)
         where TSchema : Schema<TId> where TId : IEquatable<TId>
     {
+        var entityList = entities.ToList();
+        var operations = GetBulkOps<TSchema, TId>(entityList);
+
+        ProcessEntitiesPreSave<TSchema, TId>(entityList);
+
         var collection = Meerkat.GetCollectionForType<TSchema, TId>();
-        var operations = GetBulkOps<TSchema, TId>(entities);
-        await collection.BulkWriteAsync(operations, MongoDbConstants.BulkInsertOptions, cancellationToken);
+        await collection.BulkWriteAsync(operations, BulkInsertOptions, cancellationToken);
+
+        ProcessEntitiesPostSaves<TSchema, TId>(entityList);
+    }
+
+    private static void ProcessEntitiesPreSave<TSchema, TId>(IEnumerable<TSchema> entities)
+        where TSchema : Schema<TId> where TId : IEquatable<TId>
+    {
+        foreach (var entity in entities)
+        {
+            entity.HandleTimestamps();
+            entity.HandleLowercaseTransformations();
+            entity.HandleUppercaseTransformations();
+
+            entity.PreSave();
+        }
+    }
+
+    private static void ProcessEntitiesPostSaves<TSchema, TId>(IEnumerable<TSchema> entities)
+        where TSchema : Schema<TId> where TId : IEquatable<TId>
+    {
+        foreach (var entity in entities)
+            entity.PostSave();
     }
 
     private static List<WriteModel<TSchema>> GetBulkOps<TSchema, TId>(IEnumerable<TSchema> entities)

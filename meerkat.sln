@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "meerkat", "meerkat\meerkat.csproj", "{89FD0E5E-9338-41F0-9541-103622FA11F5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "meerkat.Tests", "meerkat.Tests\meerkat.Tests.csproj", "{160D0E92-29F1-4874-BCC7-DF742F5E5832}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{89FD0E5E-9338-41F0-9541-103622FA11F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{89FD0E5E-9338-41F0-9541-103622FA11F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{89FD0E5E-9338-41F0-9541-103622FA11F5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{160D0E92-29F1-4874-BCC7-DF742F5E5832}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{160D0E92-29F1-4874-BCC7-DF742F5E5832}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{160D0E92-29F1-4874-BCC7-DF742F5E5832}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{160D0E92-29F1-4874-BCC7-DF742F5E5832}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

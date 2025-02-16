@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
@@ -42,7 +43,8 @@ public static partial class Meerkat
     /// <typeparam name="TSchema">The schema type.</typeparam>
     /// <typeparam name="TId">The identifier type.</typeparam>
     /// <returns>An IQueryable instance for querying the collection.</returns>
-    public static IQueryable<TSchema> Query<TSchema, TId>() where TSchema : Schema<TId> where TId : IEquatable<TId> => GetCollectionForType<TSchema, TId>().AsQueryable();
+    public static IQueryable<TSchema> Query<TSchema, TId>() where TSchema : Schema<TId> where TId : IEquatable<TId> =>
+        GetCollectionForType<TSchema, TId>().AsQueryable();
 
     /// <summary>
     /// Finds an entity by its unique identifier.
@@ -91,6 +93,121 @@ public static partial class Meerkat
         Query<TSchema, TId>().FirstOrDefaultAsync(predicate ?? (schema => true), cancellationToken);
 
     /// <summary>
+    /// Search for entities by predicate
+    /// </summary>
+    /// <param name="predicate">A function to test each element. If not defined, returns the entire collection</param>
+    /// <typeparam name="TSchema">The schema type.</typeparam>
+    /// <typeparam name="TId">The identifier type.</typeparam>
+    /// <returns>The list of matched entities</returns>
+    public static List<TSchema> Find<TSchema, TId>(Expression<Func<TSchema, bool>>? predicate = null)
+        where TSchema : Schema<TId> where TId : IEquatable<TId> =>
+        Query<TSchema, TId>().Where(predicate ?? (schema => true)).ToList();
+
+    /// <summary>
+    /// Search for entities by predicate asynchronously
+    /// </summary>
+    /// <param name="predicate">A function to test each element. If not defined, returns the entire collection</param>
+    /// <param name="cancellationToken">The cancellation token</param>
+    /// <typeparam name="TSchema">The schema type.</typeparam>
+    /// <typeparam name="TId">The identifier type.</typeparam>
+    /// <returns>The list of matched entities</returns>
+    public static Task<List<TSchema>> FindAsync<TSchema, TId>(Expression<Func<TSchema, bool>>? predicate = null,
+        CancellationToken cancellationToken = default) where TSchema : Schema<TId> where TId : IEquatable<TId> =>
+        Query<TSchema, TId>().Where(predicate ?? (schema => true)).ToListAsync(cancellationToken);
+
+    /// <summary>
+    /// Delete an entity by its id
+    /// </summary>
+    /// <param name="entityId">The entity id</param>
+    /// <param name="cancellationToken">The cancellation token</param>
+    /// <typeparam name="TSchema">The schema type.</typeparam>
+    /// <typeparam name="TId">The identifier type.</typeparam>
+    public static void RemoveById<TSchema, TId>(TId entityId, CancellationToken cancellationToken = default)
+        where TSchema : Schema<TId> where TId : IEquatable<TId> =>
+        GetCollectionForType<TSchema, TId>().DeleteOne(x => x.Id.Equals(entityId), cancellationToken);
+
+    /// <summary>
+    /// Delete an entity by its id asynchronously
+    /// </summary>
+    /// <param name="entityId">The entity id</param>
+    /// <param name="cancellationToken">The cancellation token</param>
+    /// <typeparam name="TSchema">The schema type.</typeparam>
+    /// <typeparam name="TId">The identifier type.</typeparam>
+    public static Task RemoveByIdAsync<TSchema, TId>(TId entityId, CancellationToken cancellationToken = default)
+        where TSchema : Schema<TId> where TId : IEquatable<TId> =>
+        GetCollectionForType<TSchema, TId>().DeleteOneAsync(x => x.Id.Equals(entityId), cancellationToken);
+
+    /// <summary>
+    /// Delete an entity by a predicate
+    /// </summary>
+    /// <param name="predicate">A function to test each element</param>
+    /// <param name="cancellationToken">The cancellation token</param>
+    /// <typeparam name="TSchema">The schema type.</typeparam>
+    /// <typeparam name="TId">The identifier type.</typeparam>
+    public static void RemoveOne<TSchema, TId>(Expression<Func<TSchema, bool>> predicate,
+        CancellationToken cancellationToken = default) where TSchema : Schema<TId> where TId : IEquatable<TId> =>
+        GetCollectionForType<TSchema, TId>().DeleteOne(predicate, cancellationToken);
+
+    /// <summary>
+    /// Delete an entity by a predicate asynchronously
+    /// </summary>
+    /// <param name="predicate">A function to test each element</param>
+    /// <param name="cancellationToken">The cancellation token</param>
+    /// <typeparam name="TSchema">The schema type.</typeparam>
+    /// <typeparam name="TId">The identifier type.</typeparam>
+    public static Task RemoveOneAsync<TSchema, TId>(Expression<Func<TSchema, bool>> predicate,
+        CancellationToken cancellationToken = default) where TSchema : Schema<TId> where TId : IEquatable<TId> =>
+        GetCollectionForType<TSchema, TId>().DeleteOneAsync(predicate, cancellationToken);
+
+    /// <summary>
+    /// Delete an multiple entities by a predicate
+    /// </summary>
+    /// <param name="predicate">A function to test each element</param>
+    /// <param name="cancellationToken">The cancellation token</param>
+    /// <typeparam name="TSchema">The schema type.</typeparam>
+    /// <typeparam name="TId">The identifier type.</typeparam>
+    public static void Remove<TSchema, TId>(Expression<Func<TSchema, bool>> predicate,
+        CancellationToken cancellationToken = default) where TSchema : Schema<TId> where TId : IEquatable<TId> =>
+        GetCollectionForType<TSchema, TId>().DeleteMany(predicate, cancellationToken);
+
+    /// <summary>
+    /// Delete multiple entities by a predicate asynchronously
+    /// </summary>
+    /// <param name="predicate">A function to test each element</param>
+    /// <param name="cancellationToken">The cancellation token</param>
+    /// <typeparam name="TSchema">The schema type.</typeparam>
+    /// <typeparam name="TId">The identifier type.</typeparam>
+    public static Task RemoveAsync<TSchema, TId>(Expression<Func<TSchema, bool>> predicate,
+        CancellationToken cancellationToken = default) where TSchema : Schema<TId> where TId : IEquatable<TId> =>
+        GetCollectionForType<TSchema, TId>().DeleteManyAsync(predicate, cancellationToken);
+
+    /// <summary>
+    /// Count number of documents that match predicate
+    /// </summary>
+    /// <param name="predicate">A function to test each element</param>
+    /// <param name="cancellationToken">The cancellation token</param>
+    /// <typeparam name="TSchema">The schema type.</typeparam>
+    /// <typeparam name="TId">The identifier type.</typeparam>
+    /// <returns>The number of entries that match the predicate</returns>
+    public static long Count<TSchema, TId>(Expression<Func<TSchema, bool>>? predicate = null,
+        CancellationToken cancellationToken = default) where TSchema : Schema<TId> where TId : IEquatable<TId> =>
+        GetCollectionForType<TSchema, TId>()
+            .CountDocuments(predicate ?? (schema => true), cancellationToken: cancellationToken);
+
+    /// <summary>
+    /// Count number of documents that match predicate asynchronously
+    /// </summary>
+    /// <param name="predicate">A function to test each element</param>
+    /// <param name="cancellationToken">The cancellation token</param>
+    /// <typeparam name="TSchema">The schema type.</typeparam>
+    /// <typeparam name="TId">The identifier type.</typeparam>
+    /// <returns>The number of entries that match the predicate</returns>
+    public static Task<long> CountAsync<TSchema, TId>(Expression<Func<TSchema, bool>>? predicate = null,
+        CancellationToken cancellationToken = default) where TSchema : Schema<TId> where TId : IEquatable<TId> =>
+        GetCollectionForType<TSchema, TId>()
+            .CountDocumentsAsync(predicate ?? (schema => true), cancellationToken: cancellationToken);
+
+    /// <summary>
     /// Checks whether any entity matches the given predicate.
     /// </summary>
     /// <param name="predicate">A function to test each element. If null, checks if any entity exists.</param>
@@ -112,4 +229,7 @@ public static partial class Meerkat
     public static Task<bool> ExistsAsync<TSchema, TId>(Expression<Func<TSchema, bool>>? predicate = null,
         CancellationToken cancellationToken = default) where TSchema : Schema<TId> where TId : IEquatable<TId> =>
         Query<TSchema, TId>().AnyAsync(predicate ?? (schema => true), cancellationToken);
+
+    // necessary for testing
+    internal static void ResetDatabase() => _database = null;
 }

@@ -40,14 +40,13 @@ public abstract class Schema<TId> where TId : IEquatable<TId>
     /// </summary>
     public void Save()
     {
-        var collection = Meerkat.GetCollectionForType<Schema<TId>, TId>(this);
-
         HandleTimestamps();
         HandleLowercaseTransformations();
         HandleUppercaseTransformations();
 
         PreSave();
 
+        var collection = Meerkat.GetCollectionForType<Schema<TId>, TId>(this);
         collection.ReplaceOne(x => x.Id.Equals(Id), this, MongoDbConstants.ReplaceOptions);
 
         PostSave();
@@ -60,14 +59,13 @@ public abstract class Schema<TId> where TId : IEquatable<TId>
     /// <returns>A task representing the asynchronous save operation.</returns>
     public async Task SaveAsync(CancellationToken cancellationToken = default)
     {
-        var collection = Meerkat.GetCollectionForType<Schema<TId>, TId>(this);
-
         HandleTimestamps();
         HandleLowercaseTransformations();
         HandleUppercaseTransformations();
 
         PreSave();
 
+        var collection = Meerkat.GetCollectionForType<Schema<TId>, TId>(this);
         await collection.ReplaceOneAsync(x => x.Id.Equals(Id), this, MongoDbConstants.ReplaceOptions,
             cancellationToken);
 
@@ -86,7 +84,7 @@ public abstract class Schema<TId> where TId : IEquatable<TId>
     /// </summary>
     public virtual void PostSave() { }
 
-    private void HandleTimestamps()
+    internal void HandleTimestamps()
     {
         // check whether to track updates
         var trackUpdates = GetType().ShouldTrackTimestamps();
@@ -100,7 +98,7 @@ public abstract class Schema<TId> where TId : IEquatable<TId>
         }
     }
 
-    private void HandleLowercaseTransformations()
+    internal void HandleLowercaseTransformations()
     {
         var properties = this.AttributedWith<LowercaseAttribute>().ToList();
 
@@ -114,7 +112,7 @@ public abstract class Schema<TId> where TId : IEquatable<TId>
         }
     }
 
-    private void HandleUppercaseTransformations()
+    internal void HandleUppercaseTransformations()
     {
         var properties = this.AttributedWith<UppercaseAttribute>().ToList();
 

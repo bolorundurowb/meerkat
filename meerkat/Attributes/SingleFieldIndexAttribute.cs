@@ -29,4 +29,3 @@ public class SingleFieldIndexAttribute : Attribute
     /// </summary>
     public bool Sparse { get; set; } = false;
 }
-

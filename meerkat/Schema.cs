@@ -85,7 +85,7 @@ public abstract class Schema<TId> where TId : IEquatable<TId>
     /// Can be overridden to provide custom post-save logic.
     /// </summary>
     public virtual void PostSave() { }
-    
+
     private void HandleTimestamps()
     {
         // check whether to track updates

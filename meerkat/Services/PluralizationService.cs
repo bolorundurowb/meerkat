@@ -10,17 +10,17 @@ internal static class PluralizationService
     private static readonly List<PluralizationRule> Rules;
 
     static PluralizationService() => Rules =
-        [
-            new("s", false, "th", "ph", "ey"),
-            new("es", false, "o"),
-            new("ves", true, "f", "fe"),
-            new("na", true, "non"),
-            new("ia", true, "ion"),
-            new("es", true, "is"),
-            new("ies", true, "y"),
-            new("i", true, "us"),
-            new("ice", true, "ouse")
-        ];
+    [
+        new("s", false, "th", "ph", "ey"),
+        new("es", false, "o"),
+        new("ves", true, "f", "fe"),
+        new("na", true, "non"),
+        new("ia", true, "ion"),
+        new("es", true, "is"),
+        new("ies", true, "y"),
+        new("i", true, "us"),
+        new("ice", true, "ouse")
+    ];
 
     public static string Pluralize(string singular)
     {

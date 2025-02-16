@@ -23,4 +23,3 @@ public class UniqueIndexAttribute : Attribute
     /// </summary>
     public bool Sparse { get; set; } = false;
 }
-

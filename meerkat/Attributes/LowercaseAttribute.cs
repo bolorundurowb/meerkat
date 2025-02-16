@@ -8,4 +8,3 @@ namespace meerkat.Attributes;
 /// </summary>
 [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
 public sealed class LowercaseAttribute : Attribute { }
-

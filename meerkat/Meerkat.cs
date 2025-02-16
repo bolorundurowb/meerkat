@@ -229,4 +229,7 @@ public static partial class Meerkat
     public static Task<bool> ExistsAsync<TSchema, TId>(Expression<Func<TSchema, bool>>? predicate = null,
         CancellationToken cancellationToken = default) where TSchema : Schema<TId> where TId : IEquatable<TId> =>
         Query<TSchema, TId>().AnyAsync(predicate ?? (schema => true), cancellationToken);
+
+    // necessary for testing
+    internal static void ResetDatabase() => _database = null;
 }

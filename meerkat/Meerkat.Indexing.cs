@@ -106,17 +106,25 @@ public static partial class Meerkat
 
         var groupedIndexes = attributedMembers
             .GroupBy(kvp => kvp.Key.Name)
-            .Select(group => group.Select(kvp => kvp.Value.Name).Where(name => name != null).ToList())
-            .Where(fields => fields.Count > 0)
-            .ToList();
+            .ToDictionary(x => x.Key, y => y.ToList());
 
-        foreach (var fieldGroup in groupedIndexes)
+        foreach (var nameGroup in groupedIndexes)
         {
             var indexKeys = Builders<TSchema>.IndexKeys;
-            var indexDefinition = fieldGroup.Aggregate(indexKeys.Combine(),
-                (current, fieldName) => current.Ascending(fieldName!));
+            var indexDefinition = nameGroup.Value.Aggregate(indexKeys.Combine(),
+                (current, groupAttributedMembers) =>
+                {
+                    return groupAttributedMembers.Key.IndexOrder switch
+                    {
+                        IndexOrder.Ascending => current.Ascending(groupAttributedMembers.Value.Name),
+                        IndexOrder.Descending => current.Descending(groupAttributedMembers.Value.Name),
+                        IndexOrder.Hashed => current.Hashed(groupAttributedMembers.Value.Name),
+                        _ => throw new ArgumentOutOfRangeException()
+                    };
+                });
 
-            var indexModel = new CreateIndexModel<TSchema>(indexDefinition);
+            var indexModel =
+                new CreateIndexModel<TSchema>(indexDefinition, new CreateIndexOptions { Name = nameGroup.Key });
             collection.Indexes.CreateOne(indexModel);
         }
     }

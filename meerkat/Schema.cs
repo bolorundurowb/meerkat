@@ -23,7 +23,7 @@ public abstract class Schema<TId> where TId : IEquatable<TId>
     /// It is recommended that this value be unique within the collection.
     /// </summary>
     [BsonId]
-    public TId Id { get; protected set; }
+    public TId Id { get; set; }
 
     /// <summary>
     /// Gets the timestamp indicating when the document was first persisted to the database.

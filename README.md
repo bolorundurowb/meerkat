@@ -203,109 +203,143 @@ var students = new [] { peter, paul };
 await students.SaveAllAsync(); // or students.SaveAll(); for sync calls
 ```
 
-### 🔍 Indexing
+## 📄 Index Attributes  
 
-Indexes in MongoDB improve query performance by enabling efficient lookups and enforcing constraints. The following attributes define different types of indexes that can be applied to fields or properties in a MongoDB document model.
-
-## MongoDB Index Attributes
-
-Indexes in MongoDB optimize query performance by allowing efficient lookups and enforcing constraints. The following attributes define different types of indexes that can be applied to fields or properties in a MongoDB document model.
-
-All model classes must inherit from the abstract class `Schema<TKey>`, where `TKey` represents the type of the primary key.
-
-### **1. Compound Index (`CompoundIndexAttribute`)**
-A **compound index** is an index on multiple fields, allowing queries to efficiently filter or sort using those fields. The order of fields in a compound index affects query optimization.
-
-#### **Usage Example**
-```csharp
-public class Product : Schema<Guid>
-{
-    [CompoundIndex]
-    public string Category { get; set; }
-
-    [CompoundIndex]
-    public string Brand { get; set; }
-}
-```  
-This creates a compound index on `Category` and `Brand`, making queries that filter or sort by both fields more efficient.
-
-**Example Query Optimized by This Index:**
-```csharp
-var products = collection.Find(Builders<Product>.Filter.Eq(p => p.Category, "Electronics"))
-                         .SortBy(p => p.Brand)
-                         .ToList();
-```
+This section provides an overview of the custom attributes used to define MongoDB indexes in your model classes. These attributes are applied to fields or properties and are used to generate appropriate indexes in MongoDB. All model classes must inherit from the abstract class `Schema<TKey>`.
 
 ---
 
-### **2. Geospatial Index (`GeospatialIndexAttribute`)**
-A **geospatial index** enables efficient location-based queries, such as finding points within a specific radius or nearest neighbors. MongoDB supports `2dsphere` and `2d` indexes for geospatial data.
+### 🗂️ Index Attributes Overview 
 
-#### **Usage Example**
-```csharp
-public class Location : Schema<string>
-{
-    [GeospatialIndex]
-    public double[] Coordinates { get; set; } = new double[2]; // [Longitude, Latitude]
-}
-```  
-This ensures that MongoDB optimizes spatial queries using a `2dsphere` index.
+#### 🎯 **`SingleFieldIndexAttribute`** 
+- **Purpose**: Defines a single-field index on a specific field or property.
+- **Usage**: Apply this attribute to a field or property to create an index on that single field.
+- **Optional Properties**:
+    - **`Name`**: Specifies the name of the index. If not provided, MongoDB generates a default name.
+    - **`Sparse`**: A boolean value indicating whether the index should be sparse. Default is `false`.
+    - **`IndexOrder`**: Specifies the order of the index. Options are `Ascending`, `Descending`, or `Hashed`.
 
-**Example Query for Finding Nearby Locations:**
-```csharp
-var filter = Builders<Location>.Filter.NearSphere(
-    l => l.Coordinates, 
-    longitude: 36.8219, 
-    latitude: -1.2921, 
-    maxDistance: 5000 // 5km radius
-);
-var nearbyLocations = collection.Find(filter).ToList();
-```
-
----
-
-### **3. Single-Field Index (`SingleFieldIndexAttribute`)**
-A **single-field index** optimizes queries that filter or sort based on a single field.
-
-#### **Usage Example**
-```csharp
-public class Customer : Schema<ObjectId>
-{
-    [SingleFieldIndex]
-    public string Email { get; set; }
-}
-```  
-This makes queries that filter by `Email` more efficient.
-
-**Example Query Optimized by This Index:**
-```csharp
-var customer = collection.Find(Builders<Customer>.Filter.Eq(c => c.Email, "user@example.com")).FirstOrDefault();
-```
-
----
-
-### **4. Unique Index (`UniqueIndexAttribute`)**
-A **unique index** ensures that a field contains only unique values, preventing duplicates.
-
-#### **Usage Example**
+##### Example:
 ```csharp
 public class User : Schema<Guid>
 {
-    [UniqueIndex]
+    [SingleFieldIndex(Name = "username_index", Sparse = true, IndexOrder = IndexOrder.Ascending)]
     public string Username { get; set; }
 }
-```  
-This enforces uniqueness on the `Username` field, ensuring no two users share the same username.
-
-**Example Query Using This Index:**
-```csharp
-var newUser = new User { Username = "john_doe" };
-collection.InsertOne(newUser); // Will throw an error if "john_doe" already exists
 ```
+- **Explanation**: This creates a single-field index on the `Username` property with an ascending order. The index is sparse, meaning it will only include documents where the `Username` field exists.
+
+##### What is a Sparse Index? 🤔
+A sparse index only includes documents that have the indexed field. If a document does not contain the indexed field, it is excluded from the index. This can save space and improve performance for fields that are not present in all documents.
+
+##### What is a Hashed Index? 🔍
+A hashed index in MongoDB uses a hash function to compute the value of the indexed field. This is particularly useful for sharding and equality queries but does not support range queries.
 
 ---
 
-By using these attributes, MongoDB indexes are automatically created and managed, improving query performance, enabling spatial queries, and enforcing data integrity constraints.
+#### 🔑 **`UniqueIndexAttribute`** 
+- **Purpose**: Defines a unique index on a specific field or property.
+- **Usage**: Apply this attribute to enforce uniqueness on a field or property.
+- **Optional Properties**:
+    - **`Name`**: Specifies the name of the index. If not provided, MongoDB generates a default name.
+    - **`Sparse`**: A boolean value indicating whether the index should be sparse. Default is `false`.
+
+##### Example:
+```csharp
+public class User : Schema<Guid>
+{
+    [UniqueIndex(Name = "email_unique_index", Sparse = true)]
+    public string Email { get; set; }
+}
+```
+- **Explanation**: This creates a unique index on the `Email` property. The index is sparse, meaning it will only include documents where the `Email` field exists.
+
+---
+
+#### 🧩 **`CompoundIndexAttribute`** 
+- **Purpose**: Defines a compound index on multiple fields or properties.
+- **Usage**: Apply this attribute to multiple fields or properties to create a compound index.
+- **Optional Properties**:
+    - **`Name`**: Specifies the name of the index. If two or more fields have the same `Name`, they are grouped into a single compound index. Unnamed indexes are grouped into one compound index.
+    - **`IndexOrder`**: Specifies the order of the index. Options are `Ascending`, `Descending`, or `Hashed`.
+
+##### Example:
+```csharp
+public class Order : Schema<Guid>
+{
+    [CompoundIndex(Name = "order_index", IndexOrder = IndexOrder.Ascending)]
+    public DateTime OrderDate { get; set; }
+
+    [CompoundIndex(Name = "order_index", IndexOrder = IndexOrder.Descending)]
+    public decimal TotalAmount { get; set; }
+}
+```
+- **Explanation**: This creates a compound index on the `OrderDate` and `TotalAmount` properties. The `OrderDate` is indexed in ascending order, while the `TotalAmount` is indexed in descending order.
+
+##### Note on Compound Indexes 📌
+If multiple fields have the same `Name` in the `CompoundIndexAttribute`, they are grouped into a single compound index. Unnamed indexes are grouped into one compound index automatically.
+
+---
+
+#### 🌍 **`GeospatialIndexAttribute`** 
+- **Purpose**: Defines a geospatial index on a field or property.
+- **Usage**: Apply this attribute to fields or properties that store geospatial data (e.g., coordinates).
+- **Optional Properties**:
+    - **`Name`**: Specifies the name of the index. If not provided, MongoDB generates a default name.
+    - **`IndexType`**: Specifies the type of geospatial index. Options are `TwoD` (default) or `TwoDSphere`.
+
+##### Example:
+```csharp
+public class Location : Schema<Guid>
+{
+    [GeospatialIndex(Name = "location_geo_index", IndexType = IndexType.TwoDSphere)]
+    public double[] Coordinates { get; set; }
+}
+```
+- **Explanation**: This creates a geospatial index on the `Coordinates` property, using the `TwoDSphere` index type, which is useful for querying geospatial data on a spherical surface.
+  What is the Difference Between TwoD and TwoDSphere? 🌐
+
+  - **`TwoD`**: This index type is used for flat, 2D geospatial data. It is suitable for simple 2D coordinate systems.
+
+  - **`TwoDSphere`**: This index type is used for geospatial data on a spherical surface (e.g., Earth). It supports more complex queries involving distances, intersections, and other spherical calculations.
+
+---
+
+### Summary of Index Types 📊
+
+| Attribute                | Purpose                          | Optional Properties            |
+|--------------------------|----------------------------------|--------------------------------|
+| `SingleFieldIndex`       | Single-field index              | `Name`, `Sparse`, `IndexOrder` |
+| `UniqueIndex`            | Unique index                    | `Name`, `Sparse`               |
+| `CompoundIndex`           | Compound index on multiple fields | `Name`, `IndexOrder`           |
+| `GeospatialIndex`         | Geospatial index                | `Name`, `IndexType`             |
+
+---
+
+### Example Model Class 🧑‍💻
+
+Here’s an example of a model class using all the attributes:
+
+```csharp
+public class Product : Schema<Guid>
+{
+    [SingleFieldIndex(Name = "name_index", IndexOrder = IndexOrder.Ascending)]
+    public string Name { get; set; }
+
+    [UniqueIndex(Name = "sku_unique_index", Sparse = true)]
+    public string SKU { get; set; }
+
+    [CompoundIndex(Name = "price_category_index", IndexOrder = IndexOrder.Descending)]
+    public decimal Price { get; set; }
+
+    [CompoundIndex(Name = "price_category_index", IndexOrder = IndexOrder.Ascending)]
+    public string Category { get; set; }
+
+    [GeospatialIndex(Name = "location_geo_index")]
+    public double[] Location { get; set; }
+}
+```
+- **Explanation**: This example demonstrates the use of multiple index types within a single model class. It includes a single-field index, a unique index, a compound index, and a geospatial index.
 
 ---
 

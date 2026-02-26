@@ -40,20 +40,6 @@ public class MeerkatCrudTests
     }
 
     [Fact]
-    public void FindById_ShouldCallCollection()
-    {
-        // Arrange
-        var id = "123";
-        var entity = new TestEntity { Id = id };
-        
-        // Mocking IQueryable is hard, but FindById uses Query() which uses GetCollectionForType().AsQueryable()
-        // For simplicity in this environment, let's test methods that call the collection directly if possible.
-        // FindById, FindOne, Find, Query all go through IQueryable.
-        
-        // Let's test RemoveById which calls DeleteOne directly.
-    }
-
-    [Fact]
     public void RemoveById_ShouldCallDeleteOne()
     {
         // Act

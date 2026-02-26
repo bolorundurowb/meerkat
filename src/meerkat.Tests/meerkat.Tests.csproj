@@ -13,7 +13,7 @@
         <PackageReference Include="coverlet.collector" Version="8.0.0">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>>
+        </PackageReference>
         <PackageReference Include="coverlet.msbuild" Version="8.0.0">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>

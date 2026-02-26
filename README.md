@@ -67,7 +67,7 @@ Ensure you’ve declared the necessary namespace at the top of your class file:
 using meerkat;
 ```
 
-**Note:** All async methods support `CancellationToken` for canceling operations. ⏳
+**Note:** All async methods support `CancellationToken` for canceling operations.
 
 ---
 
@@ -104,7 +104,7 @@ public class Student : Schema
 
 ### 💾 Persistence
 
-Meerkat simplifies CRUD operations by combining **create** and **update** into a single API. If an entity doesn’t exist, it’s inserted; if it does, it’s updated. 🔄
+Meerkat simplifies CRUD operations by combining **create** and **update** into a single API. If an entity doesn’t exist, it’s inserted; if it does, it’s updated.
 
 ```csharp
 var student = new Student
@@ -194,7 +194,7 @@ var count = await Meerkat.CountAsync<Student>(x => x.FirstName.StartsWith("Ja"))
 
 ### 📚 Collections
 
-Meerkat allows for bulk upsert operations on collections of entities, both synchronously and asynchronously. 📦
+Meerkat allows for bulk upsert operations on collections of entities, both synchronously and asynchronously.
 
 ```csharp
 var peter = new Student();
@@ -229,10 +229,10 @@ public class User : Schema<Guid>
 ```
 - **Explanation**: This creates a single-field index on the `Username` property with an ascending order. The index is sparse, meaning it will only include documents where the `Username` field exists.
 
-##### What is a Sparse Index? 🤔
+##### 🤔 What is a Sparse Index?
 A sparse index only includes documents that have the indexed field. If a document does not contain the indexed field, it is excluded from the index. This can save space and improve performance for fields that are not present in all documents.
 
-##### What is a Hashed Index? 🔍
+##### 🔍 What is a Hashed Index?
 A hashed index in MongoDB uses a hash function to compute the value of the indexed field. This is particularly useful for sharding and equality queries but does not support range queries.
 
 ---
@@ -276,7 +276,7 @@ public class Order : Schema<Guid>
 ```
 - **Explanation**: This creates a compound index on the `OrderDate` and `TotalAmount` properties. The `OrderDate` is indexed in ascending order, while the `TotalAmount` is indexed in descending order.
 
-##### Note on Compound Indexes 📌
+##### 📌 Note on Compound Indexes
 If multiple fields have the same `Name` in the `CompoundIndexAttribute`, they are grouped into a single compound index. Unnamed indexes are grouped into one compound index automatically.
 
 ---
@@ -297,7 +297,7 @@ public class Location : Schema<Guid>
 }
 ```
 - **Explanation**: This creates a geospatial index on the `Coordinates` property, using the `TwoDSphere` index type, which is useful for querying geospatial data on a spherical surface.
-  What is the Difference Between TwoD and TwoDSphere? 🌐
+  What is the Difference Between TwoD and TwoDSphere?
 
   - **`TwoD`**: This index type is used for flat, 2D geospatial data. It is suitable for simple 2D coordinate systems.
 
@@ -305,7 +305,7 @@ public class Location : Schema<Guid>
 
 ---
 
-### Summary of Index Types 📊
+### 📊 Summary of Index Types
 
 | Attribute                | Purpose                          | Optional Properties            |
 |--------------------------|----------------------------------|--------------------------------|
@@ -316,7 +316,7 @@ public class Location : Schema<Guid>
 
 ---
 
-### Example Model Class 🧑‍💻
+### 🧑‍💻 Example Model Class
 
 Here’s an example of a model class using all the attributes:
 
@@ -343,4 +343,4 @@ public class Product : Schema<Guid>
 
 ---
 
-Enjoy using **Meerkat**! 🎉 If you have any questions or feedback, feel free to reach out or contribute to the project. 🚀
+Enjoy using **Meerkat**! 🎉 If you have any questions or feedback, feel free to reach out or contribute to the project.

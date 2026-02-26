@@ -47,8 +47,10 @@ public abstract class Schema<TId> where TId : IEquatable<TId>
         PreSave();
 
         var collection = Meerkat.GetCollectionForType<Schema<TId>, TId>(this);
-        collection.ReplaceOne(x => x.Id.Equals(Id), this, MongoDbConstants.ReplaceOptions);
+        if (collection == null)
+            throw new Exception("Collection is null for Schema<TId>");
 
+        collection.ReplaceOne(x => x.Id.Equals(Id), this, MongoDbConstants.ReplaceOptions);
         PostSave();
     }
 
@@ -66,9 +68,11 @@ public abstract class Schema<TId> where TId : IEquatable<TId>
         PreSave();
 
         var collection = Meerkat.GetCollectionForType<Schema<TId>, TId>(this);
+        if (collection == null)
+            throw new Exception("Collection is null for Schema<TId> Async");
+
         await collection.ReplaceOneAsync(x => x.Id.Equals(Id), this, MongoDbConstants.ReplaceOptions,
             cancellationToken);
-
         PostSave();
     }
 
@@ -76,13 +80,17 @@ public abstract class Schema<TId> where TId : IEquatable<TId>
     /// A virtual method that is invoked before the entity is persisted.
     /// Can be overridden to provide custom pre-save logic.
     /// </summary>
-    public virtual void PreSave() { }
+    public virtual void PreSave()
+    {
+    }
 
     /// <summary>
     /// A virtual method that is invoked after the entity has been persisted.
     /// Can be overridden to provide custom post-save logic.
     /// </summary>
-    public virtual void PostSave() { }
+    public virtual void PostSave()
+    {
+    }
 
     internal void HandleTimestamps()
     {
@@ -91,10 +99,9 @@ public abstract class Schema<TId> where TId : IEquatable<TId>
 
         if (trackUpdates)
         {
-            if (!CreatedAt.HasValue)
-                CreatedAt = DateTime.UtcNow;
-
-            UpdatedAt = DateTime.UtcNow;
+            var now = DateTime.UtcNow;
+            CreatedAt ??= now;
+            UpdatedAt = now;
         }
     }
 

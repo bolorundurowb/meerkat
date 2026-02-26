@@ -41,7 +41,7 @@ public static partial class Meerkat
             })
             .ToList();
 
-        if (indices.Any())
+        if (indices.Any() && collection.Indexes != null)
             collection.Indexes.CreateMany(indices);
     }
 
@@ -68,7 +68,7 @@ public static partial class Meerkat
             })
             .ToList();
 
-        if (indices.Any())
+        if (indices.Any() && collection.Indexes != null)
             collection.Indexes.CreateMany(indices);
     }
 
@@ -93,7 +93,7 @@ public static partial class Meerkat
             })
             .ToList();
 
-        if (indices.Any())
+        if (indices.Any() && collection.Indexes != null)
             collection.Indexes.CreateMany(indices);
     }
 
@@ -125,7 +125,8 @@ public static partial class Meerkat
 
             var indexModel =
                 new CreateIndexModel<TSchema>(indexDefinition, new CreateIndexOptions { Name = nameGroup.Key });
-            collection.Indexes.CreateOne(indexModel);
+            if (collection is { Indexes: not null })
+                collection.Indexes.CreateOne(indexModel);
         }
     }
 }

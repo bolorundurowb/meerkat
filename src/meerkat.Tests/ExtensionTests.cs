@@ -1,7 +1,4 @@
-using System;
 using meerkat.Extensions;
-using meerkat.Services;
-using Xunit;
 
 namespace meerkat.Tests;
 

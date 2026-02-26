@@ -1,8 +1,5 @@
-using System;
-using System.Linq;
 using meerkat.Attributes;
 using meerkat.Extensions;
-using Xunit;
 
 namespace meerkat.Tests;
 

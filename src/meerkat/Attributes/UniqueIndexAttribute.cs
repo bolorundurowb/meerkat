@@ -16,9 +16,8 @@ public class UniqueIndexAttribute : Attribute
     public string? Name { get; set; }
 
     /// <summary>
-    /// Determines how this index handles <c>null</c> values.
-    /// If <c>true</c>, the index only includes documents that have the indexed field.
-    /// If <c>false</c>, the index includes all documents, including those missing the indexed field.
+    /// Gets or sets a value indicating whether the index should be sparse.
+    /// A sparse index only includes documents that contain the indexed field.
     /// Defaults to <c>false</c>.
     /// </summary>
     public bool Sparse { get; set; } = false;

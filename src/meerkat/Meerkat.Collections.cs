@@ -6,10 +6,13 @@ namespace meerkat;
 
 public static partial class Meerkat
 {
-    internal static IMongoCollection<TSchema> GetCollectionForType<TSchema, TId>(TSchema model)
+    internal static IMongoCollection<TSchema> GetCollectionForType<TSchema, TId>(Schema<TId> model)
         where TSchema : Schema<TId> where TId : IEquatable<TId>
     {
-        var type = model.GetType();
+        var type = typeof(TSchema);
+        if (type == typeof(Schema<TId>))
+            type = model.GetType();
+
         return SharedGetCollection<TSchema, TId>(type);
     }
 

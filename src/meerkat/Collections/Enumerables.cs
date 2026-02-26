@@ -13,11 +13,11 @@ public static class Enumerables
         { IsOrdered = false, BypassDocumentValidation = false };
 
     /// <summary>
-    /// Persist a collection of entities to the matched collection synchronously
+    /// Persists a collection of entities to their corresponding MongoDB collection synchronously.
     /// </summary>
-    /// <param name="entities">A collection of entities to be persisted</param>
-    /// <typeparam name="TSchema">The type of entity</typeparam>
-    /// <typeparam name="TId">The type of the entity's Id</typeparam>
+    /// <param name="entities">A collection of entities to be persisted.</param>
+    /// <typeparam name="TSchema">The schema type.</typeparam>
+    /// <typeparam name="TId">The identifier type.</typeparam>
     public static void SaveAll<TSchema, TId>(this IEnumerable<TSchema> entities)
         where TSchema : Schema<TId> where TId : IEquatable<TId>
     {
@@ -33,12 +33,12 @@ public static class Enumerables
     }
 
     /// <summary>
-    /// Persist a collection of entities to the matched collection asynchronously
+    /// Persists a collection of entities to their corresponding MongoDB collection asynchronously.
     /// </summary>
-    /// <param name="entities">A collection of entities to be persisted</param>
-    /// <param name="cancellationToken">The cancellation token</param>
-    /// <typeparam name="TSchema">The type of entity</typeparam>
-    /// <typeparam name="TId">The type of the entity's Id</typeparam>
+    /// <param name="entities">A collection of entities to be persisted.</param>
+    /// <param name="cancellationToken">Token to cancel the asynchronous operation.</param>
+    /// <typeparam name="TSchema">The schema type.</typeparam>
+    /// <typeparam name="TId">The identifier type.</typeparam>
     public static async Task SaveAllAsync<TSchema, TId>(this IEnumerable<TSchema> entities,
         CancellationToken cancellationToken = default)
         where TSchema : Schema<TId> where TId : IEquatable<TId>

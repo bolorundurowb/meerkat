@@ -3,18 +3,18 @@
     <LangVersion>latest</LangVersion>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>meerkat</PackageId>
-    <PackageVersion>2.0.0</PackageVersion>
+    <PackageVersion>2.0.1</PackageVersion>
     <Title>Meerkat</Title>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <Authors>Winner-Timothy Bolorunduro</Authors>
     <Description>An ODM for MongoDB</Description>
-    <Copyright>© 2021 , Bolorunduro Winner-Timothy. All Rights reserved.</Copyright>
+    <Copyright>© 2021-2026 , Bolorunduro Winner-Timothy. All Rights reserved.</Copyright>
     <PackageProjectUrl>https://github.com/bolorundurowb/meerkat</PackageProjectUrl>
     <PackageLicenseUrl>https://github.com/bolorundurowb/meerkat/blob/master/LICENSE</PackageLicenseUrl>
     <RepositoryUrl>https://github.com/bolorundurowb/meerkat</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>meerkat, mongodb, mongoose, ODM</PackageTags>
-    <PackageReleaseNotes>- Add generic typed key support</PackageReleaseNotes>
+    <PackageReleaseNotes>- Update dependecies</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Company>bolorundurowb</Company>
     <NeutralLanguage>en-NG</NeutralLanguage>
@@ -25,11 +25,11 @@
 
   <ItemGroup>
     <PackageReference Include="mongo-url-parser" Version="1.1.0" />
-    <PackageReference Include="MongoDB.Driver" Version="3.2.0" />
+    <PackageReference Include="MongoDB.Driver" Version="3.6.0" />
   </ItemGroup>
   
   <ItemGroup>
-    <None Include="..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
   
   <ItemGroup>

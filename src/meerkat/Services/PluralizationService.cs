@@ -11,15 +11,15 @@ internal static class PluralizationService
 
     static PluralizationService() => Rules =
     [
-        new("s", false, "th", "ph", "ey"),
-        new("es", false, "o"),
+        new("s", false, "th", "ph", "ey", "ay", "oy", "uy"),
+        new("es", false, "o", "ch", "sh", "ss", "x"),
         new("ves", true, "f", "fe"),
         new("na", true, "non"),
         new("ia", true, "ion"),
         new("es", true, "is"),
         new("ies", true, "y"),
-        new("i", true, "us"),
-        new("ice", true, "ouse")
+        new("ice", true, "ouse"),
+        new("i", true, "us")
     ];
 
     public static string Pluralize(string singular)
@@ -31,6 +31,12 @@ internal static class PluralizationService
             return $"{singular}s";
 
         var suffix = rule.Match(singular);
+        
+        // special case for 'us' ending to prefer 'es' (e.g. bus -> buses) over 'i' (e.g. cactus -> cacti)
+        // when 'us' is a short word (common nouns)
+        if (suffix == "us" && singular.Length <= 3)
+            return $"{singular}es";
+
         return rule.Pluralize(suffix, singular);
     }
 

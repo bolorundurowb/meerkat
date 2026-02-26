@@ -24,7 +24,7 @@ internal static class TypeExtensions
             return collectionName;
 
         var collectionAttribute = type.GetCustomAttribute<CollectionAttribute>();
-        var attributeName = collectionAttribute?.Name;
+        var attributeName = collectionAttribute?.Name.Trim();
         var name = string.IsNullOrWhiteSpace(attributeName) ? type.Name.Pluralize() : attributeName;
 
         if (string.IsNullOrWhiteSpace(name)) 

@@ -16,8 +16,8 @@ namespace meerkat;
 /// </summary>
 public static partial class Meerkat
 {
-    private static readonly ConcurrentDictionary<string, bool> SchemasWithCheckedIndices = new();
-    private static Lazy<IMongoDatabase>? _database;
+    internal static readonly ConcurrentDictionary<string, bool> SchemasWithCheckedIndices = new();
+    internal static Lazy<IMongoDatabase>? _database;
 
     /// <summary>
     /// Gets the connected MongoDB database instance.

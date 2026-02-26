@@ -36,15 +36,7 @@ public class MeerkatCrudTests
         // Reset Meerkat state and connect with mock
         Meerkat.ResetDatabase();
         
-        // We need to bypass the real connection string parsing since we can't easily mock the static Parser
-        // However, Meerkat.Connect calls Parser.Parse(databaseConnectionString)
-        // Let's use a dummy connection string that Parser.Parse can handle, 
-        // then overwrite the _database field using reflection or just rely on the fact that 
-        // we can't easily inject the mock into the private Lazy field.
-        
-        // Actually, Meerkat is a static class. Let's use reflection to inject the mock database.
-        var databaseField = typeof(Meerkat).GetField("_database", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
-        databaseField.SetValue(null, new Lazy<IMongoDatabase>(() => _mockDb.Object));
+        Meerkat._database = new Lazy<IMongoDatabase>(() => _mockDb.Object);
     }
 
     [Fact]

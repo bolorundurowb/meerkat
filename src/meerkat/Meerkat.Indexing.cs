@@ -9,7 +9,7 @@ namespace meerkat;
 
 public static partial class Meerkat
 {
-    private static void HandleIndexing<TSchema, TId>(Type type, IMongoCollection<TSchema> collection)
+    internal static void HandleIndexing<TSchema, TId>(Type type, IMongoCollection<TSchema> collection)
         where TSchema : Schema<TId> where TId : IEquatable<TId>
     {
         var typeName = type.FullName;
@@ -25,7 +25,7 @@ public static partial class Meerkat
         SchemasWithCheckedIndices[typeName] = true;
     }
 
-    private static void HandleUniqueIndexing<TSchema>(Type type, IMongoCollection<TSchema> collection)
+    internal static void HandleUniqueIndexing<TSchema>(Type type, IMongoCollection<TSchema> collection)
     {
         var attributedMembers = type.GetAttributedMembers<UniqueIndexAttribute>();
         var indices = attributedMembers
@@ -45,7 +45,7 @@ public static partial class Meerkat
             collection.Indexes.CreateMany(indices);
     }
 
-    private static void HandleSingleFieldIndexing<TSchema>(Type type, IMongoCollection<TSchema> collection)
+    internal static void HandleSingleFieldIndexing<TSchema>(Type type, IMongoCollection<TSchema> collection)
     {
         var attributedMembers = type.GetAttributedMembers<SingleFieldIndexAttribute>();
         var indices = attributedMembers
@@ -72,7 +72,7 @@ public static partial class Meerkat
             collection.Indexes.CreateMany(indices);
     }
 
-    private static void HandleGeospatialFieldIndexing<TSchema>(Type type, IMongoCollection<TSchema> collection)
+    internal static void HandleGeospatialFieldIndexing<TSchema>(Type type, IMongoCollection<TSchema> collection)
     {
         var attributedMembers = type.GetAttributedMembers<GeospatialIndexAttribute>();
         var indices = attributedMembers
@@ -97,7 +97,7 @@ public static partial class Meerkat
             collection.Indexes.CreateMany(indices);
     }
 
-    private static void HandleCompoundFieldIndexing<TSchema>(Type type, IMongoCollection<TSchema> collection)
+    internal static void HandleCompoundFieldIndexing<TSchema>(Type type, IMongoCollection<TSchema> collection)
     {
         var attributedMembers = type.GetAttributedMembers<CompoundIndexAttribute>();
 

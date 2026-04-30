@@ -13,7 +13,7 @@
     <PackageLicenseUrl>https://github.com/bolorundurowb/meerkat/blob/master/LICENSE</PackageLicenseUrl>
     <RepositoryUrl>https://github.com/bolorundurowb/meerkat</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageTags>meerkat, mongodb, mongoose, ODM</PackageTags>
+    <PackageTags>meerkat mongodb mongoose odm mongodb-driver dotnet csharp netstandard orm data-access document-database nosql nuget linq indexing</PackageTags>
     <PackageReleaseNotes>- Update dependecies</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Company>bolorundurowb</Company>

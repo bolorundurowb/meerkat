@@ -1,346 +1,327 @@
-# 🐾 Meerkat
+# Meerkat
 
 [![Build, Test & Coverage](https://github.com/bolorundurowb/meerkat/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/bolorundurowb/meerkat/actions/workflows/build-and-test.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) ![NuGet Version](https://img.shields.io/nuget/v/meerkat) [![codecov](https://codecov.io/gh/bolorundurowb/meerkat/graph/badge.svg?token=E35WQFJ7IM)](https://codecov.io/gh/bolorundurowb/meerkat)
 
-**Meerkat** is an ODM (Object Document Mapper) library designed to replicate the functionality of NodeJS's [Mongoose](https://www.npmjs.com/package/mongoose) in the .NET ecosystem. 🚀 For those unfamiliar, Mongoose is a JavaScript ODM wrapper library that simplifies data access when working with MongoDB. Similarly, **Meerkat** wraps around the official MongoDB client library for .NET, simplifying common data access patterns.
+**Meerkat** is an ODM (Object Document Mapper) for MongoDB in .NET. It wraps the official MongoDB driver and simplifies
+common data access patterns, modelling, querying, persistence, and indexing with a clean, strongly-typed API.
 
-The name **Meerkat** is a playful homage to Mongoose, as a meerkat is a type of mongoose. 😄 If you find this library cool or useful, don't forget to give it a ⭐️ star!
+## Installation
 
----
-
-## 🚨 Breaking Changes
-
-With the release of **version 2.0.0**, the underlying MongoDB driver was upgraded to **3.2.0**. The library also transitions the base `Schema` class to  using strongly typed Ids
-
----
-
-## 🤝 Contributing
-
-There’s still a lot to be done! Feel free to:
-- Open new issues to suggest features or report bugs 🐛
-- Submit PRs with updates or improvements 🛠️
-
----
-
-## 📦 Installation
-
-### Manual Installation (for the hardcore devs 💪)
-Add the following to your `.csproj` file:
-
-```xml
-<PackageReference Include="meerkat" Version="2.0.0"/>
-```
-
-### Visual Studio Package Manager Console
-Run the following command:
-
-```cmd
-Install-Package meerkat
-```
-
-### .NET CLI
-Run the following in your terminal:
+**.NET CLI**
 
 ```bash
 dotnet add package meerkat
 ```
 
----
+**Package Manager Console**
 
-## 🛠️ Setup
+```powershell
+Install-Package meerkat
+```
 
-Before using any of Meerkat's functions, you need to initialize it. This only needs to be done once. 🏁
+**.csproj**
+
+```xml
+
+<PackageReference Include="meerkat" Version="2.0.1"/>
+```
+
+## Setup
+
+Call `Connect` once at application startup, before any other Meerkat operation:
 
 ```csharp
 using meerkat;
-...
-Meerkat.Connect("<any valid full MongoDB connection string>"); // e.g., mongodb://user:password@server-address:port/database-name?other-options
+
+Meerkat.Connect("mongodb://user:password@host:port/database-name");
 ```
 
----
+## Defining Models
 
-## 🚀 Usage
-
-Ensure you’ve declared the necessary namespace at the top of your class file:
+All models must inherit from `Schema<TId>`, where `TId` is the type of the document's unique identifier. The `Id`
+property is automatically mapped as the MongoDB `_id` field.
 
 ```csharp
 using meerkat;
-```
+using MongoDB.Bson;
 
-**Note:** All async methods support `CancellationToken` for canceling operations.
+public class Student : Schema<ObjectId>
+{
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
 
----
-
-### 🧩 Modelling
-
-All models must inherit from the abstract `Schema` class. The `Schema` class has a an `Id` property whose type is determined by the `TKey` generic argument. In the example below, the `Id` property is of type `ObjectId`.
-
-```csharp
-class Student : Schema<ObjectId>
-{  
-  public string FirstName { get; set; }
-  
-  public string LastName { get; set; }
-  
-  public Student()
-  {
-    // Example: Generate an ObjectID (you'd likely use a methode better suited to your Id type)
-    Id = ObjectId.GenerateNewId();
-  }
+    public Student()
+    {
+        Id = ObjectId.GenerateNewId();
+    }
 }
 ```
 
-To specify a custom collection name or enable timestamp tracking:
+Common ID types include `ObjectId`, `Guid`, `string`, and `int` any type that implements `IEquatable<T>`.
+
+### Collection configuration
+
+Apply the `[Collection]` attribute to control the collection name and timestamp tracking:
 
 ```csharp
-[Collection(Name = "Persons", TrackTimestamps = true)]
-public class Student : Schema
+[Collection(Name = "persons", TrackTimestamps = true)]
+public class Student : Schema<ObjectId>
 {
-  ...
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
 }
 ```
 
----
+- **`Name`** - overrides the default collection name. Without this attribute, Meerkat uses a pluralized, lowercased
+  version of the class name (e.g., `Student` → `students`).
+- **`TrackTimestamps`** - when `true`, Meerkat automatically sets `CreatedAt` on first save and updates `UpdatedAt` on
+  every subsequent save.
 
-### 💾 Persistence
+## Querying
 
-Meerkat simplifies CRUD operations by combining **create** and **update** into a single API. If an entity doesn’t exist, it’s inserted; if it does, it’s updated.
+All static query methods on `Meerkat` require two type parameters: the schema type and the ID type.
 
-```csharp
-var student = new Student
-{
-  FirstName = "Olubakinde",
-  LastName = "Chukumerije"
-};
-
-await student.SaveAsync(); // or student.Save(); for synchronous calls
-```
-
-It’s that simple! 🎉
-
----
-
-### 🔍 Querying
-
-#### Find by ID
-```csharp
-var student = await Meerkat.FindByIdAsync<Student>(1234); // or Meerkat.FindById<Student>(1234); for sync calls
-```
-
-#### Find by Predicate
-```csharp
-var student = await Meerkat.FindOneAsync<Student>(x => x.FirstName == "John"); // or Meerkat.FindOne(x => x.LastName == "Jane");
-```
-
-#### Complex Queries
-For complex queries, you can access the underlying `IQueryable`:
+### Find by ID
 
 ```csharp
-var queryable = Meerkat.Query<Student>();
-
-var students = await queryable
-  .Where(x => x.FirstName == "Olubakinde")
-  .ToListAsync();
+var student = await Meerkat.FindByIdAsync<Student, ObjectId>(id);
+// sync:
+var student = Meerkat.FindById<Student, ObjectId>(id);
 ```
 
----
-
-### 🗑️ Removal
-
-#### Remove by ID
-```csharp
-await Meerkat.RemoveByIdAsync<Student>(1234); // or Meerkat.RemoveById<Student>(1234); for sync calls
-```
-
-#### Remove by Predicate
-```csharp
-await Meerkat.RemoveOneAsync<Student>(x => x.FirstName == "John"); // or Meerkat.RemoveOne(x => x.LastName == "Jane");
-```
-
-#### Remove All Matching Entities
-```csharp
-await Meerkat.RemoveAsync<Student>(x => x.FirstName == "John"); // or Meerkat.Remove(x => x.LastName == "Jane");
-```
-
----
-
-### ✅ Existence Checks
-
-#### Check if Any Entities Exist
-```csharp
-var exists = await Meerkat.ExistsAsync<Student>(); // or Meerkat.Exists<Student>(); for sync calls
-```
-
-#### Check if Entities Match a Predicate
-```csharp
-var exists = await Meerkat.ExistsAsync<Student>(x => x.FirstName.StartsWith("Ja")); // or Meerkat.Exists<Student>(x => x.FirstName.StartsWith("Ja"));
-```
-
----
-
-### 🔢 Counting
-
-#### Count All Entities
-```csharp
-var count = await Meerkat.CountAsync<Student>(); // or Meerkat.Count<Student>(); for sync calls
-```
-
-#### Count Entities Matching a Predicate
-```csharp
-var count = await Meerkat.CountAsync<Student>(x => x.FirstName.StartsWith("Ja")); // or Meerkat.Count<Student>(x => x.FirstName.StartsWith("Ja"));
-```
-
----
-
-### 📚 Collections
-
-Meerkat allows for bulk upsert operations on collections of entities, both synchronously and asynchronously.
+### Find one by predicate
 
 ```csharp
-var peter = new Student();
-var paul = new Student();
-var students = new [] { peter, paul };
-await students.SaveAllAsync(); // or students.SaveAll(); for sync calls
+var student = await Meerkat.FindOneAsync<Student, ObjectId>(x => x.FirstName == "Ada");
+// sync:
+var student = Meerkat.FindOne<Student, ObjectId>(x => x.LastName == "Lovelace");
 ```
 
-## 📄 Index Attributes  
+Omitting the predicate returns the first document in the collection.
 
-This section provides an overview of the custom attributes used to define MongoDB indexes in your model classes. These attributes are applied to fields or properties and are used to generate appropriate indexes in MongoDB. All model classes must inherit from the abstract class `Schema<TKey>`.
+### Find many by predicate
 
----
+```csharp
+var students = await Meerkat.FindAsync<Student, ObjectId>(x => x.LastName == "Lovelace");
+// sync:
+var students = Meerkat.Find<Student, ObjectId>(x => x.LastName == "Lovelace");
+```
 
-### 🗂️ Index Attributes Overview 
+Omitting the predicate returns all documents.
 
-#### 🎯 **`SingleFieldIndexAttribute`** 
-- **Purpose**: Defines a single-field index on a specific field or property.
-- **Usage**: Apply this attribute to a field or property to create an index on that single field.
-- **Optional Properties**:
-    - **`Name`**: Specifies the name of the index. If not provided, MongoDB generates a default name.
-    - **`Sparse`**: A boolean value indicating whether the index should be sparse. Default is `false`.
-    - **`IndexOrder`**: Specifies the order of the index. Options are `Ascending`, `Descending`, or `Hashed`.
+### LINQ queries
 
-##### Example:
+For complex queries, use `Query<TSchema, TId>()` to get a LINQ-compatible `IQueryable`:
+
+```csharp
+var results = await Meerkat.Query<Student, ObjectId>()
+    .Where(x => x.FirstName.StartsWith("A"))
+    .OrderBy(x => x.LastName)
+    .ToListAsync();
+```
+
+## Persistence
+
+`Save` and `SaveAsync` perform an upsert: inserting the document if it does not exist, or replacing it if it does. The
+match is done on `Id`.
+
+```csharp
+var student = new Student { FirstName = "Ada", LastName = "Lovelace" };
+
+await student.SaveAsync();
+// sync:
+student.Save();
+```
+
+## Bulk Persistence
+
+To save multiple entities in a single batched operation, use the `SaveAll` / `SaveAllAsync` extension methods from the
+`meerkat.Collections` namespace:
+
+```csharp
+using meerkat.Collections;
+
+var students = new[] { new Student(), new Student() };
+
+await students.SaveAllAsync<Student, ObjectId>();
+// sync:
+students.SaveAll<Student, ObjectId>();
+```
+
+## Removal
+
+### Remove by ID
+
+```csharp
+await Meerkat.RemoveByIdAsync<Student, ObjectId>(id);
+// sync:
+Meerkat.RemoveById<Student, ObjectId>(id);
+```
+
+### Remove first match
+
+```csharp
+await Meerkat.RemoveOneAsync<Student, ObjectId>(x => x.FirstName == "Ada");
+// sync:
+Meerkat.RemoveOne<Student, ObjectId>(x => x.FirstName == "Ada");
+```
+
+### Remove all matches
+
+```csharp
+await Meerkat.RemoveAsync<Student, ObjectId>(x => x.LastName == "Lovelace");
+// sync:
+Meerkat.Remove<Student, ObjectId>(x => x.LastName == "Lovelace");
+```
+
+## Counting
+
+```csharp
+// total count
+long total = await Meerkat.CountAsync<Student, ObjectId>();
+
+// conditional count
+long count = await Meerkat.CountAsync<Student, ObjectId>(x => x.FirstName.StartsWith("A"));
+
+// sync variants
+long total = Meerkat.Count<Student, ObjectId>();
+long count = Meerkat.Count<Student, ObjectId>(x => x.FirstName.StartsWith("A"));
+```
+
+## Existence Checks
+
+```csharp
+bool any = await Meerkat.ExistsAsync<Student, ObjectId>();
+bool match = await Meerkat.ExistsAsync<Student, ObjectId>(x => x.FirstName == "Ada");
+
+// sync variants
+bool any = Meerkat.Exists<Student, ObjectId>();
+bool match = Meerkat.Exists<Student, ObjectId>(x => x.FirstName == "Ada");
+```
+
+## Indexing
+
+Apply index attributes to model properties to have Meerkat automatically create the appropriate MongoDB indexes.
+
+### Single-field index
+
 ```csharp
 public class User : Schema<Guid>
 {
-    [SingleFieldIndex(Name = "username_index", Sparse = true, IndexOrder = IndexOrder.Ascending)]
+    [SingleFieldIndex(Name = "username_idx", Sparse = true, IndexOrder = IndexOrder.Ascending)]
     public string Username { get; set; }
 }
 ```
-- **Explanation**: This creates a single-field index on the `Username` property with an ascending order. The index is sparse, meaning it will only include documents where the `Username` field exists.
 
-##### 🤔 What is a Sparse Index?
-A sparse index only includes documents that have the indexed field. If a document does not contain the indexed field, it is excluded from the index. This can save space and improve performance for fields that are not present in all documents.
+| Property     | Default     | Description                            |
+|--------------|-------------|----------------------------------------|
+| `Name`       | auto        | Custom index name                      |
+| `Sparse`     | `false`     | Excludes documents missing the field   |
+| `IndexOrder` | `Ascending` | `Ascending`, `Descending`, or `Hashed` |
 
-##### 🔍 What is a Hashed Index?
-A hashed index in MongoDB uses a hash function to compute the value of the indexed field. This is particularly useful for sharding and equality queries but does not support range queries.
+### Unique index
 
----
-
-#### 🔑 **`UniqueIndexAttribute`** 
-- **Purpose**: Defines a unique index on a specific field or property.
-- **Usage**: Apply this attribute to enforce uniqueness on a field or property.
-- **Optional Properties**:
-    - **`Name`**: Specifies the name of the index. If not provided, MongoDB generates a default name.
-    - **`Sparse`**: A boolean value indicating whether the index should be sparse. Default is `false`.
-
-##### Example:
 ```csharp
 public class User : Schema<Guid>
 {
-    [UniqueIndex(Name = "email_unique_index", Sparse = true)]
+    [UniqueIndex(Name = "email_idx", Sparse = true)]
     public string Email { get; set; }
 }
 ```
-- **Explanation**: This creates a unique index on the `Email` property. The index is sparse, meaning it will only include documents where the `Email` field exists.
 
----
+| Property | Default | Description                          |
+|----------|---------|--------------------------------------|
+| `Name`   | auto    | Custom index name                    |
+| `Sparse` | `false` | Excludes documents missing the field |
 
-#### 🧩 **`CompoundIndexAttribute`** 
-- **Purpose**: Defines a compound index on multiple fields or properties.
-- **Usage**: Apply this attribute to multiple fields or properties to create a compound index.
-- **Optional Properties**:
-    - **`Name`**: Specifies the name of the index. If two or more fields have the same `Name`, they are grouped into a single compound index. Unnamed indexes are grouped into one compound index.
-    - **`IndexOrder`**: Specifies the order of the index. Options are `Ascending`, `Descending`, or `Hashed`.
+### Compound index
 
-##### Example:
+Fields sharing the same `Name` value are grouped into a single compound index:
+
 ```csharp
 public class Order : Schema<Guid>
 {
-    [CompoundIndex(Name = "order_index", IndexOrder = IndexOrder.Ascending)]
+    [CompoundIndex(Name = "order_idx", IndexOrder = IndexOrder.Ascending)]
     public DateTime OrderDate { get; set; }
 
-    [CompoundIndex(Name = "order_index", IndexOrder = IndexOrder.Descending)]
+    [CompoundIndex(Name = "order_idx", IndexOrder = IndexOrder.Descending)]
     public decimal TotalAmount { get; set; }
 }
 ```
-- **Explanation**: This creates a compound index on the `OrderDate` and `TotalAmount` properties. The `OrderDate` is indexed in ascending order, while the `TotalAmount` is indexed in descending order.
 
-##### 📌 Note on Compound Indexes
-If multiple fields have the same `Name` in the `CompoundIndexAttribute`, they are grouped into a single compound index. Unnamed indexes are grouped into one compound index automatically.
+Fields without a `Name` are grouped together into one unnamed compound index.
 
----
+### Geospatial index
 
-#### 🌍 **`GeospatialIndexAttribute`** 
-- **Purpose**: Defines a geospatial index on a field or property.
-- **Usage**: Apply this attribute to fields or properties that store geospatial data (e.g., coordinates).
-- **Optional Properties**:
-    - **`Name`**: Specifies the name of the index. If not provided, MongoDB generates a default name.
-    - **`IndexType`**: Specifies the type of geospatial index. Options are `TwoD` (default) or `TwoDSphere`.
-
-##### Example:
 ```csharp
 public class Location : Schema<Guid>
 {
-    [GeospatialIndex(Name = "location_geo_index", IndexType = IndexType.TwoDSphere)]
+    [GeospatialIndex(Name = "coords_idx", IndexType = GeospatialIndexType.TwoDSphere)]
     public double[] Coordinates { get; set; }
 }
 ```
-- **Explanation**: This creates a geospatial index on the `Coordinates` property, using the `TwoDSphere` index type, which is useful for querying geospatial data on a spherical surface.
-  What is the Difference Between TwoD and TwoDSphere?
 
-  - **`TwoD`**: This index type is used for flat, 2D geospatial data. It is suitable for simple 2D coordinate systems.
+| Property    | Default | Description                                                                  |
+|-------------|---------|------------------------------------------------------------------------------|
+| `Name`      | auto    | Custom index name                                                            |
+| `IndexType` | `TwoD`  | `TwoD` for flat geometry, `TwoDSphere` for spherical (Earth-surface) queries |
 
-  - **`TwoDSphere`**: This index type is used for geospatial data on a spherical surface (e.g., Earth). It supports more complex queries involving distances, intersections, and other spherical calculations.
+### Index summary
 
----
+| Attribute          | Scope               | Key properties                       |
+|--------------------|---------------------|--------------------------------------|
+| `SingleFieldIndex` | Single property     | `Name`, `Sparse`, `IndexOrder`       |
+| `UniqueIndex`      | Single property     | `Name`, `Sparse`                     |
+| `CompoundIndex`    | Multiple properties | `Name` (groups fields), `IndexOrder` |
+| `GeospatialIndex`  | Single property     | `Name`, `IndexType`                  |
 
-### 📊 Summary of Index Types
+## Data Transformations
 
-| Attribute                | Purpose                          | Optional Properties            |
-|--------------------------|----------------------------------|--------------------------------|
-| `SingleFieldIndex`       | Single-field index              | `Name`, `Sparse`, `IndexOrder` |
-| `UniqueIndex`            | Unique index                    | `Name`, `Sparse`               |
-| `CompoundIndex`           | Compound index on multiple fields | `Name`, `IndexOrder`           |
-| `GeospatialIndex`         | Geospatial index                | `Name`, `IndexType`             |
-
----
-
-### 🧑‍💻 Example Model Class
-
-Here’s an example of a model class using all the attributes:
+Apply `[Lowercase]` or `[Uppercase]` to string properties to have their values automatically transformed before each
+save. Both attributes are restricted to `string` properties and throw `InvalidAttributeException` if applied to any
+other type.
 
 ```csharp
-public class Product : Schema<Guid>
+public class User : Schema<Guid>
 {
-    [SingleFieldIndex(Name = "name_index", IndexOrder = IndexOrder.Ascending)]
-    public string Name { get; set; }
+    [Lowercase]
+    public string Email { get; set; }
 
-    [UniqueIndex(Name = "sku_unique_index", Sparse = true)]
-    public string SKU { get; set; }
-
-    [CompoundIndex(Name = "price_category_index", IndexOrder = IndexOrder.Descending)]
-    public decimal Price { get; set; }
-
-    [CompoundIndex(Name = "price_category_index", IndexOrder = IndexOrder.Ascending)]
-    public string Category { get; set; }
-
-    [GeospatialIndex(Name = "location_geo_index")]
-    public double[] Location { get; set; }
+    [Uppercase]
+    public string CountryCode { get; set; }
 }
 ```
-- **Explanation**: This example demonstrates the use of multiple index types within a single model class. It includes a single-field index, a unique index, a compound index, and a geospatial index.
 
----
+## Lifecycle Hooks
 
-Enjoy using **Meerkat**! 🎉 If you have any questions or feedback, feel free to reach out or contribute to the project.
+Override `PreSave` and `PostSave` on any model to run custom logic before or after persistence:
+
+```csharp
+public class Student : Schema<ObjectId>
+{
+    public string FirstName { get; set; }
+
+    public override void PreSave()
+    {
+        // runs after timestamp updates and transformations, before the database write
+        FirstName = FirstName?.Trim();
+    }
+
+    public override void PostSave()
+    {
+        // runs after the database write completes
+    }
+}
+```
+
+## Breaking Changes
+
+### v2.0.0
+
+- The MongoDB driver was upgraded to **3.x**.
+- The base class `Schema` was replaced by the generic `Schema<TId>`, requiring an explicit ID type parameter on all
+  models and on all static `Meerkat` methods.
+
+## Contributing
+
+Issues and pull requests are welcome at [github.com/bolorundurowb/meerkat](https://github.com/bolorundurowb/meerkat).

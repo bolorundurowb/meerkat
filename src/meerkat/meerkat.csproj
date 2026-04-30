@@ -8,7 +8,7 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <Authors>Winner-Timothy Bolorunduro</Authors>
     <Description>An ODM for MongoDB</Description>
-    <Copyright>© 2021-2026 , Bolorunduro Winner-Timothy. All Rights reserved.</Copyright>
+    <Copyright>© 2021-2026, Bolorunduro Winner-Timothy. All Rights reserved.</Copyright>
     <PackageProjectUrl>https://github.com/bolorundurowb/meerkat</PackageProjectUrl>
     <PackageLicenseUrl>https://github.com/bolorundurowb/meerkat/blob/master/LICENSE</PackageLicenseUrl>
     <RepositoryUrl>https://github.com/bolorundurowb/meerkat</RepositoryUrl>

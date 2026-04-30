@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="meerkat.Tests/meerkat.Tests.csproj" />
+  <Project Path="meerkat/meerkat.csproj" />
+</Solution>

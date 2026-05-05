@@ -1,0 +1,112 @@
+name: Generate Release
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  release:
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Detect Version Change
+        id: version_check
+        shell: bash
+        run: |
+          CURRENT_VERSION=$(dotnet msbuild src/meerkat/meerkat.csproj -getProperty:Version)
+          if [ -z "$CURRENT_VERSION" ]; then
+            echo "Failed to extract version."
+            exit 1
+          fi
+          echo "Current version: $CURRENT_VERSION"
+          echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+
+          # Suppress errors if HEAD~1 doesn't exist
+          PREV_CSPROJ=$(git show HEAD~1:src/meerkat/meerkat.csproj 2>/dev/null || echo "")
+
+          CHANGED="false"
+          if [ -z "$PREV_CSPROJ" ]; then
+            CHANGED="true" # Initial commit or missing history
+          else
+            # Simple regex extraction for previous version
+            PREV_VERSION=$(echo "$PREV_CSPROJ" | grep -oP '(?<=<(Package)?Version>)[^<]+' | head -n 1 || echo "")
+            if [ "$CURRENT_VERSION" != "$PREV_VERSION" ]; then
+              CHANGED="true"
+            fi
+          fi
+
+          echo "changed=$CHANGED" >> $GITHUB_OUTPUT
+
+      - name: Check if Tag Exists
+        id: tag_check
+        if: steps.version_check.outputs.changed == 'true'
+        shell: bash
+        run: |
+          TAG="v${{ steps.version_check.outputs.current_version }}"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Tag $TAG already exists. Skipping release."
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Determine Pre-release
+        id: prerelease_check
+        if: steps.version_check.outputs.changed == 'true' && steps.tag_check.outputs.exists == 'false'
+        shell: bash
+        run: |
+          VERSION="${{ steps.version_check.outputs.current_version }}"
+          if [[ $VERSION == *"-alpha"* ]] || [[ $VERSION == *"-beta"* ]]; then
+            echo "is_prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_prerelease=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate Fallback Release Notes
+        id: fallback_notes
+        if: steps.version_check.outputs.changed == 'true' && steps.tag_check.outputs.exists == 'false'
+        shell: bash
+        run: |
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -z "$LATEST_TAG" ]; then
+            NOTES=$(git log --oneline -n 10 --pretty=format:"- %s (%h)")
+          else
+            NOTES=$(git log $LATEST_TAG..HEAD --oneline --pretty=format:"- %s (%h)")
+          fi
+          echo "notes<<EOF" >> $GITHUB_OUTPUT
+          echo "$NOTES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Build and Pack
+        if: steps.version_check.outputs.changed == 'true' && steps.tag_check.outputs.exists == 'false'
+        run: |
+          dotnet build src/meerkat/meerkat.csproj --configuration Release
+          dotnet pack src/meerkat/meerkat.csproj --configuration Release --no-build -o ./artifacts
+
+      - name: Create GitHub Release
+        if: steps.version_check.outputs.changed == 'true' && steps.tag_check.outputs.exists == 'false'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version_check.outputs.current_version }}
+          name: v${{ steps.version_check.outputs.current_version }}
+          body: ${{ steps.fallback_notes.outputs.notes }}
+          prerelease: ${{ steps.prerelease_check.outputs.is_prerelease == 'true' }}
+          generate_release_notes: true
+          files: artifacts/*.nupkg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

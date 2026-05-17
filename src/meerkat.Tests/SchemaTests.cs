@@ -1,5 +1,6 @@
 using meerkat.Attributes;
 using meerkat.Exceptions;
+using OmniAssert;
 
 namespace meerkat.Tests;
 
@@ -41,9 +42,9 @@ public class SchemaTests
         entity.HandleTimestamps();
 
         // Assert
-        Assert.NotNull(entity.CreatedAt);
-        Assert.NotNull(entity.UpdatedAt);
-        Assert.Equal(entity.CreatedAt, entity.UpdatedAt);
+        entity.CreatedAt.Verify().NotToBeNull();
+        entity.UpdatedAt.Verify().NotToBeNull();
+        entity.UpdatedAt.Verify().ToBe(entity.CreatedAt);
     }
 
     [Fact]
@@ -61,8 +62,8 @@ public class SchemaTests
         entity.HandleTimestamps();
 
         // Assert
-        Assert.Equal(originalCreatedAt, entity.CreatedAt);
-        Assert.NotNull(entity.UpdatedAt);
+        entity.CreatedAt.Verify().ToBe(originalCreatedAt);
+        entity.UpdatedAt.Verify().NotToBeNull();
     }
 
     [Fact]
@@ -75,8 +76,8 @@ public class SchemaTests
         entity.HandleTimestamps();
 
         // Assert
-        Assert.Null(entity.CreatedAt);
-        Assert.Null(entity.UpdatedAt);
+        entity.CreatedAt.Verify().ToBeNull();
+        entity.UpdatedAt.Verify().ToBeNull();
     }
 
     [Fact]
@@ -89,8 +90,8 @@ public class SchemaTests
         entity.HandleLowercaseTransformations();
 
         // Assert
-        Assert.Equal("test@example.com", entity.Email);
-        Assert.Equal("STAY_SAME", entity.Normal);
+        entity.Email.Verify().ToBe("test@example.com");
+        entity.Normal.Verify().ToBe("STAY_SAME");
     }
 
     [Fact]
@@ -103,8 +104,8 @@ public class SchemaTests
         entity.HandleUppercaseTransformations();
 
         // Assert
-        Assert.Equal("ABC-123", entity.Code);
-        Assert.Equal("stay_same", entity.Normal);
+        entity.Code.Verify().ToBe("ABC-123");
+        entity.Normal.Verify().ToBe("stay_same");
     }
 
     [Fact]
@@ -114,7 +115,8 @@ public class SchemaTests
         var entity = new InvalidLowercaseEntity { Number = 123 };
 
         // Act & Assert
-        Assert.Throws<InvalidAttributeException>(() => entity.HandleLowercaseTransformations());
+        Action act = () => entity.HandleLowercaseTransformations();
+        act.Throws<InvalidAttributeException>();
     }
 
     [Fact]
@@ -124,6 +126,7 @@ public class SchemaTests
         var entity = new InvalidUppercaseEntity { Number = 123 };
 
         // Act & Assert
-        Assert.Throws<InvalidAttributeException>(() => entity.HandleUppercaseTransformations());
+        Action act = () => entity.HandleUppercaseTransformations();
+        act.Throws<InvalidAttributeException>();
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace meerkat.Tests;
+﻿using OmniAssert;
+
+namespace meerkat.Tests;
 
 public class MeerkatTests
 {
@@ -12,7 +14,7 @@ public class MeerkatTests
         Meerkat.Connect(connectionString);
 
         // Assert
-        Assert.NotNull(Meerkat.Database);
+        Meerkat.Database.Verify().NotToBeNull();
     }
 
     [Fact]
@@ -22,9 +24,8 @@ public class MeerkatTests
         Meerkat.ResetDatabase();
 
         // Act & Assert
-        var exception = Assert.Throws<InvalidOperationException>(() => Meerkat.Database);
-        Assert.Equal(
-            "The database connection has not been initialized. Call Connect() before carrying out any operations.",
-            exception.Message);
+        Action act = () => { _ = Meerkat.Database; };
+        act.Throws<InvalidOperationException>()
+            .WithMessage("The database connection has not been initialized. Call Connect() before carrying out any operations.");
     }
 }

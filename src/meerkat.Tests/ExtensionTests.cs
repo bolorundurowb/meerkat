@@ -1,4 +1,5 @@
 using meerkat.Extensions;
+using OmniAssert;
 
 namespace meerkat.Tests;
 
@@ -29,16 +30,16 @@ public class ExtensionTests
         var result = singular.Pluralize();
 
         // Assert
-        Assert.Equal(expectedPlural, result, ignoreCase: true);
+        result.Verify().ToBeIgnoringCase(expectedPlural);
     }
 
     [Fact]
     public void Pluralize_ShouldHandleEmptyOrNullString()
     {
         // Act & Assert
-        Assert.Null(((string?)null).Pluralize());
-        Assert.Equal("", "".Pluralize());
-        Assert.Equal("   ", "   ".Pluralize());
+        ((string?)null).Pluralize().Verify().ToBeNull();
+        "".Pluralize().Verify().ToBe("");
+        "   ".Pluralize().Verify().ToBe("   ");
     }
 
     [Theory]
@@ -52,6 +53,6 @@ public class ExtensionTests
         var result = input.ReplaceLastOccurrence(oldValue, newValue);
 
         // Assert
-        Assert.Equal(expected, result);
+        result.Verify().ToBe(expected);
     }
 }

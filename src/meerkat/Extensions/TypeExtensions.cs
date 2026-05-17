@@ -27,7 +27,7 @@ internal static class TypeExtensions
         var attributeName = collectionAttribute?.Name.Trim();
         var name = string.IsNullOrWhiteSpace(attributeName) ? type.Name.Pluralize() : attributeName;
 
-        if (string.IsNullOrWhiteSpace(name)) 
+        if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentNullException(nameof(name), "Failed to generate a collection name for the provided type.");
 
         collectionName = Whitespace.Replace(name!.ToLowerInvariant(), "_");
@@ -72,9 +72,9 @@ internal static class TypeExtensions
         foreach (var member in allMembers)
         {
             // only one attribute of a given type is allowed per member
-            var attribute = member.GetCustomAttribute<TAttribute>( false);
+            var attribute = member.GetCustomAttribute<TAttribute>(false);
 
-            if (attribute != null) 
+            if (attribute != null)
                 attributeMemberPairs.Add(new KeyValuePair<TAttribute, MemberInfo>(attribute, member));
         }
 

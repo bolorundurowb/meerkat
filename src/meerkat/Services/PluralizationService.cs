@@ -31,7 +31,7 @@ internal static class PluralizationService
             return $"{singular}s";
 
         var suffix = rule.Match(singular);
-        
+
         // special case for 'us' ending to prefer 'es' (e.g. bus -> buses) over 'i' (e.g. cactus -> cacti)
         // when 'us' is a short word (common nouns)
         if (suffix == "us" && singular.Length <= 3)

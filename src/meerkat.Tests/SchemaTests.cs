@@ -14,7 +14,7 @@ public class SchemaTests
 
         [Uppercase]
         public string Code { get; set; }
-        
+
         public string Normal { get; set; }
     }
 

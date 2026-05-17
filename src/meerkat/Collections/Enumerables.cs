@@ -10,7 +10,7 @@ namespace meerkat.Collections;
 public static class Enumerables
 {
     private static readonly BulkWriteOptions BulkInsertOptions = new()
-        { IsOrdered = false, BypassDocumentValidation = false };
+    { IsOrdered = false, BypassDocumentValidation = false };
 
     /// <summary>
     /// Persists a collection of entities to their corresponding MongoDB collection synchronously.
@@ -80,7 +80,7 @@ public static class Enumerables
         return entities.Select(entity =>
                 new ReplaceOneModel<TSchema>(
                         Builders<TSchema>.Filter.Where(x => x.Id.Equals(entity.Id)), entity)
-                    { IsUpsert = true })
+                { IsUpsert = true })
             .Cast<WriteModel<TSchema>>()
             .ToList();
     }

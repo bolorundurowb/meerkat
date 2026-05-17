@@ -1,4 +1,5 @@
 using meerkat.Extensions;
+using OmniAssert;
 
 namespace meerkat.Tests;
 
@@ -25,33 +26,24 @@ public class ExtensionTests
     [InlineData("Guy", "guys")]
     public void Pluralize_ShouldReturnCorrectPluralForm(string singular, string expectedPlural)
     {
-        // Act
-        var result = singular.Pluralize();
-
-        // Assert
-        Assert.Equal(expectedPlural, result, ignoreCase: true);
+        singular.Pluralize().Verify().ToBeIgnoringCase(expectedPlural);
     }
 
     [Fact]
     public void Pluralize_ShouldHandleEmptyOrNullString()
     {
-        // Act & Assert
-        Assert.Null(((string?)null).Pluralize());
-        Assert.Equal("", "".Pluralize());
-        Assert.Equal("   ", "   ".Pluralize());
+        ((string?)null).Pluralize().Verify().ToBeNull();
+        "".Pluralize().Verify().ToBe("");
+        "   ".Pluralize().Verify().ToBe("   ");
     }
 
     [Theory]
     [InlineData("Hello World", "World", "Everyone", "Hello Everyone")]
-    [InlineData("Banana", "a", "s", "Banans")] // Wait, ReplaceLastOccurrence for Banana 'a' -> 's' should be 'Banans'? Let's check logic.
+    [InlineData("Banana", "a", "s", "Banans")]
     [InlineData("TestTest", "Test", "Case", "TestCase")]
     [InlineData("NoMatch", "Matchless", "Something", "NoMatch")]
     public void ReplaceLastOccurrence_ShouldWorkCorrectly(string input, string oldValue, string newValue, string expected)
     {
-        // Act
-        var result = input.ReplaceLastOccurrence(oldValue, newValue);
-
-        // Assert
-        Assert.Equal(expected, result);
+        input.ReplaceLastOccurrence(oldValue, newValue).Verify().ToBe(expected);
     }
 }

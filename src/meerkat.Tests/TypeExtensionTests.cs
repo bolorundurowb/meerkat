@@ -1,5 +1,6 @@
 using meerkat.Attributes;
 using meerkat.Extensions;
+using OmniAssert;
 
 namespace meerkat.Tests;
 
@@ -16,46 +17,32 @@ public class TypeExtensionTests
     [Fact]
     public void GetCollectionName_ShouldReturnPluralizedLowercaseName_WhenNoAttribute()
     {
-        // Act
-        var name = typeof(Product).GetCollectionName();
-
-        // Assert
-        Assert.Equal("products", name);
+        typeof(Product).GetCollectionName().Verify().ToBe("products");
     }
 
     [Fact]
     public void GetCollectionName_ShouldReturnAttributeName_WhenAttributePresent()
     {
-        // Act
-        var name = typeof(CustomUser).GetCollectionName();
-
-        // Assert
-        Assert.Equal("custom_users", name);
+        typeof(CustomUser).GetCollectionName().Verify().ToBe("custom_users");
     }
 
     [Fact]
     public void GetCollectionName_ShouldHandleWhitespaceAndLowercase_WhenAttributePresent()
     {
-        // Act
-        var name = typeof(Order).GetCollectionName();
-
-        // Assert
-        Assert.Equal("orders", name);
+        typeof(Order).GetCollectionName().Verify().ToBe("orders");
     }
 
     [Fact]
     public void ShouldTrackTimestamps_ShouldReturnTrue_WhenAttributeTracks()
     {
-        // Act & Assert
-        Assert.True(typeof(CustomUser).ShouldTrackTimestamps());
+        typeof(CustomUser).ShouldTrackTimestamps().Verify().ToBeTrue();
     }
 
     [Fact]
     public void ShouldTrackTimestamps_ShouldReturnFalse_WhenAttributeDoesNotTrackOrMissing()
     {
-        // Act & Assert
-        Assert.False(typeof(Product).ShouldTrackTimestamps());
-        Assert.False(typeof(Order).ShouldTrackTimestamps());
+        typeof(Product).ShouldTrackTimestamps().Verify().ToBeFalse();
+        typeof(Order).ShouldTrackTimestamps().Verify().ToBeFalse();
     }
 
     private class AttributedClass
@@ -72,14 +59,11 @@ public class TypeExtensionTests
     [Fact]
     public void AttributedWith_ShouldReturnCorrectProperties()
     {
-        // Act
         var lowercaseProps = typeof(AttributedClass).AttributedWith<LowercaseAttribute>().ToList();
         var uppercaseProps = typeof(AttributedClass).AttributedWith<UppercaseAttribute>().ToList();
-
-        // Assert
-        Assert.Single(lowercaseProps);
-        Assert.Equal("Name", lowercaseProps[0].Name);
-        Assert.Single(uppercaseProps);
-        Assert.Equal("Sku", uppercaseProps[0].Name);
+        lowercaseProps.Verify().HasCount(1);
+        lowercaseProps[0].Name.Verify().ToBe("Name");
+        uppercaseProps.Verify().HasCount(1);
+        uppercaseProps[0].Name.Verify().ToBe("Sku");
     }
 }

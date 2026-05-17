@@ -33,37 +33,29 @@ public class IndexingTests
         _mockCollection = new Mock<IMongoCollection<IndexedEntity>>();
         _mockIndexes = new Mock<IMongoIndexManager<IndexedEntity>>();
         _mockCollection.Setup(x => x.Indexes).Returns(_mockIndexes.Object);
-        
-        // Clear cached indices check for each test to ensure HandleIndexing runs
         Meerkat.SchemasWithCheckedIndices.Clear();
     }
 
     [Fact]
     public void HandleIndexing_ShouldCreateCorrectIndices()
     {
-        // Act
         Meerkat.HandleIndexing<IndexedEntity, Guid>(typeof(IndexedEntity), _mockCollection.Object);
 
-        // Assert
-        // Verify Unique Index
         _mockIndexes.Verify(x => x.CreateMany(
-            It.Is<IEnumerable<CreateIndexModel<IndexedEntity>>>(models => 
+            It.Is<IEnumerable<CreateIndexModel<IndexedEntity>>>(models =>
                 models.Any(m => m.Options.Name == "unique_name" && m.Options.Unique == true && m.Options.Sparse == true)),
             It.IsAny<System.Threading.CancellationToken>()), Times.AtLeastOnce);
 
-        // Verify Single Field Index
         _mockIndexes.Verify(x => x.CreateMany(
-            It.Is<IEnumerable<CreateIndexModel<IndexedEntity>>>(models => 
+            It.Is<IEnumerable<CreateIndexModel<IndexedEntity>>>(models =>
                 models.Any(m => m.Options.Name == "single_age")),
             It.IsAny<System.Threading.CancellationToken>()), Times.AtLeastOnce);
 
-        // Verify Geospatial Index
         _mockIndexes.Verify(x => x.CreateMany(
-            It.Is<IEnumerable<CreateIndexModel<IndexedEntity>>>(models => 
+            It.Is<IEnumerable<CreateIndexModel<IndexedEntity>>>(models =>
                 models.Any(m => m.Options.Name == "geo_location")),
             It.IsAny<System.Threading.CancellationToken>()), Times.AtLeastOnce);
 
-        // Verify Compound Index
         _mockIndexes.Verify(x => x.CreateOne(
             It.Is<CreateIndexModel<IndexedEntity>>(m => m.Options.Name == "compound_idx"),
             null,

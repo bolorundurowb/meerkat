@@ -26,17 +26,12 @@ public class ExtensionTests
     [InlineData("Guy", "guys")]
     public void Pluralize_ShouldReturnCorrectPluralForm(string singular, string expectedPlural)
     {
-        // Act
-        var result = singular.Pluralize();
-
-        // Assert
-        result.Verify().ToBeIgnoringCase(expectedPlural);
+        singular.Pluralize().Verify().ToBeIgnoringCase(expectedPlural);
     }
 
     [Fact]
     public void Pluralize_ShouldHandleEmptyOrNullString()
     {
-        // Act & Assert
         ((string?)null).Pluralize().Verify().ToBeNull();
         "".Pluralize().Verify().ToBe("");
         "   ".Pluralize().Verify().ToBe("   ");
@@ -44,15 +39,11 @@ public class ExtensionTests
 
     [Theory]
     [InlineData("Hello World", "World", "Everyone", "Hello Everyone")]
-    [InlineData("Banana", "a", "s", "Banans")] // Wait, ReplaceLastOccurrence for Banana 'a' -> 's' should be 'Banans'? Let's check logic.
+    [InlineData("Banana", "a", "s", "Banans")]
     [InlineData("TestTest", "Test", "Case", "TestCase")]
     [InlineData("NoMatch", "Matchless", "Something", "NoMatch")]
     public void ReplaceLastOccurrence_ShouldWorkCorrectly(string input, string oldValue, string newValue, string expected)
     {
-        // Act
-        var result = input.ReplaceLastOccurrence(oldValue, newValue);
-
-        // Assert
-        result.Verify().ToBe(expected);
+        input.ReplaceLastOccurrence(oldValue, newValue).Verify().ToBe(expected);
     }
 }

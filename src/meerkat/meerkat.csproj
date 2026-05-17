@@ -3,7 +3,7 @@
     <LangVersion>latest</LangVersion>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>meerkat</PackageId>
-    <PackageVersion>2.0.1</PackageVersion>
+    <PackageVersion>2.0.2</PackageVersion>
     <Title>Meerkat</Title>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <Authors>Winner-Timothy Bolorunduro</Authors>
@@ -14,7 +14,7 @@
     <RepositoryUrl>https://github.com/bolorundurowb/meerkat</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>meerkat mongodb mongoose odm mongodb-driver dotnet csharp netstandard orm data-access document-database nosql nuget linq indexing</PackageTags>
-    <PackageReleaseNotes>- Update dependecies</PackageReleaseNotes>
+    <PackageReleaseNotes>- Update dependencies</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Company>bolorundurowb</Company>
     <NeutralLanguage>en-NG</NeutralLanguage>

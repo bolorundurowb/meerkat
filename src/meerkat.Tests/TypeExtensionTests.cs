@@ -61,9 +61,9 @@ public class TypeExtensionTests
     {
         var lowercaseProps = typeof(AttributedClass).AttributedWith<LowercaseAttribute>().ToList();
         var uppercaseProps = typeof(AttributedClass).AttributedWith<UppercaseAttribute>().ToList();
-        lowercaseProps.Verify().HasCount(1);
+        lowercaseProps.Verify().ToHaveCount(1);
         lowercaseProps[0].Name.Verify().ToBe("Name");
-        uppercaseProps.Verify().HasCount(1);
+        uppercaseProps.Verify().ToHaveCount(1);
         uppercaseProps[0].Name.Verify().ToBe("Sku");
     }
 }

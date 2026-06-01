@@ -33,11 +33,11 @@ jobs:
         working-directory: ./src
 
       - name: Run unit tests
-        run: dotnet test --configuration Release --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=../../coverage/coverage.cobertura.xml --filter "Category!=Integration"
+        run: dotnet test --configuration Release --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=../../coverage/unit.cobertura.xml --filter "Category!=Integration"
         working-directory: ./src
 
       - name: Run integration tests
-        run: dotnet test --configuration Release --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=../../coverage/coverage.cobertura.xml --filter "Category=Integration"
+        run: dotnet test --configuration Release --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=../../coverage/integration.cobertura.xml --filter "Category=Integration"
         working-directory: ./src
 
       - name: Upload coverage reports to Codecov

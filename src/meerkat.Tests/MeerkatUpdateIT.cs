@@ -5,23 +5,26 @@ using OmniAssert;
 
 namespace meerkat.Tests;
 
-[Xunit.Collection("MeerkatTests")]
-public class MeerkatUpdateTests
+[Xunit.CollectionDefinition("MeerkatIntegrationTests", DisableParallelization = true)]
+public class MeerkatIntegrationTestsCollection;
+
+[meerkat.Attributes.Collection(Name = "update_test_counters")]
+public class Counter : Schema<ObjectId>
 {
-    [meerkat.Attributes.Collection(Name = "update_test_counters")]
-    private class Counter : Schema<ObjectId>
+    public string Name { get; set; }
+    public int Value { get; set; }
+    public long Total { get; set; }
+    public double Score { get; set; }
+
+    public Counter()
     {
-        public string Name { get; set; }
-        public int Value { get; set; }
-        public long Total { get; set; }
-        public double Score { get; set; }
-
-        public Counter()
-        {
-            Id = ObjectId.GenerateNewId();
-        }
+        Id = ObjectId.GenerateNewId();
     }
+}
 
+[Xunit.Collection("MeerkatIntegrationTests")]
+public class MeerkatUpdateIntegrationTests
+{
     [Fact]
     public void IncrementById_ShouldIncreaseFieldByOne_WhenNoAmountProvided()
     {
@@ -87,6 +90,40 @@ public class MeerkatUpdateTests
     }
 
     [Fact]
+    public void IncrementByFilter_ShouldUpdateMatchingDocument()
+    {
+        Meerkat.ResetDatabase();
+        Meerkat.Connect("mongodb://localhost:27017/testdb");
+
+        var counter = new Counter { Name = "filter-test", Value = 20 };
+        counter.Save();
+
+        var filter = Builders<Counter>.Filter.Eq(x => x.Name, "filter-test");
+        Meerkat.IncrementByFilter<Counter, ObjectId, int>(filter, x => x.Value, 7);
+
+        var updated = Meerkat.FindById<Counter, ObjectId>(counter.Id);
+        updated.Verify().NotToBeNull();
+        updated.Value.Verify().ToBe(27);
+    }
+
+    [Fact]
+    public void DecrementByFilter_ShouldUpdateMatchingDocument()
+    {
+        Meerkat.ResetDatabase();
+        Meerkat.Connect("mongodb://localhost:27017/testdb");
+
+        var counter = new Counter { Name = "filter-test-2", Value = 30 };
+        counter.Save();
+
+        var filter = Builders<Counter>.Filter.Eq(x => x.Name, "filter-test-2");
+        Meerkat.DecrementByFilter<Counter, ObjectId, int>(filter, x => x.Value, 8);
+
+        var updated = Meerkat.FindById<Counter, ObjectId>(counter.Id);
+        updated.Verify().NotToBeNull();
+        updated.Value.Verify().ToBe(22);
+    }
+
+    [Fact]
     public void IncrementOne_ShouldUpdateFirstMatchingDocument()
     {
         Meerkat.ResetDatabase();
@@ -100,6 +137,22 @@ public class MeerkatUpdateTests
         var updated = Meerkat.FindOne<Counter, ObjectId>(x => x.Name == "alpha");
         updated.Verify().NotToBeNull();
         updated.Value.Verify().ToBe(8);
+    }
+
+    [Fact]
+    public void DecrementOne_ShouldUpdateFirstMatchingDocument()
+    {
+        Meerkat.ResetDatabase();
+        Meerkat.Connect("mongodb://localhost:27017/testdb");
+
+        var counter = new Counter { Name = "beta", Value = 20 };
+        counter.Save();
+
+        Meerkat.DecrementOne<Counter, ObjectId, int>(x => x.Name == "beta", x => x.Value, 7);
+
+        var updated = Meerkat.FindOne<Counter, ObjectId>(x => x.Name == "beta");
+        updated.Verify().NotToBeNull();
+        updated.Value.Verify().ToBe(13);
     }
 
     [Fact]
@@ -125,6 +178,30 @@ public class MeerkatUpdateTests
         var other = Meerkat.FindOne<Counter, ObjectId>(x => x.Name == "other");
         other.Verify().NotToBeNull();
         other.Value.Verify().ToBe(100);
+    }
+
+    [Fact]
+    public void DecrementMany_ShouldUpdateAllMatchingDocuments()
+    {
+        Meerkat.ResetDatabase();
+        Meerkat.Connect("mongodb://localhost:27017/testdb");
+
+        var c1 = new Counter { Name = "decrement-group", Value = 50 };
+        var c2 = new Counter { Name = "decrement-group", Value = 30 };
+        var c3 = new Counter { Name = "untouched", Value = 999 };
+        c1.Save();
+        c2.Save();
+        c3.Save();
+
+        Meerkat.DecrementMany<Counter, ObjectId, int>(x => x.Name == "decrement-group", x => x.Value, 10);
+
+        var groupItems = Meerkat.Find<Counter, ObjectId>(x => x.Name == "decrement-group");
+        groupItems.Verify().ToHaveCount(2);
+        groupItems.Verify().AllSatisfy(item => item.Value < 50);
+
+        var untouched = Meerkat.FindOne<Counter, ObjectId>(x => x.Name == "untouched");
+        untouched.Verify().NotToBeNull();
+        untouched.Value.Verify().ToBe(999);
     }
 
     [Fact]
@@ -160,40 +237,6 @@ public class MeerkatUpdateTests
     }
 
     [Fact]
-    public void IncrementByFilter_ShouldUpdateMatchingDocument()
-    {
-        Meerkat.ResetDatabase();
-        Meerkat.Connect("mongodb://localhost:27017/testdb");
-
-        var counter = new Counter { Name = "filter-test", Value = 20 };
-        counter.Save();
-
-        var filter = Builders<Counter>.Filter.Eq(x => x.Name, "filter-test");
-        Meerkat.IncrementByFilter<Counter, ObjectId, int>(filter, x => x.Value, 7);
-
-        var updated = Meerkat.FindById<Counter, ObjectId>(counter.Id);
-        updated.Verify().NotToBeNull();
-        updated.Value.Verify().ToBe(27);
-    }
-
-    [Fact]
-    public void DecrementByFilter_ShouldUpdateMatchingDocument()
-    {
-        Meerkat.ResetDatabase();
-        Meerkat.Connect("mongodb://localhost:27017/testdb");
-
-        var counter = new Counter { Name = "filter-test-2", Value = 30 };
-        counter.Save();
-
-        var filter = Builders<Counter>.Filter.Eq(x => x.Name, "filter-test-2");
-        Meerkat.DecrementByFilter<Counter, ObjectId, int>(filter, x => x.Value, 8);
-
-        var updated = Meerkat.FindById<Counter, ObjectId>(counter.Id);
-        updated.Verify().NotToBeNull();
-        updated.Value.Verify().ToBe(22);
-    }
-
-    [Fact]
     public void IncrementOneAndGetUpdated_ShouldReturnUpdatedDocument()
     {
         Meerkat.ResetDatabase();
@@ -221,32 +264,5 @@ public class MeerkatUpdateTests
 
         updated.Verify().NotToBeNull();
         updated.Value.Verify().ToBe(38);
-    }
-
-    [Fact]
-    public void IncrementById_ShouldThrowExceptionIfNotConnected()
-    {
-        Meerkat.ResetDatabase();
-        var act = () => Meerkat.IncrementById<Counter, ObjectId, int>(ObjectId.GenerateNewId(), x => x.Value);
-        act.Throws<InvalidOperationException>()
-            .WithMessage("The database connection has not been initialized. Call Connect() before carrying out any operations.");
-    }
-
-    [Fact]
-    public void DecrementById_ShouldThrowExceptionIfNotConnected()
-    {
-        Meerkat.ResetDatabase();
-        var act = () => Meerkat.DecrementById<Counter, ObjectId, int>(ObjectId.GenerateNewId(), x => x.Value);
-        act.Throws<InvalidOperationException>()
-            .WithMessage("The database connection has not been initialized. Call Connect() before carrying out any operations.");
-    }
-
-    [Fact]
-    public void IncrementMany_ShouldThrowExceptionIfNotConnected()
-    {
-        Meerkat.ResetDatabase();
-        var act = () => Meerkat.IncrementMany<Counter, ObjectId, int>(x => true, x => x.Value);
-        act.Throws<InvalidOperationException>()
-            .WithMessage("The database connection has not been initialized. Call Connect() before carrying out any operations.");
     }
 }

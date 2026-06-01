@@ -10,6 +10,12 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
+    services:
+      mongodb:
+        image: mongo:8
+        ports:
+          - 27017:27017
+
     steps:
       - uses: actions/checkout@v4
 
@@ -26,8 +32,12 @@ jobs:
         run: dotnet build --configuration Release --no-restore
         working-directory: ./src
 
-      - name: Run tests with code coverage
-        run: dotnet test --configuration Release --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=../../coverage/coverage.cobertura.xml
+      - name: Run unit tests
+        run: dotnet test --configuration Release --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=../../coverage/coverage.cobertura.xml --filter "FullyQualifiedName!~Integration"
+        working-directory: ./src
+
+      - name: Run integration tests
+        run: dotnet test --configuration Release --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=../../coverage/coverage.cobertura.xml --filter "FullyQualifiedName~Integration"
         working-directory: ./src
 
       - name: Upload coverage reports to Codecov

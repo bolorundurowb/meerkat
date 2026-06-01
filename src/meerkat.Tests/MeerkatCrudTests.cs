@@ -4,6 +4,7 @@ using Moq;
 
 namespace meerkat.Tests;
 
+[Xunit.Collection("MeerkatUnitTests")]
 public class MeerkatCrudTests
 {
     public class TestEntity : Schema<string>

@@ -8,6 +8,9 @@ namespace meerkat.Tests;
 [Xunit.CollectionDefinition("MeerkatTests", DisableParallelization = true)]
 public class MeerkatTestsCollection;
 
+[Xunit.CollectionDefinition("MeerkatUnitTests", DisableParallelization = true)]
+public class MeerkatUnitTestsCollection;
+
 [Xunit.Collection("MeerkatTests")]
 public class MeerkatTests
 {

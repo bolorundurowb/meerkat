@@ -1,9 +1,12 @@
 using meerkat.Attributes;
 using meerkat.Exceptions;
+using MongoDB.Driver;
+using Moq;
 using OmniAssert;
 
 namespace meerkat.Tests;
 
+[Xunit.Collection("MeerkatUnitTests")]
 public class SchemaTests
 {
     [Attributes.Collection(TrackTimestamps = true)]
@@ -30,6 +33,25 @@ public class SchemaTests
     {
         [Uppercase]
         public int Number { get; set; }
+    }
+
+    private class SaveTestEntity : Schema<string>
+    {
+        public string Name { get; set; }
+    }
+
+    private readonly Mock<IMongoDatabase> _mockDb;
+    private readonly Mock<IMongoCollection<Schema<string>>> _mockSchemaCollection;
+
+    public SchemaTests()
+    {
+        _mockDb = new Mock<IMongoDatabase>();
+        _mockSchemaCollection = new Mock<IMongoCollection<Schema<string>>>();
+        _mockDb.Setup(x => x.GetCollection<Schema<string>>(It.IsAny<string>(), It.IsAny<MongoCollectionSettings>()))
+               .Returns(_mockSchemaCollection.Object);
+        _mockSchemaCollection.Setup(x => x.Indexes).Returns(new Mock<IMongoIndexManager<Schema<string>>>().Object);
+        Meerkat.ResetDatabase();
+        Meerkat._database = new Lazy<IMongoDatabase>(() => _mockDb.Object);
     }
 
     [Fact]
@@ -94,5 +116,21 @@ public class SchemaTests
         var entity = new InvalidUppercaseEntity { Number = 123 };
         var act = () => entity.HandleUppercaseTransformations();
         act.Throws<InvalidAttributeException>();
+    }
+
+    [Fact]
+    public async Task SaveAsync_ShouldCallReplaceOneAsync()
+    {
+        var entity = new SaveTestEntity { Id = "123", Name = "Test" };
+        await entity.SaveAsync();
+        _mockSchemaCollection.Verify(x => x.ReplaceOneAsync(It.IsAny<FilterDefinition<Schema<string>>>(), entity, It.IsAny<ReplaceOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public void Save_ShouldCallReplaceOne()
+    {
+        var entity = new SaveTestEntity { Id = "123", Name = "Test" };
+        entity.Save();
+        _mockSchemaCollection.Verify(x => x.ReplaceOne(It.IsAny<FilterDefinition<Schema<string>>>(), entity, It.IsAny<ReplaceOptions>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 }

@@ -5,7 +5,7 @@ using OmniAssert;
 
 namespace meerkat.Tests;
 
-[Collection("MeerkatUnitTests")]
+[Xunit.Collection("MeerkatUnitTests")]
 public class MeerkatUpdatesTests
 {
     private readonly Mock<IMongoDatabase> _mockDb;

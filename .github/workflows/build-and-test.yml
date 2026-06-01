@@ -33,11 +33,15 @@ jobs:
         working-directory: ./src
 
       - name: Run unit tests
-        run: dotnet test --configuration Release --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=../../coverage/unit.cobertura.xml --filter "Category!=Integration"
+        run: |
+          mkdir -p "${{ github.workspace }}/coverage"
+          dotnet test --configuration Release --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput="${{ github.workspace }}/coverage/unit.cobertura.xml" --filter "Category!=Integration"
         working-directory: ./src
 
       - name: Run integration tests
-        run: dotnet test --configuration Release --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=../../coverage/integration.cobertura.xml --filter "Category=Integration"
+        run: |
+          mkdir -p "${{ github.workspace }}/coverage"
+          dotnet test --configuration Release --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput="${{ github.workspace }}/coverage/integration.cobertura.xml" --filter "Category=Integration"
         working-directory: ./src
 
       - name: Upload coverage reports to Codecov

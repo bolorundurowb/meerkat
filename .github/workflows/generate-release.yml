@@ -28,7 +28,7 @@ jobs:
         id: version_check
         shell: bash
         run: |
-          CURRENT_VERSION=$(dotnet msbuild src/meerkat/meerkat.csproj -getProperty:Version)
+          CURRENT_VERSION=$(dotnet msbuild src/meerkat/meerkat.csproj -getProperty:PackageVersion)
           if [ -z "$CURRENT_VERSION" ]; then
             echo "Failed to extract version."
             exit 1
@@ -44,7 +44,7 @@ jobs:
             CHANGED="true" # Initial commit or missing history
           else
             # Simple regex extraction for previous version
-            PREV_VERSION=$(echo "$PREV_CSPROJ" | grep -oP '(?<=<(Package)?Version>)[^<]+' | head -n 1 || echo "")
+            PREV_VERSION=$(echo "$PREV_CSPROJ" | grep -oP '(?<=<PackageVersion>)[^<]+' || echo "$PREV_CSPROJ" | grep -oP '(?<=<Version>)[^<]+' || echo "")
             if [ "$CURRENT_VERSION" != "$PREV_VERSION" ]; then
               CHANGED="true"
             fi

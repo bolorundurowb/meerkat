@@ -174,6 +174,70 @@ await Meerkat.RemoveAsync<Student, ObjectId>(x => x.LastName == "Lovelace");
 Meerkat.Remove<Student, ObjectId>(x => x.LastName == "Lovelace");
 ```
 
+## Atomic Updates
+
+Meerkat provides atomic increment and decrement operations for numeric fields. Each method defaults the amount to `1` when not specified. Generic `TField` type parameter supports `int`, `long`, `double`, `decimal`, and any other numeric type accepted by MongoDB.
+
+### Increment/Decrement by ID
+
+```csharp
+await Meerkat.IncrementByIdAsync<Student, ObjectId, int>(id, x => x.Age, 5);
+Meerkat.IncrementById<Student, ObjectId, int>(id, x => x.Age);      // default amount = 1
+
+await Meerkat.DecrementByIdAsync<Student, ObjectId, int>(id, x => x.Age, 3);
+Meerkat.DecrementById<Student, ObjectId, int>(id, x => x.Age);      // default amount = 1
+```
+
+### Increment/Decrement by filter
+
+```csharp
+var filter = Builders<Student>.Filter.Eq(x => x.FirstName, "Ada");
+
+await Meerkat.IncrementByFilterAsync<Student, ObjectId, int>(filter, x => x.Age, 5);
+Meerkat.IncrementByFilter<Student, ObjectId, int>(filter, x => x.Age);
+
+await Meerkat.DecrementByFilterAsync<Student, ObjectId, int>(filter, x => x.Age, 3);
+Meerkat.DecrementByFilter<Student, ObjectId, int>(filter, x => x.Age);
+```
+
+### Increment/Decrement one by predicate
+
+```csharp
+await Meerkat.IncrementOneAsync<Student, ObjectId, int>(x => x.FirstName == "Ada", x => x.Age, 5);
+Meerkat.IncrementOne<Student, ObjectId, int>(x => x.FirstName == "Ada", x => x.Age);
+
+await Meerkat.DecrementOneAsync<Student, ObjectId, int>(x => x.FirstName == "Ada", x => x.Age, 3);
+Meerkat.DecrementOne<Student, ObjectId, int>(x => x.FirstName == "Ada", x => x.Age);
+```
+
+### Increment/Decrement many by predicate
+
+```csharp
+await Meerkat.IncrementManyAsync<Student, ObjectId, int>(x => x.Age < 18, x => x.Age, 1);
+Meerkat.IncrementMany<Student, ObjectId, int>(x => x.Age < 18, x => x.Age, 1);
+
+await Meerkat.DecrementManyAsync<Student, ObjectId, int>(x => x.Age >= 65, x => x.Age, 1);
+Meerkat.DecrementMany<Student, ObjectId, int>(x => x.Age >= 65, x => x.Age, 1);
+```
+
+### Increment/Decrement and get updated document
+
+The `*AndGetUpdated` variants return the document after the update is applied:
+
+```csharp
+var updated = await Meerkat.IncrementByIdAndGetUpdatedAsync<Student, ObjectId, int>(id, x => x.Age, 5);
+var updated = Meerkat.IncrementByIdAndGetUpdated<Student, ObjectId, int>(id, x => x.Age);
+
+var updated = await Meerkat.DecrementByIdAndGetUpdatedAsync<Student, ObjectId, int>(id, x => x.Age, 3);
+var updated = Meerkat.DecrementByIdAndGetUpdated<Student, ObjectId, int>(id, x => x.Age);
+
+var updated = await Meerkat.IncrementOneAndGetUpdatedAsync<Student, ObjectId, int>(x => x.FirstName == "Ada", x => x.Age, 5);
+var updated = Meerkat.IncrementOneAndGetUpdated<Student, ObjectId, int>(x => x.FirstName == "Ada", x => x.Age);
+
+var updated = await Meerkat.DecrementOneAndGetUpdatedAsync<Student, ObjectId, int>(x => x.FirstName == "Ada", x => x.Age, 3);
+var updated = Meerkat.DecrementOneAndGetUpdated<Student, ObjectId, int>(x => x.FirstName == "Ada", x => x.Age);
+```
+
 ## Counting
 
 ```csharp

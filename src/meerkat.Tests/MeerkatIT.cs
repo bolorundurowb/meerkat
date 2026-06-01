@@ -21,17 +21,15 @@ public class IntegrationCounter : Schema<ObjectId>
     }
 }
 
-[Xunit.Collection("MeerkatIntegrationTests")]
+[Collection("MeerkatIntegrationTests")]
 [Trait("Category", "Integration")]
 public class MeerkatIT
 {
-    private const string DB_URL = "mongodb://localhost:2017/testdb";
-    
     [Fact]
     public void IncrementAndDecrementById_ShouldUpdateFieldValue()
     {
         Meerkat.ResetDatabase();
-        Meerkat.Connect(DB_URL);
+        Meerkat.Connect("mongodb://localhost:27017/testdb");
 
         var counter = new IntegrationCounter { Name = "test", Value = 10 };
         counter.Save();
@@ -49,7 +47,7 @@ public class MeerkatIT
     public void IncrementOneAndGetUpdated_ShouldReturnUpdatedDocument()
     {
         Meerkat.ResetDatabase();
-        Meerkat.Connect(DB_URL);
+        Meerkat.Connect("mongodb://localhost:27017/testdb");
 
         var counter = new IntegrationCounter { Name = "get-updated", Score = 50.5 };
         counter.Save();
@@ -65,7 +63,7 @@ public class MeerkatIT
     public void IncrementMany_ShouldUpdateAllMatchingDocuments()
     {
         Meerkat.ResetDatabase();
-        Meerkat.Connect(DB_URL);
+        Meerkat.Connect("mongodb://localhost:27017/testdb");
 
         var c1 = new IntegrationCounter { Name = "group", Value = 1 };
         var c2 = new IntegrationCounter { Name = "group", Value = 2 };
@@ -90,7 +88,7 @@ public class MeerkatIT
     public void DecrementByFilter_ShouldUpdateMatchingDocument()
     {
         Meerkat.ResetDatabase();
-        Meerkat.Connect(DB_URL);
+        Meerkat.Connect("mongodb://localhost:27017/testdb");
 
         var counter = new IntegrationCounter { Name = "filter-test", Total = 100 };
         counter.Save();

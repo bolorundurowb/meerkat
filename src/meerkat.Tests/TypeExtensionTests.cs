@@ -6,12 +6,12 @@ namespace meerkat.Tests;
 
 public class TypeExtensionTests
 {
-    [meerkat.Attributes.Collection(Name = "custom_users", TrackTimestamps = true)]
+    [Attributes.Collection(Name = "custom_users", TrackTimestamps = true)]
     private class CustomUser : Schema<Guid> { }
 
     private class Product : Schema<Guid> { }
 
-    [meerkat.Attributes.Collection(Name = "  Orders  ")]
+    [Attributes.Collection(Name = "  Orders  ")]
     private class Order : Schema<Guid> { }
 
     [Fact]

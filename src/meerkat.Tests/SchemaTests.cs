@@ -6,7 +6,7 @@ namespace meerkat.Tests;
 
 public class SchemaTests
 {
-    [meerkat.Attributes.Collection(TrackTimestamps = true)]
+    [Attributes.Collection(TrackTimestamps = true)]
     private class TrackedEntity : Schema<Guid>
     {
         [Lowercase]

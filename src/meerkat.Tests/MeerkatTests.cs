@@ -1,14 +1,12 @@
-﻿using meerkat.Attributes;
-using MongoDB.Bson;
-using MongoDB.Driver;
+﻿using MongoDB.Bson;
 using OmniAssert;
 
 namespace meerkat.Tests;
 
-[Xunit.CollectionDefinition("MeerkatTests", DisableParallelization = true)]
+[CollectionDefinition("MeerkatTests", DisableParallelization = true)]
 public class MeerkatTestsCollection;
 
-[Xunit.CollectionDefinition("MeerkatUnitTests", DisableParallelization = true)]
+[CollectionDefinition("MeerkatUnitTests", DisableParallelization = true)]
 public class MeerkatUnitTestsCollection;
 
 [Xunit.Collection("MeerkatTests")]
@@ -32,7 +30,7 @@ public class MeerkatTests
             .WithMessage("The database connection has not been initialized. Call Connect() before carrying out any operations.");
     }
 
-    [meerkat.Attributes.Collection(Name = "test_students")]
+    [Attributes.Collection(Name = "test_students")]
     private class TestStudent : Schema<Guid>
     {
         public string FirstName { get; set; }

@@ -44,21 +44,21 @@ public class IndexingTests
         _mockIndexes.Verify(x => x.CreateMany(
             It.Is<IEnumerable<CreateIndexModel<IndexedEntity>>>(models =>
                 models.Any(m => m.Options.Name == "unique_name" && m.Options.Unique == true && m.Options.Sparse == true)),
-            It.IsAny<System.Threading.CancellationToken>()), Times.AtLeastOnce);
+            It.IsAny<CancellationToken>()), Times.AtLeastOnce);
 
         _mockIndexes.Verify(x => x.CreateMany(
             It.Is<IEnumerable<CreateIndexModel<IndexedEntity>>>(models =>
                 models.Any(m => m.Options.Name == "single_age")),
-            It.IsAny<System.Threading.CancellationToken>()), Times.AtLeastOnce);
+            It.IsAny<CancellationToken>()), Times.AtLeastOnce);
 
         _mockIndexes.Verify(x => x.CreateMany(
             It.Is<IEnumerable<CreateIndexModel<IndexedEntity>>>(models =>
                 models.Any(m => m.Options.Name == "geo_location")),
-            It.IsAny<System.Threading.CancellationToken>()), Times.AtLeastOnce);
+            It.IsAny<CancellationToken>()), Times.AtLeastOnce);
 
         _mockIndexes.Verify(x => x.CreateOne(
             It.Is<CreateIndexModel<IndexedEntity>>(m => m.Options.Name == "compound_idx"),
             null,
-            It.IsAny<System.Threading.CancellationToken>()), Times.Once);
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 }

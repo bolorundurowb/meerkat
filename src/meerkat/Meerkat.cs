@@ -38,6 +38,16 @@ public static partial class Meerkat
     }
 
     /// <summary>
+    /// Retrieves the underlying MongoDB collection for the specified schema type.
+    /// </summary>
+    /// <typeparam name="TSchema">The schema type.</typeparam>
+    /// <typeparam name="TId">The identifier type.</typeparam>
+    /// <returns>The IMongoCollection instance for the schema.</returns>
+    public static IMongoCollection<TSchema> Collection<TSchema, TId>()
+        where TSchema : Schema<TId> where TId : IEquatable<TId> =>
+        GetCollectionForType<TSchema, TId>();
+
+    /// <summary>
     /// Retrieves a queryable collection of the specified schema type.
     /// </summary>
     /// <typeparam name="TSchema">The schema type.</typeparam>

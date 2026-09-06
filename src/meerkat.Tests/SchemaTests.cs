@@ -59,9 +59,9 @@ public class SchemaTests
     {
         var entity = new TrackedEntity();
         entity.HandleTimestamps();
-        entity.CreatedAt.Verify().NotToBeNull();
-        entity.UpdatedAt.Verify().NotToBeNull();
-        entity.UpdatedAt.Verify().ToBe(entity.CreatedAt);
+        entity.CreatedAt.Must().NotBeNull();
+        entity.UpdatedAt.Must().NotBeNull();
+        entity.UpdatedAt.Must().Be(entity.CreatedAt);
     }
 
     [Fact]
@@ -71,8 +71,8 @@ public class SchemaTests
         entity.HandleTimestamps();
         var originalCreatedAt = entity.CreatedAt;
         entity.HandleTimestamps();
-        entity.CreatedAt.Verify().ToBe(originalCreatedAt);
-        entity.UpdatedAt.Verify().NotToBeNull();
+        entity.CreatedAt.Must().Be(originalCreatedAt);
+        entity.UpdatedAt.Must().NotBeNull();
     }
 
     [Fact]
@@ -80,8 +80,8 @@ public class SchemaTests
     {
         var entity = new UntrackedEntity();
         entity.HandleTimestamps();
-        entity.CreatedAt.Verify().ToBeNull();
-        entity.UpdatedAt.Verify().ToBeNull();
+        entity.CreatedAt.Must().BeNull();
+        entity.UpdatedAt.Must().BeNull();
     }
 
     [Fact]
@@ -89,8 +89,8 @@ public class SchemaTests
     {
         var entity = new TrackedEntity { Email = "TEST@EXAMPLE.COM", Normal = "STAY_SAME" };
         entity.HandleLowercaseTransformations();
-        entity.Email.Verify().ToBe("test@example.com");
-        entity.Normal.Verify().ToBe("STAY_SAME");
+        entity.Email.Must().Be("test@example.com");
+        entity.Normal.Must().Be("STAY_SAME");
     }
 
     [Fact]
@@ -98,8 +98,8 @@ public class SchemaTests
     {
         var entity = new TrackedEntity { Code = "abc-123", Normal = "stay_same" };
         entity.HandleUppercaseTransformations();
-        entity.Code.Verify().ToBe("ABC-123");
-        entity.Normal.Verify().ToBe("stay_same");
+        entity.Code.Must().Be("ABC-123");
+        entity.Normal.Must().Be("stay_same");
     }
 
     [Fact]

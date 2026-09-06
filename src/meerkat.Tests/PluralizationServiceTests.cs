@@ -27,7 +27,7 @@ public class PluralizationServiceTests
     [InlineData("Guy", "guys")]
     public void Pluralize_ShouldReturnCorrectPluralForm(string singular, string expectedPlural)
     {
-        PluralizationService.Pluralize(singular).Verify().ToBeIgnoringCase(expectedPlural);
+        PluralizationService.Pluralize(singular).Must().BeIgnoringCase(expectedPlural);
     }
 
     [Theory]
@@ -35,7 +35,7 @@ public class PluralizationServiceTests
     [InlineData("Mongoose", "mongooses")]
     public void Pluralize_OuseRule_ShouldWorkCorrectly(string singular, string expectedPlural)
     {
-        PluralizationService.Pluralize(singular).Verify().ToBeIgnoringCase(expectedPlural);
+        PluralizationService.Pluralize(singular).Must().BeIgnoringCase(expectedPlural);
     }
 
     [Theory]
@@ -46,7 +46,7 @@ public class PluralizationServiceTests
     [InlineData("Fox", "foxes")]
     public void Pluralize_EsSuffix_ShouldApplyToEndings(string singular, string expectedPlural)
     {
-        PluralizationService.Pluralize(singular).Verify().ToBeIgnoringCase(expectedPlural);
+        PluralizationService.Pluralize(singular).Must().BeIgnoringCase(expectedPlural);
     }
 
     [Theory]
@@ -55,29 +55,29 @@ public class PluralizationServiceTests
     [InlineData("Shelf", "shelves")]
     public void Pluralize_VesSuffix_ShouldReplaceFOrFe(string singular, string expectedPlural)
     {
-        PluralizationService.Pluralize(singular).Verify().ToBeIgnoringCase(expectedPlural);
+        PluralizationService.Pluralize(singular).Must().BeIgnoringCase(expectedPlural);
     }
 
     [Fact]
     public void Pluralize_ShortUsWord_ShouldAddEs()
     {
-        PluralizationService.Pluralize("bus").Verify().ToBe("buses");
+        PluralizationService.Pluralize("bus").Must().Be("buses");
     }
 
     [Fact]
     public void Pluralize_NoMatchingRule_ShouldAddS()
     {
-        PluralizationService.Pluralize("dog").Verify().ToBe("dogs");
-        PluralizationService.Pluralize("cat").Verify().ToBe("cats");
-        PluralizationService.Pluralize("computer").Verify().ToBe("computers");
+        PluralizationService.Pluralize("dog").Must().Be("dogs");
+        PluralizationService.Pluralize("cat").Must().Be("cats");
+        PluralizationService.Pluralize("computer").Must().Be("computers");
     }
 
     [Fact]
     public void Pluralize_IsCaseInsensitive()
     {
-        PluralizationService.Pluralize("city").Verify().ToBe("cities");
-        PluralizationService.Pluralize("City").Verify().ToBe("Cities");
-        PluralizationService.Pluralize("CITY").Verify().ToBe("CITies");
+        PluralizationService.Pluralize("city").Must().Be("cities");
+        PluralizationService.Pluralize("City").Must().Be("Cities");
+        PluralizationService.Pluralize("CITY").Must().Be("CITies");
     }
 
     [Theory]
@@ -89,7 +89,7 @@ public class PluralizationServiceTests
     [InlineData("donkey", "donkeys")]
     public void Pluralize_SimpleS_ShouldApplyToEndings(string singular, string expectedPlural)
     {
-        PluralizationService.Pluralize(singular).Verify().ToBeIgnoringCase(expectedPlural);
+        PluralizationService.Pluralize(singular).Must().BeIgnoringCase(expectedPlural);
     }
 
     [Theory]
@@ -97,6 +97,6 @@ public class PluralizationServiceTests
     [InlineData("Diagnosis", "diagnoses")]
     public void Pluralize_IsToEs_ShouldReplaceIsEnding(string singular, string expectedPlural)
     {
-        PluralizationService.Pluralize(singular).Verify().ToBeIgnoringCase(expectedPlural);
+        PluralizationService.Pluralize(singular).Must().BeIgnoringCase(expectedPlural);
     }
 }

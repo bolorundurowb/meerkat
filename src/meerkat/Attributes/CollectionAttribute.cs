@@ -12,7 +12,7 @@ public sealed class CollectionAttribute : Attribute
     /// <summary>
     /// Gets or sets the name of the MongoDB collection.
     /// </summary>
-    public string Name { get; set; }
+    public string? Name { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether timestamps should be tracked for documents in the collection.

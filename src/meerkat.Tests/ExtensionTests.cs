@@ -26,15 +26,15 @@ public class ExtensionTests
     [InlineData("Guy", "guys")]
     public void Pluralize_ShouldReturnCorrectPluralForm(string singular, string expectedPlural)
     {
-        singular.Pluralize().Verify().ToBeIgnoringCase(expectedPlural);
+        singular.Pluralize().Must().BeIgnoringCase(expectedPlural);
     }
 
     [Fact]
     public void Pluralize_ShouldHandleEmptyOrNullString()
     {
-        ((string?)null).Pluralize().Verify().ToBeNull();
-        "".Pluralize().Verify().ToBe("");
-        "   ".Pluralize().Verify().ToBe("   ");
+        ((string?)null).Pluralize().Must().BeNull();
+        "".Pluralize().Must().Be("");
+        "   ".Pluralize().Must().Be("   ");
     }
 
     [Theory]
@@ -44,6 +44,6 @@ public class ExtensionTests
     [InlineData("NoMatch", "Matchless", "Something", "NoMatch")]
     public void ReplaceLastOccurrence_ShouldWorkCorrectly(string input, string oldValue, string newValue, string expected)
     {
-        input.ReplaceLastOccurrence(oldValue, newValue).Verify().ToBe(expected);
+        input.ReplaceLastOccurrence(oldValue, newValue).Must().Be(expected);
     }
 }

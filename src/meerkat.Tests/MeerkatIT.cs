@@ -36,11 +36,11 @@ public class MeerkatIT
 
         Meerkat.IncrementById<IntegrationCounter, ObjectId, int>(counter.Id, x => x.Value, 5);
         var afterInc = Meerkat.FindById<IntegrationCounter, ObjectId>(counter.Id);
-        afterInc.Value.Verify().ToBe(15);
+        afterInc.Value.Must().Be(15);
 
         Meerkat.DecrementById<IntegrationCounter, ObjectId, int>(counter.Id, x => x.Value, 3);
         var afterDec = Meerkat.FindById<IntegrationCounter, ObjectId>(counter.Id);
-        afterDec.Value.Verify().ToBe(12);
+        afterDec.Value.Must().Be(12);
     }
 
     [Fact]
@@ -55,8 +55,8 @@ public class MeerkatIT
         var updated = Meerkat.IncrementOneAndGetUpdated<IntegrationCounter, ObjectId, double>(
             x => x.Name == "get-updated", x => x.Score, 10.5);
 
-        updated.Verify().NotToBeNull();
-        updated.Score.Verify().ToBe(61.0);
+        updated.Must().NotBeNull();
+        updated.Score.Must().Be(61.0);
     }
 
     [Fact]
@@ -75,13 +75,13 @@ public class MeerkatIT
         Meerkat.IncrementMany<IntegrationCounter, ObjectId, int>(x => x.Name == "group", x => x.Value, 10);
 
         var groupItems = Meerkat.Find<IntegrationCounter, ObjectId>(x => x.Name == "group");
-        groupItems.Verify().ToHaveCount(2);
+        groupItems.Must().HaveCount(2);
         foreach (var item in groupItems)
-            item.Value.Verify().ToBeGreaterThan(10);
+            item.Value.Must().BeGreaterThan(10);
 
         var other = Meerkat.FindOne<IntegrationCounter, ObjectId>(x => x.Name == "other");
-        other.Verify().NotToBeNull();
-        other.Value.Verify().ToBe(100);
+        other.Must().NotBeNull();
+        other.Value.Must().Be(100);
     }
 
     [Fact]
@@ -97,7 +97,7 @@ public class MeerkatIT
         Meerkat.DecrementByFilter<IntegrationCounter, ObjectId, long>(filter, x => x.Total, 25);
 
         var updated = Meerkat.FindById<IntegrationCounter, ObjectId>(counter.Id);
-        updated.Verify().NotToBeNull();
-        updated.Total.Verify().ToBe(75);
+        updated.Must().NotBeNull();
+        updated.Total.Must().Be(75);
     }
 }

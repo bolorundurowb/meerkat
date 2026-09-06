@@ -18,7 +18,7 @@ public class MeerkatTests
         Meerkat.ResetDatabase();
         var connectionString = "mongodb://localhost:27017/testdb";
         Meerkat.Connect(connectionString);
-        Meerkat.Database.Verify().NotToBeNull();
+        Meerkat.Database.Must().NotBeNull();
     }
 
     [Fact]
@@ -47,8 +47,8 @@ public class MeerkatTests
         Meerkat.ResetDatabase();
         Meerkat.Connect("mongodb://localhost:27017/testdb");
         var collection = Meerkat.Collection<TestStudent, Guid>();
-        collection.Verify().NotToBeNull();
-        collection.CollectionNamespace.CollectionName.Verify().ToBe("test_students");
+        collection.Must().NotBeNull();
+        collection.CollectionNamespace.CollectionName.Must().Be("test_students");
     }
 
     [Fact]
@@ -57,8 +57,8 @@ public class MeerkatTests
         Meerkat.ResetDatabase();
         Meerkat.Connect("mongodb://localhost:27017/testdb");
         var collection = Meerkat.Collection<TestProduct, ObjectId>();
-        collection.Verify().NotToBeNull();
-        collection.CollectionNamespace.CollectionName.Verify().ToBe("testproducts");
+        collection.Must().NotBeNull();
+        collection.CollectionNamespace.CollectionName.Must().Be("testproducts");
     }
 
     [Fact]

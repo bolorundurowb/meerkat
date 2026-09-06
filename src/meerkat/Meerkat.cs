@@ -2,7 +2,7 @@
 using System.Collections.Concurrent;
 using System.Linq;
 using MongoDB.Driver;
-using MongoUrlParser;
+using UriCredentialParser;
 
 namespace meerkat;
 
@@ -28,7 +28,7 @@ public static partial class Meerkat
     /// <param name="databaseConnectionString">A fully qualified MongoDB connection string.</param>
     public static void Connect(string databaseConnectionString)
     {
-        var (dbUrl, dbName) = Parser.Parse(databaseConnectionString);
+        var (dbUrl, dbName) = CredentialsParser.Parse(databaseConnectionString).ToMongoConnectionSplit();
         _database = new Lazy<IMongoDatabase>(() => new MongoClient(dbUrl).GetDatabase(dbName));
     }
 

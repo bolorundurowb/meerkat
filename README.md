@@ -176,7 +176,49 @@ Meerkat.Remove<Student, ObjectId>(x => x.LastName == "Lovelace");
 
 ## Atomic Updates
 
-Meerkat provides atomic increment and decrement operations for numeric fields. Each method defaults the amount to `1` when not specified. Generic `TField` type parameter supports `int`, `long`, `double`, `decimal`, and any other numeric type accepted by MongoDB.
+`Save` / `SaveAsync` replace the entire document. For concurrent or field-level writes, use the fluent updater or the increment/decrement helpers below. These issue MongoDB update operators (`$set`, `$unset`, `$push`, `$pull`, `$addToSet`, `$inc`) instead of a full replace.
+
+### Fluent partial updates
+
+Compose one or more field operations and execute them as a single atomic update. If the schema uses `[Collection(TrackTimestamps = true)]`, `UpdatedAt` is set to UTC now as part of the same write. `CreatedAt`, `PreSave`, `PostSave`, and case transforms are not applied.
+
+```csharp
+await Meerkat.Update<Student, ObjectId>(id)
+    .Set(x => x.LastName, "Lovelace")
+    .Unset(x => x.Nickname)
+    .Push(x => x.Tags, "honor")
+    .Pull(x => x.Tags, "draft")
+    .AddToSet(x => x.Tags, "alumni")
+    .Inc(x => x.Age, 1)
+    .ExecuteAsync();
+
+var updated = await Meerkat.Update<Student, ObjectId>(id)
+    .Set(x => x.LastName, "Lovelace")
+    .ExecuteAndGetUpdatedAsync();
+
+await Meerkat.UpdateOne<Student, ObjectId>(x => x.FirstName == "Ada")
+    .Set(x => x.LastName, "Lovelace")
+    .ExecuteAsync();
+
+await Meerkat.UpdateMany<Student, ObjectId>(x => x.Age < 18)
+    .Set(x => x.Status, "minor")
+    .ExecuteAsync();
+
+var filter = Builders<Student>.Filter.Eq(x => x.Status, "pending");
+await Meerkat.UpdateByFilter<Student, ObjectId>(filter)
+    .Set(x => x.Status, "active")
+    .ExecuteAsync();
+
+await Meerkat.UpdateByFilter<Student, ObjectId>(filter, many: true)
+    .Set(x => x.Status, "active")
+    .ExecuteAsync();
+```
+
+`Execute` / `ExecuteAsync` return `UpdateResult`. `ExecuteAndGetUpdated` / `ExecuteAndGetUpdatedAsync` return the document after the update and cannot be used with `UpdateMany`.
+
+### Increment/Decrement
+
+Meerkat also provides dedicated atomic increment and decrement operations for numeric fields. Each method defaults the amount to `1` when not specified. Generic `TField` type parameter supports `int`, `long`, `double`, `decimal`, and any other numeric type accepted by MongoDB.
 
 ### Increment/Decrement by ID
 

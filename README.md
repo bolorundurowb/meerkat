@@ -361,14 +361,18 @@ public class User : Schema<Guid>
 {
     [SingleFieldIndex(Name = "username_idx", Sparse = true, IndexOrder = IndexOrder.Ascending)]
     public string Username { get; set; }
+
+    [SingleFieldIndex(ExpireAfter = "30d")]
+    public DateTime CreatedAtUtc { get; set; }
 }
 ```
 
-| Property     | Default     | Description                            |
-|--------------|-------------|----------------------------------------|
-| `Name`       | auto        | Custom index name                      |
-| `Sparse`     | `false`     | Excludes documents missing the field   |
-| `IndexOrder` | `Ascending` | `Ascending`, `Descending`, or `Hashed` |
+| Property      | Default     | Description                                                                                                           |
+|---------------|-------------|-----------------------------------------------------------------------------------------------------------------------|
+| `Name`        | auto        | Custom index name                                                                                                     |
+| `Sparse`      | `false`     | Excludes documents missing the field                                                                                  |
+| `IndexOrder`  | `Ascending` | `Ascending`, `Descending`, or `Hashed`                                                                                |
+| `ExpireAfter` | `null`      | TTL duration (e.g. `"30d"`, `"12h"`, `"15m"`, `"1s"`, `"500ms"`, `"2w"`, or ISO-8601). Only on `DateTime`/`DateTime?` |
 
 ### Unique index
 
@@ -392,15 +396,21 @@ Fields sharing the same `Name` value are grouped into a single compound index:
 ```csharp
 public class Order : Schema<Guid>
 {
-    [CompoundIndex(Name = "order_idx", IndexOrder = IndexOrder.Ascending)]
+    [CompoundIndex(Name = "order_idx", IndexOrder = IndexOrder.Ascending, Unique = true)]
     public DateTime OrderDate { get; set; }
 
-    [CompoundIndex(Name = "order_idx", IndexOrder = IndexOrder.Descending)]
+    [CompoundIndex(Name = "order_idx", IndexOrder = IndexOrder.Descending, Unique = true)]
     public decimal TotalAmount { get; set; }
 }
 ```
 
-Fields without a `Name` are grouped together into one unnamed compound index.
+| Property     | Default     | Description                                                                    |
+|--------------|-------------|--------------------------------------------------------------------------------|
+| `Name`       | auto        | Custom index name (groups fields together)                                     |
+| `IndexOrder` | `Ascending` | `Ascending`, `Descending`, or `Hashed`                                         |
+| `Unique`     | `false`     | Enforces uniqueness across the compound group; all members in the group must match |
+
+Fields without a `Name` are grouped together into one unnamed compound index. All members sharing the same group name must have matching `Unique` settings; mixed values throw an `InvalidAttributeException`.
 
 ### Geospatial index
 
@@ -419,12 +429,12 @@ public class Location : Schema<Guid>
 
 ### Index summary
 
-| Attribute          | Scope               | Key properties                       |
-|--------------------|---------------------|--------------------------------------|
-| `SingleFieldIndex` | Single property     | `Name`, `Sparse`, `IndexOrder`       |
-| `UniqueIndex`      | Single property     | `Name`, `Sparse`                     |
-| `CompoundIndex`    | Multiple properties | `Name` (groups fields), `IndexOrder` |
-| `GeospatialIndex`  | Single property     | `Name`, `IndexType`                  |
+| Attribute          | Scope               | Key properties                                     |
+|--------------------|---------------------|----------------------------------------------------|
+| `SingleFieldIndex` | Single property     | `Name`, `Sparse`, `IndexOrder`, `ExpireAfter`      |
+| `UniqueIndex`      | Single property     | `Name`, `Sparse`                                   |
+| `CompoundIndex`    | Multiple properties | `Name` (groups fields), `IndexOrder`, `Unique`     |
+| `GeospatialIndex`  | Single property     | `Name`, `IndexType`                                |
 
 ## Data Transformations
 

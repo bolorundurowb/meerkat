@@ -24,11 +24,19 @@ public static partial class Meerkat
     public static void IncrementById<TSchema, TId, TField>(TId id,
         Expression<Func<TSchema, TField>> field, TField amount = default,
         CancellationToken cancellationToken = default)
-        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
-        GetCollectionForType<TSchema, TId>().UpdateOne(
-            ApplySoftDeleteFilter<TSchema, TId>(Builders<TSchema>.Filter.Where(x => x.Id.Equals(id))),
-            Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
-            cancellationToken: cancellationToken);
+        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct
+    {
+        var collection = GetCollectionForType<TSchema, TId>();
+        WithAmbientSession(
+            session => collection.UpdateOne(session,
+                ApplySoftDeleteFilter<TSchema, TId>(Builders<TSchema>.Filter.Where(x => x.Id.Equals(id))),
+                Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
+                cancellationToken: cancellationToken),
+            () => collection.UpdateOne(
+                ApplySoftDeleteFilter<TSchema, TId>(Builders<TSchema>.Filter.Where(x => x.Id.Equals(id))),
+                Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
+                cancellationToken: cancellationToken));
+    }
 
     /// <summary>
     /// Atomically increments a numeric field on the document with the specified ID asynchronously.
@@ -43,11 +51,19 @@ public static partial class Meerkat
     public static Task IncrementByIdAsync<TSchema, TId, TField>(TId id,
         Expression<Func<TSchema, TField>> field, TField amount = default,
         CancellationToken cancellationToken = default)
-        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
-        GetCollectionForType<TSchema, TId>().UpdateOneAsync(
-            ApplySoftDeleteFilter<TSchema, TId>(Builders<TSchema>.Filter.Where(x => x.Id.Equals(id))),
-            Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
-            cancellationToken: cancellationToken);
+        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct
+    {
+        var collection = GetCollectionForType<TSchema, TId>();
+        return WithAmbientSessionAsync(
+            session => collection.UpdateOneAsync(session,
+                ApplySoftDeleteFilter<TSchema, TId>(Builders<TSchema>.Filter.Where(x => x.Id.Equals(id))),
+                Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
+                cancellationToken: cancellationToken),
+            () => collection.UpdateOneAsync(
+                ApplySoftDeleteFilter<TSchema, TId>(Builders<TSchema>.Filter.Where(x => x.Id.Equals(id))),
+                Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
+                cancellationToken: cancellationToken));
+    }
 
     /// <summary>
     /// Atomically decrements a numeric field on the document with the specified ID.
@@ -62,11 +78,19 @@ public static partial class Meerkat
     public static void DecrementById<TSchema, TId, TField>(TId id,
         Expression<Func<TSchema, TField>> field, TField amount = default,
         CancellationToken cancellationToken = default)
-        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
-        GetCollectionForType<TSchema, TId>().UpdateOne(
-            ApplySoftDeleteFilter<TSchema, TId>(Builders<TSchema>.Filter.Where(x => x.Id.Equals(id))),
-            Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
-            cancellationToken: cancellationToken);
+        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct
+    {
+        var collection = GetCollectionForType<TSchema, TId>();
+        WithAmbientSession(
+            session => collection.UpdateOne(session,
+                ApplySoftDeleteFilter<TSchema, TId>(Builders<TSchema>.Filter.Where(x => x.Id.Equals(id))),
+                Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
+                cancellationToken: cancellationToken),
+            () => collection.UpdateOne(
+                ApplySoftDeleteFilter<TSchema, TId>(Builders<TSchema>.Filter.Where(x => x.Id.Equals(id))),
+                Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
+                cancellationToken: cancellationToken));
+    }
 
     /// <summary>
     /// Atomically decrements a numeric field on the document with the specified ID asynchronously.
@@ -81,11 +105,19 @@ public static partial class Meerkat
     public static Task DecrementByIdAsync<TSchema, TId, TField>(TId id,
         Expression<Func<TSchema, TField>> field, TField amount = default,
         CancellationToken cancellationToken = default)
-        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
-        GetCollectionForType<TSchema, TId>().UpdateOneAsync(
-            ApplySoftDeleteFilter<TSchema, TId>(Builders<TSchema>.Filter.Where(x => x.Id.Equals(id))),
-            Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
-            cancellationToken: cancellationToken);
+        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct
+    {
+        var collection = GetCollectionForType<TSchema, TId>();
+        return WithAmbientSessionAsync(
+            session => collection.UpdateOneAsync(session,
+                ApplySoftDeleteFilter<TSchema, TId>(Builders<TSchema>.Filter.Where(x => x.Id.Equals(id))),
+                Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
+                cancellationToken: cancellationToken),
+            () => collection.UpdateOneAsync(
+                ApplySoftDeleteFilter<TSchema, TId>(Builders<TSchema>.Filter.Where(x => x.Id.Equals(id))),
+                Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
+                cancellationToken: cancellationToken));
+    }
 
     /// <summary>
     /// Atomically increments a numeric field on documents matching the given filter.
@@ -100,11 +132,19 @@ public static partial class Meerkat
     public static void IncrementByFilter<TSchema, TId, TField>(FilterDefinition<TSchema> filter,
         Expression<Func<TSchema, TField>> field, TField amount = default,
         CancellationToken cancellationToken = default)
-        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
-        GetCollectionForType<TSchema, TId>().UpdateOne(
-            ApplySoftDeleteFilter<TSchema, TId>(filter),
-            Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
-            cancellationToken: cancellationToken);
+        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct
+    {
+        var collection = GetCollectionForType<TSchema, TId>();
+        WithAmbientSession(
+            session => collection.UpdateOne(session,
+                ApplySoftDeleteFilter<TSchema, TId>(filter),
+                Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
+                cancellationToken: cancellationToken),
+            () => collection.UpdateOne(
+                ApplySoftDeleteFilter<TSchema, TId>(filter),
+                Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
+                cancellationToken: cancellationToken));
+    }
 
     /// <summary>
     /// Atomically increments a numeric field on documents matching the given filter asynchronously.
@@ -119,11 +159,19 @@ public static partial class Meerkat
     public static Task IncrementByFilterAsync<TSchema, TId, TField>(FilterDefinition<TSchema> filter,
         Expression<Func<TSchema, TField>> field, TField amount = default,
         CancellationToken cancellationToken = default)
-        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
-        GetCollectionForType<TSchema, TId>().UpdateOneAsync(
-            ApplySoftDeleteFilter<TSchema, TId>(filter),
-            Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
-            cancellationToken: cancellationToken);
+        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct
+    {
+        var collection = GetCollectionForType<TSchema, TId>();
+        return WithAmbientSessionAsync(
+            session => collection.UpdateOneAsync(session,
+                ApplySoftDeleteFilter<TSchema, TId>(filter),
+                Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
+                cancellationToken: cancellationToken),
+            () => collection.UpdateOneAsync(
+                ApplySoftDeleteFilter<TSchema, TId>(filter),
+                Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
+                cancellationToken: cancellationToken));
+    }
 
     /// <summary>
     /// Atomically decrements a numeric field on documents matching the given filter.
@@ -138,11 +186,19 @@ public static partial class Meerkat
     public static void DecrementByFilter<TSchema, TId, TField>(FilterDefinition<TSchema> filter,
         Expression<Func<TSchema, TField>> field, TField amount = default,
         CancellationToken cancellationToken = default)
-        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
-        GetCollectionForType<TSchema, TId>().UpdateOne(
-            ApplySoftDeleteFilter<TSchema, TId>(filter),
-            Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
-            cancellationToken: cancellationToken);
+        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct
+    {
+        var collection = GetCollectionForType<TSchema, TId>();
+        WithAmbientSession(
+            session => collection.UpdateOne(session,
+                ApplySoftDeleteFilter<TSchema, TId>(filter),
+                Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
+                cancellationToken: cancellationToken),
+            () => collection.UpdateOne(
+                ApplySoftDeleteFilter<TSchema, TId>(filter),
+                Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
+                cancellationToken: cancellationToken));
+    }
 
     /// <summary>
     /// Atomically decrements a numeric field on documents matching the given filter asynchronously.
@@ -157,11 +213,19 @@ public static partial class Meerkat
     public static Task DecrementByFilterAsync<TSchema, TId, TField>(FilterDefinition<TSchema> filter,
         Expression<Func<TSchema, TField>> field, TField amount = default,
         CancellationToken cancellationToken = default)
-        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
-        GetCollectionForType<TSchema, TId>().UpdateOneAsync(
-            ApplySoftDeleteFilter<TSchema, TId>(filter),
-            Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
-            cancellationToken: cancellationToken);
+        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct
+    {
+        var collection = GetCollectionForType<TSchema, TId>();
+        return WithAmbientSessionAsync(
+            session => collection.UpdateOneAsync(session,
+                ApplySoftDeleteFilter<TSchema, TId>(filter),
+                Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
+                cancellationToken: cancellationToken),
+            () => collection.UpdateOneAsync(
+                ApplySoftDeleteFilter<TSchema, TId>(filter),
+                Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
+                cancellationToken: cancellationToken));
+    }
 
     /// <summary>
     /// Atomically increments a numeric field on the first document matching the predicate.
@@ -176,11 +240,19 @@ public static partial class Meerkat
     public static void IncrementOne<TSchema, TId, TField>(Expression<Func<TSchema, bool>> predicate,
         Expression<Func<TSchema, TField>> field, TField amount = default,
         CancellationToken cancellationToken = default)
-        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
-        GetCollectionForType<TSchema, TId>().UpdateOne(
-            ApplySoftDeleteFilter<TSchema, TId>(predicate),
-            Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
-            cancellationToken: cancellationToken);
+        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct
+    {
+        var collection = GetCollectionForType<TSchema, TId>();
+        WithAmbientSession(
+            session => collection.UpdateOne(session,
+                ApplySoftDeleteFilter<TSchema, TId>(predicate),
+                Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
+                cancellationToken: cancellationToken),
+            () => collection.UpdateOne(
+                ApplySoftDeleteFilter<TSchema, TId>(predicate),
+                Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
+                cancellationToken: cancellationToken));
+    }
 
     /// <summary>
     /// Atomically increments a numeric field on the first document matching the predicate asynchronously.
@@ -195,11 +267,19 @@ public static partial class Meerkat
     public static Task IncrementOneAsync<TSchema, TId, TField>(Expression<Func<TSchema, bool>> predicate,
         Expression<Func<TSchema, TField>> field, TField amount = default,
         CancellationToken cancellationToken = default)
-        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
-        GetCollectionForType<TSchema, TId>().UpdateOneAsync(
-            ApplySoftDeleteFilter<TSchema, TId>(predicate),
-            Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
-            cancellationToken: cancellationToken);
+        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct
+    {
+        var collection = GetCollectionForType<TSchema, TId>();
+        return WithAmbientSessionAsync(
+            session => collection.UpdateOneAsync(session,
+                ApplySoftDeleteFilter<TSchema, TId>(predicate),
+                Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
+                cancellationToken: cancellationToken),
+            () => collection.UpdateOneAsync(
+                ApplySoftDeleteFilter<TSchema, TId>(predicate),
+                Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
+                cancellationToken: cancellationToken));
+    }
 
     /// <summary>
     /// Atomically decrements a numeric field on the first document matching the predicate.
@@ -214,11 +294,19 @@ public static partial class Meerkat
     public static void DecrementOne<TSchema, TId, TField>(Expression<Func<TSchema, bool>> predicate,
         Expression<Func<TSchema, TField>> field, TField amount = default,
         CancellationToken cancellationToken = default)
-        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
-        GetCollectionForType<TSchema, TId>().UpdateOne(
-            ApplySoftDeleteFilter<TSchema, TId>(predicate),
-            Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
-            cancellationToken: cancellationToken);
+        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct
+    {
+        var collection = GetCollectionForType<TSchema, TId>();
+        WithAmbientSession(
+            session => collection.UpdateOne(session,
+                ApplySoftDeleteFilter<TSchema, TId>(predicate),
+                Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
+                cancellationToken: cancellationToken),
+            () => collection.UpdateOne(
+                ApplySoftDeleteFilter<TSchema, TId>(predicate),
+                Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
+                cancellationToken: cancellationToken));
+    }
 
     /// <summary>
     /// Atomically decrements a numeric field on the first document matching the predicate asynchronously.
@@ -233,11 +321,19 @@ public static partial class Meerkat
     public static Task DecrementOneAsync<TSchema, TId, TField>(Expression<Func<TSchema, bool>> predicate,
         Expression<Func<TSchema, TField>> field, TField amount = default,
         CancellationToken cancellationToken = default)
-        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
-        GetCollectionForType<TSchema, TId>().UpdateOneAsync(
-            ApplySoftDeleteFilter<TSchema, TId>(predicate),
-            Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
-            cancellationToken: cancellationToken);
+        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct
+    {
+        var collection = GetCollectionForType<TSchema, TId>();
+        return WithAmbientSessionAsync(
+            session => collection.UpdateOneAsync(session,
+                ApplySoftDeleteFilter<TSchema, TId>(predicate),
+                Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
+                cancellationToken: cancellationToken),
+            () => collection.UpdateOneAsync(
+                ApplySoftDeleteFilter<TSchema, TId>(predicate),
+                Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
+                cancellationToken: cancellationToken));
+    }
 
     /// <summary>
     /// Atomically increments a numeric field on all documents matching the predicate.
@@ -252,11 +348,19 @@ public static partial class Meerkat
     public static void IncrementMany<TSchema, TId, TField>(Expression<Func<TSchema, bool>> predicate,
         Expression<Func<TSchema, TField>> field, TField amount = default,
         CancellationToken cancellationToken = default)
-        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
-        GetCollectionForType<TSchema, TId>().UpdateMany(
-            ApplySoftDeleteFilter<TSchema, TId>(predicate),
-            Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
-            cancellationToken: cancellationToken);
+        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct
+    {
+        var collection = GetCollectionForType<TSchema, TId>();
+        WithAmbientSession(
+            session => collection.UpdateMany(session,
+                ApplySoftDeleteFilter<TSchema, TId>(predicate),
+                Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
+                cancellationToken: cancellationToken),
+            () => collection.UpdateMany(
+                ApplySoftDeleteFilter<TSchema, TId>(predicate),
+                Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
+                cancellationToken: cancellationToken));
+    }
 
     /// <summary>
     /// Atomically increments a numeric field on all documents matching the predicate asynchronously.
@@ -271,11 +375,19 @@ public static partial class Meerkat
     public static Task IncrementManyAsync<TSchema, TId, TField>(Expression<Func<TSchema, bool>> predicate,
         Expression<Func<TSchema, TField>> field, TField amount = default,
         CancellationToken cancellationToken = default)
-        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
-        GetCollectionForType<TSchema, TId>().UpdateManyAsync(
-            ApplySoftDeleteFilter<TSchema, TId>(predicate),
-            Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
-            cancellationToken: cancellationToken);
+        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct
+    {
+        var collection = GetCollectionForType<TSchema, TId>();
+        return WithAmbientSessionAsync(
+            session => collection.UpdateManyAsync(session,
+                ApplySoftDeleteFilter<TSchema, TId>(predicate),
+                Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
+                cancellationToken: cancellationToken),
+            () => collection.UpdateManyAsync(
+                ApplySoftDeleteFilter<TSchema, TId>(predicate),
+                Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
+                cancellationToken: cancellationToken));
+    }
 
     /// <summary>
     /// Atomically decrements a numeric field on all documents matching the predicate.
@@ -290,11 +402,19 @@ public static partial class Meerkat
     public static void DecrementMany<TSchema, TId, TField>(Expression<Func<TSchema, bool>> predicate,
         Expression<Func<TSchema, TField>> field, TField amount = default,
         CancellationToken cancellationToken = default)
-        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
-        GetCollectionForType<TSchema, TId>().UpdateMany(
-            ApplySoftDeleteFilter<TSchema, TId>(predicate),
-            Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
-            cancellationToken: cancellationToken);
+        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct
+    {
+        var collection = GetCollectionForType<TSchema, TId>();
+        WithAmbientSession(
+            session => collection.UpdateMany(session,
+                ApplySoftDeleteFilter<TSchema, TId>(predicate),
+                Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
+                cancellationToken: cancellationToken),
+            () => collection.UpdateMany(
+                ApplySoftDeleteFilter<TSchema, TId>(predicate),
+                Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
+                cancellationToken: cancellationToken));
+    }
 
     /// <summary>
     /// Atomically decrements a numeric field on all documents matching the predicate asynchronously.
@@ -309,11 +429,19 @@ public static partial class Meerkat
     public static Task DecrementManyAsync<TSchema, TId, TField>(Expression<Func<TSchema, bool>> predicate,
         Expression<Func<TSchema, TField>> field, TField amount = default,
         CancellationToken cancellationToken = default)
-        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
-        GetCollectionForType<TSchema, TId>().UpdateManyAsync(
-            ApplySoftDeleteFilter<TSchema, TId>(predicate),
-            Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
-            cancellationToken: cancellationToken);
+        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct
+    {
+        var collection = GetCollectionForType<TSchema, TId>();
+        return WithAmbientSessionAsync(
+            session => collection.UpdateManyAsync(session,
+                ApplySoftDeleteFilter<TSchema, TId>(predicate),
+                Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
+                cancellationToken: cancellationToken),
+            () => collection.UpdateManyAsync(
+                ApplySoftDeleteFilter<TSchema, TId>(predicate),
+                Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
+                cancellationToken: cancellationToken));
+    }
 
     /// <summary>
     /// Atomically increments a numeric field on the document with the specified ID and returns the updated document.
@@ -329,12 +457,21 @@ public static partial class Meerkat
     public static TSchema? IncrementByIdAndGetUpdated<TSchema, TId, TField>(TId id,
         Expression<Func<TSchema, TField>> field, TField amount = default,
         CancellationToken cancellationToken = default)
-        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
-        GetCollectionForType<TSchema, TId>().FindOneAndUpdate(
-            ApplySoftDeleteFilter<TSchema, TId>(Builders<TSchema>.Filter.Where(x => x.Id.Equals(id))),
-            Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
-            new FindOneAndUpdateOptions<TSchema> { ReturnDocument = ReturnDocument.After },
-            cancellationToken);
+        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct
+    {
+        var collection = GetCollectionForType<TSchema, TId>();
+        return WithAmbientSession(
+            session => collection.FindOneAndUpdate(session,
+                ApplySoftDeleteFilter<TSchema, TId>(Builders<TSchema>.Filter.Where(x => x.Id.Equals(id))),
+                Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
+                new FindOneAndUpdateOptions<TSchema> { ReturnDocument = ReturnDocument.After },
+                cancellationToken),
+            () => collection.FindOneAndUpdate(
+                ApplySoftDeleteFilter<TSchema, TId>(Builders<TSchema>.Filter.Where(x => x.Id.Equals(id))),
+                Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
+                new FindOneAndUpdateOptions<TSchema> { ReturnDocument = ReturnDocument.After },
+                cancellationToken));
+    }
 
     /// <summary>
     /// Atomically increments a numeric field on the document with the specified ID and returns the updated document asynchronously.
@@ -350,12 +487,21 @@ public static partial class Meerkat
     public static Task<TSchema?> IncrementByIdAndGetUpdatedAsync<TSchema, TId, TField>(TId id,
         Expression<Func<TSchema, TField>> field, TField amount = default,
         CancellationToken cancellationToken = default)
-        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
-        GetCollectionForType<TSchema, TId>().FindOneAndUpdateAsync(
-            ApplySoftDeleteFilter<TSchema, TId>(Builders<TSchema>.Filter.Where(x => x.Id.Equals(id))),
-            Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
-            new FindOneAndUpdateOptions<TSchema> { ReturnDocument = ReturnDocument.After },
-            cancellationToken);
+        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct
+    {
+        var collection = GetCollectionForType<TSchema, TId>();
+        return WithAmbientSessionAsync(
+            session => collection.FindOneAndUpdateAsync(session,
+                ApplySoftDeleteFilter<TSchema, TId>(Builders<TSchema>.Filter.Where(x => x.Id.Equals(id))),
+                Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
+                new FindOneAndUpdateOptions<TSchema> { ReturnDocument = ReturnDocument.After },
+                cancellationToken),
+            () => collection.FindOneAndUpdateAsync(
+                ApplySoftDeleteFilter<TSchema, TId>(Builders<TSchema>.Filter.Where(x => x.Id.Equals(id))),
+                Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
+                new FindOneAndUpdateOptions<TSchema> { ReturnDocument = ReturnDocument.After },
+                cancellationToken));
+    }
 
     /// <summary>
     /// Atomically decrements a numeric field on the document with the specified ID and returns the updated document.
@@ -371,12 +517,21 @@ public static partial class Meerkat
     public static TSchema? DecrementByIdAndGetUpdated<TSchema, TId, TField>(TId id,
         Expression<Func<TSchema, TField>> field, TField amount = default,
         CancellationToken cancellationToken = default)
-        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
-        GetCollectionForType<TSchema, TId>().FindOneAndUpdate(
-            ApplySoftDeleteFilter<TSchema, TId>(Builders<TSchema>.Filter.Where(x => x.Id.Equals(id))),
-            Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
-            new FindOneAndUpdateOptions<TSchema> { ReturnDocument = ReturnDocument.After },
-            cancellationToken);
+        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct
+    {
+        var collection = GetCollectionForType<TSchema, TId>();
+        return WithAmbientSession(
+            session => collection.FindOneAndUpdate(session,
+                ApplySoftDeleteFilter<TSchema, TId>(Builders<TSchema>.Filter.Where(x => x.Id.Equals(id))),
+                Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
+                new FindOneAndUpdateOptions<TSchema> { ReturnDocument = ReturnDocument.After },
+                cancellationToken),
+            () => collection.FindOneAndUpdate(
+                ApplySoftDeleteFilter<TSchema, TId>(Builders<TSchema>.Filter.Where(x => x.Id.Equals(id))),
+                Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
+                new FindOneAndUpdateOptions<TSchema> { ReturnDocument = ReturnDocument.After },
+                cancellationToken));
+    }
 
     /// <summary>
     /// Atomically decrements a numeric field on the document with the specified ID and returns the updated document asynchronously.
@@ -392,12 +547,21 @@ public static partial class Meerkat
     public static Task<TSchema?> DecrementByIdAndGetUpdatedAsync<TSchema, TId, TField>(TId id,
         Expression<Func<TSchema, TField>> field, TField amount = default,
         CancellationToken cancellationToken = default)
-        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
-        GetCollectionForType<TSchema, TId>().FindOneAndUpdateAsync(
-            ApplySoftDeleteFilter<TSchema, TId>(Builders<TSchema>.Filter.Where(x => x.Id.Equals(id))),
-            Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
-            new FindOneAndUpdateOptions<TSchema> { ReturnDocument = ReturnDocument.After },
-            cancellationToken);
+        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct
+    {
+        var collection = GetCollectionForType<TSchema, TId>();
+        return WithAmbientSessionAsync(
+            session => collection.FindOneAndUpdateAsync(session,
+                ApplySoftDeleteFilter<TSchema, TId>(Builders<TSchema>.Filter.Where(x => x.Id.Equals(id))),
+                Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
+                new FindOneAndUpdateOptions<TSchema> { ReturnDocument = ReturnDocument.After },
+                cancellationToken),
+            () => collection.FindOneAndUpdateAsync(
+                ApplySoftDeleteFilter<TSchema, TId>(Builders<TSchema>.Filter.Where(x => x.Id.Equals(id))),
+                Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
+                new FindOneAndUpdateOptions<TSchema> { ReturnDocument = ReturnDocument.After },
+                cancellationToken));
+    }
 
     /// <summary>
     /// Atomically increments a numeric field on the first document matching the predicate and returns the updated document.
@@ -414,12 +578,21 @@ public static partial class Meerkat
         Expression<Func<TSchema, bool>> predicate,
         Expression<Func<TSchema, TField>> field, TField amount = default,
         CancellationToken cancellationToken = default)
-        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
-        GetCollectionForType<TSchema, TId>().FindOneAndUpdate(
-            ApplySoftDeleteFilter<TSchema, TId>(predicate),
-            Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
-            new FindOneAndUpdateOptions<TSchema> { ReturnDocument = ReturnDocument.After },
-            cancellationToken);
+        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct
+    {
+        var collection = GetCollectionForType<TSchema, TId>();
+        return WithAmbientSession(
+            session => collection.FindOneAndUpdate(session,
+                ApplySoftDeleteFilter<TSchema, TId>(predicate),
+                Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
+                new FindOneAndUpdateOptions<TSchema> { ReturnDocument = ReturnDocument.After },
+                cancellationToken),
+            () => collection.FindOneAndUpdate(
+                ApplySoftDeleteFilter<TSchema, TId>(predicate),
+                Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
+                new FindOneAndUpdateOptions<TSchema> { ReturnDocument = ReturnDocument.After },
+                cancellationToken));
+    }
 
     /// <summary>
     /// Atomically increments a numeric field on the first document matching the predicate and returns the updated document asynchronously.
@@ -436,12 +609,21 @@ public static partial class Meerkat
         Expression<Func<TSchema, bool>> predicate,
         Expression<Func<TSchema, TField>> field, TField amount = default,
         CancellationToken cancellationToken = default)
-        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
-        GetCollectionForType<TSchema, TId>().FindOneAndUpdateAsync(
-            ApplySoftDeleteFilter<TSchema, TId>(predicate),
-            Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
-            new FindOneAndUpdateOptions<TSchema> { ReturnDocument = ReturnDocument.After },
-            cancellationToken);
+        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct
+    {
+        var collection = GetCollectionForType<TSchema, TId>();
+        return WithAmbientSessionAsync(
+            session => collection.FindOneAndUpdateAsync(session,
+                ApplySoftDeleteFilter<TSchema, TId>(predicate),
+                Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
+                new FindOneAndUpdateOptions<TSchema> { ReturnDocument = ReturnDocument.After },
+                cancellationToken),
+            () => collection.FindOneAndUpdateAsync(
+                ApplySoftDeleteFilter<TSchema, TId>(predicate),
+                Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
+                new FindOneAndUpdateOptions<TSchema> { ReturnDocument = ReturnDocument.After },
+                cancellationToken));
+    }
 
     /// <summary>
     /// Atomically decrements a numeric field on the first document matching the predicate and returns the updated document.
@@ -458,12 +640,21 @@ public static partial class Meerkat
         Expression<Func<TSchema, bool>> predicate,
         Expression<Func<TSchema, TField>> field, TField amount = default,
         CancellationToken cancellationToken = default)
-        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
-        GetCollectionForType<TSchema, TId>().FindOneAndUpdate(
-            ApplySoftDeleteFilter<TSchema, TId>(predicate),
-            Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
-            new FindOneAndUpdateOptions<TSchema> { ReturnDocument = ReturnDocument.After },
-            cancellationToken);
+        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct
+    {
+        var collection = GetCollectionForType<TSchema, TId>();
+        return WithAmbientSession(
+            session => collection.FindOneAndUpdate(session,
+                ApplySoftDeleteFilter<TSchema, TId>(predicate),
+                Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
+                new FindOneAndUpdateOptions<TSchema> { ReturnDocument = ReturnDocument.After },
+                cancellationToken),
+            () => collection.FindOneAndUpdate(
+                ApplySoftDeleteFilter<TSchema, TId>(predicate),
+                Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
+                new FindOneAndUpdateOptions<TSchema> { ReturnDocument = ReturnDocument.After },
+                cancellationToken));
+    }
 
     /// <summary>
     /// Atomically decrements a numeric field on the first document matching the predicate and returns the updated document asynchronously.
@@ -480,12 +671,21 @@ public static partial class Meerkat
         Expression<Func<TSchema, bool>> predicate,
         Expression<Func<TSchema, TField>> field, TField amount = default,
         CancellationToken cancellationToken = default)
-        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
-        GetCollectionForType<TSchema, TId>().FindOneAndUpdateAsync(
-            ApplySoftDeleteFilter<TSchema, TId>(predicate),
-            Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
-            new FindOneAndUpdateOptions<TSchema> { ReturnDocument = ReturnDocument.After },
-            cancellationToken);
+        where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct
+    {
+        var collection = GetCollectionForType<TSchema, TId>();
+        return WithAmbientSessionAsync(
+            session => collection.FindOneAndUpdateAsync(session,
+                ApplySoftDeleteFilter<TSchema, TId>(predicate),
+                Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
+                new FindOneAndUpdateOptions<TSchema> { ReturnDocument = ReturnDocument.After },
+                cancellationToken),
+            () => collection.FindOneAndUpdateAsync(
+                ApplySoftDeleteFilter<TSchema, TId>(predicate),
+                Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
+                new FindOneAndUpdateOptions<TSchema> { ReturnDocument = ReturnDocument.After },
+                cancellationToken));
+    }
 
     private static TField ResolveAmount<TField>(TField amount) where TField : struct
     {

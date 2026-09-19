@@ -26,7 +26,7 @@ public static partial class Meerkat
         CancellationToken cancellationToken = default)
         where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
         GetCollectionForType<TSchema, TId>().UpdateOne(
-            x => x.Id.Equals(id),
+            ApplySoftDeleteFilter<TSchema, TId>(Builders<TSchema>.Filter.Where(x => x.Id.Equals(id))),
             Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
             cancellationToken: cancellationToken);
 
@@ -45,7 +45,7 @@ public static partial class Meerkat
         CancellationToken cancellationToken = default)
         where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
         GetCollectionForType<TSchema, TId>().UpdateOneAsync(
-            x => x.Id.Equals(id),
+            ApplySoftDeleteFilter<TSchema, TId>(Builders<TSchema>.Filter.Where(x => x.Id.Equals(id))),
             Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
             cancellationToken: cancellationToken);
 
@@ -64,7 +64,7 @@ public static partial class Meerkat
         CancellationToken cancellationToken = default)
         where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
         GetCollectionForType<TSchema, TId>().UpdateOne(
-            x => x.Id.Equals(id),
+            ApplySoftDeleteFilter<TSchema, TId>(Builders<TSchema>.Filter.Where(x => x.Id.Equals(id))),
             Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
             cancellationToken: cancellationToken);
 
@@ -83,7 +83,7 @@ public static partial class Meerkat
         CancellationToken cancellationToken = default)
         where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
         GetCollectionForType<TSchema, TId>().UpdateOneAsync(
-            x => x.Id.Equals(id),
+            ApplySoftDeleteFilter<TSchema, TId>(Builders<TSchema>.Filter.Where(x => x.Id.Equals(id))),
             Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
             cancellationToken: cancellationToken);
 
@@ -102,7 +102,7 @@ public static partial class Meerkat
         CancellationToken cancellationToken = default)
         where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
         GetCollectionForType<TSchema, TId>().UpdateOne(
-            filter,
+            ApplySoftDeleteFilter<TSchema, TId>(filter),
             Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
             cancellationToken: cancellationToken);
 
@@ -121,7 +121,7 @@ public static partial class Meerkat
         CancellationToken cancellationToken = default)
         where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
         GetCollectionForType<TSchema, TId>().UpdateOneAsync(
-            filter,
+            ApplySoftDeleteFilter<TSchema, TId>(filter),
             Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
             cancellationToken: cancellationToken);
 
@@ -140,7 +140,7 @@ public static partial class Meerkat
         CancellationToken cancellationToken = default)
         where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
         GetCollectionForType<TSchema, TId>().UpdateOne(
-            filter,
+            ApplySoftDeleteFilter<TSchema, TId>(filter),
             Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
             cancellationToken: cancellationToken);
 
@@ -159,7 +159,7 @@ public static partial class Meerkat
         CancellationToken cancellationToken = default)
         where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
         GetCollectionForType<TSchema, TId>().UpdateOneAsync(
-            filter,
+            ApplySoftDeleteFilter<TSchema, TId>(filter),
             Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
             cancellationToken: cancellationToken);
 
@@ -178,7 +178,7 @@ public static partial class Meerkat
         CancellationToken cancellationToken = default)
         where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
         GetCollectionForType<TSchema, TId>().UpdateOne(
-            predicate,
+            ApplySoftDeleteFilter<TSchema, TId>(predicate),
             Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
             cancellationToken: cancellationToken);
 
@@ -197,7 +197,7 @@ public static partial class Meerkat
         CancellationToken cancellationToken = default)
         where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
         GetCollectionForType<TSchema, TId>().UpdateOneAsync(
-            predicate,
+            ApplySoftDeleteFilter<TSchema, TId>(predicate),
             Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
             cancellationToken: cancellationToken);
 
@@ -216,7 +216,7 @@ public static partial class Meerkat
         CancellationToken cancellationToken = default)
         where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
         GetCollectionForType<TSchema, TId>().UpdateOne(
-            predicate,
+            ApplySoftDeleteFilter<TSchema, TId>(predicate),
             Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
             cancellationToken: cancellationToken);
 
@@ -235,7 +235,7 @@ public static partial class Meerkat
         CancellationToken cancellationToken = default)
         where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
         GetCollectionForType<TSchema, TId>().UpdateOneAsync(
-            predicate,
+            ApplySoftDeleteFilter<TSchema, TId>(predicate),
             Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
             cancellationToken: cancellationToken);
 
@@ -254,7 +254,7 @@ public static partial class Meerkat
         CancellationToken cancellationToken = default)
         where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
         GetCollectionForType<TSchema, TId>().UpdateMany(
-            predicate,
+            ApplySoftDeleteFilter<TSchema, TId>(predicate),
             Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
             cancellationToken: cancellationToken);
 
@@ -273,7 +273,7 @@ public static partial class Meerkat
         CancellationToken cancellationToken = default)
         where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
         GetCollectionForType<TSchema, TId>().UpdateManyAsync(
-            predicate,
+            ApplySoftDeleteFilter<TSchema, TId>(predicate),
             Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
             cancellationToken: cancellationToken);
 
@@ -292,7 +292,7 @@ public static partial class Meerkat
         CancellationToken cancellationToken = default)
         where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
         GetCollectionForType<TSchema, TId>().UpdateMany(
-            predicate,
+            ApplySoftDeleteFilter<TSchema, TId>(predicate),
             Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
             cancellationToken: cancellationToken);
 
@@ -311,7 +311,7 @@ public static partial class Meerkat
         CancellationToken cancellationToken = default)
         where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
         GetCollectionForType<TSchema, TId>().UpdateManyAsync(
-            predicate,
+            ApplySoftDeleteFilter<TSchema, TId>(predicate),
             Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
             cancellationToken: cancellationToken);
 
@@ -331,7 +331,7 @@ public static partial class Meerkat
         CancellationToken cancellationToken = default)
         where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
         GetCollectionForType<TSchema, TId>().FindOneAndUpdate(
-            x => x.Id.Equals(id),
+            ApplySoftDeleteFilter<TSchema, TId>(Builders<TSchema>.Filter.Where(x => x.Id.Equals(id))),
             Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
             new FindOneAndUpdateOptions<TSchema> { ReturnDocument = ReturnDocument.After },
             cancellationToken);
@@ -352,7 +352,7 @@ public static partial class Meerkat
         CancellationToken cancellationToken = default)
         where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
         GetCollectionForType<TSchema, TId>().FindOneAndUpdateAsync(
-            x => x.Id.Equals(id),
+            ApplySoftDeleteFilter<TSchema, TId>(Builders<TSchema>.Filter.Where(x => x.Id.Equals(id))),
             Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
             new FindOneAndUpdateOptions<TSchema> { ReturnDocument = ReturnDocument.After },
             cancellationToken);
@@ -373,7 +373,7 @@ public static partial class Meerkat
         CancellationToken cancellationToken = default)
         where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
         GetCollectionForType<TSchema, TId>().FindOneAndUpdate(
-            x => x.Id.Equals(id),
+            ApplySoftDeleteFilter<TSchema, TId>(Builders<TSchema>.Filter.Where(x => x.Id.Equals(id))),
             Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
             new FindOneAndUpdateOptions<TSchema> { ReturnDocument = ReturnDocument.After },
             cancellationToken);
@@ -394,7 +394,7 @@ public static partial class Meerkat
         CancellationToken cancellationToken = default)
         where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
         GetCollectionForType<TSchema, TId>().FindOneAndUpdateAsync(
-            x => x.Id.Equals(id),
+            ApplySoftDeleteFilter<TSchema, TId>(Builders<TSchema>.Filter.Where(x => x.Id.Equals(id))),
             Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
             new FindOneAndUpdateOptions<TSchema> { ReturnDocument = ReturnDocument.After },
             cancellationToken);
@@ -416,7 +416,7 @@ public static partial class Meerkat
         CancellationToken cancellationToken = default)
         where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
         GetCollectionForType<TSchema, TId>().FindOneAndUpdate(
-            predicate,
+            ApplySoftDeleteFilter<TSchema, TId>(predicate),
             Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
             new FindOneAndUpdateOptions<TSchema> { ReturnDocument = ReturnDocument.After },
             cancellationToken);
@@ -438,7 +438,7 @@ public static partial class Meerkat
         CancellationToken cancellationToken = default)
         where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
         GetCollectionForType<TSchema, TId>().FindOneAndUpdateAsync(
-            predicate,
+            ApplySoftDeleteFilter<TSchema, TId>(predicate),
             Builders<TSchema>.Update.Inc(field, ResolveAmount(amount)),
             new FindOneAndUpdateOptions<TSchema> { ReturnDocument = ReturnDocument.After },
             cancellationToken);
@@ -460,7 +460,7 @@ public static partial class Meerkat
         CancellationToken cancellationToken = default)
         where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
         GetCollectionForType<TSchema, TId>().FindOneAndUpdate(
-            predicate,
+            ApplySoftDeleteFilter<TSchema, TId>(predicate),
             Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
             new FindOneAndUpdateOptions<TSchema> { ReturnDocument = ReturnDocument.After },
             cancellationToken);
@@ -482,7 +482,7 @@ public static partial class Meerkat
         CancellationToken cancellationToken = default)
         where TSchema : Schema<TId> where TId : IEquatable<TId> where TField : struct =>
         GetCollectionForType<TSchema, TId>().FindOneAndUpdateAsync(
-            predicate,
+            ApplySoftDeleteFilter<TSchema, TId>(predicate),
             Builders<TSchema>.Update.Inc(field, NegateAmount(amount)),
             new FindOneAndUpdateOptions<TSchema> { ReturnDocument = ReturnDocument.After },
             cancellationToken);

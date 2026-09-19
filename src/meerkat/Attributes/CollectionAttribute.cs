@@ -4,7 +4,7 @@ namespace meerkat.Attributes;
 
 /// <summary>
 /// Specifies metadata for a MongoDB collection.
-/// This attribute is used to define the collection name and whether timestamps should be tracked.
+/// This attribute is used to define the collection name, timestamp tracking, and soft-delete behaviour.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class)]
 public sealed class CollectionAttribute : Attribute
@@ -18,4 +18,10 @@ public sealed class CollectionAttribute : Attribute
     /// Gets or sets a value indicating whether timestamps should be tracked for documents in the collection.
     /// </summary>
     public bool TrackTimestamps { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether documents in the collection use soft delete.
+    /// When true, <c>Remove*</c> sets <c>DeletedAt</c> instead of physically deleting, and queries exclude deleted documents by default.
+    /// </summary>
+    public bool SoftDelete { get; set; }
 }

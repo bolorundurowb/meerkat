@@ -21,6 +21,7 @@ public static partial class Meerkat
         HandleSingleFieldIndexing(type, collection);
         HandleGeospatialFieldIndexing(type, collection);
         HandleCompoundFieldIndexing(type, collection);
+        HandleSoftDeleteIndexing(type, collection);
 
         SchemasWithCheckedIndices[typeName] = true;
     }
@@ -128,5 +129,17 @@ public static partial class Meerkat
             if (collection is { Indexes: not null })
                 collection.Indexes.CreateOne(indexModel);
         }
+    }
+
+    internal static void HandleSoftDeleteIndexing<TSchema>(Type type, IMongoCollection<TSchema> collection)
+    {
+        if (!type.ShouldSoftDelete() || collection.Indexes == null)
+            return;
+
+        var field = new StringFieldDefinition<TSchema>(nameof(Schema<string>.DeletedAt));
+        var definition = new IndexKeysDefinitionBuilder<TSchema>().Ascending(field);
+        var indexModel = new CreateIndexModel<TSchema>(definition,
+            new CreateIndexOptions { Name = "deleted_at_idx" });
+        collection.Indexes.CreateOne(indexModel);
     }
 }

@@ -60,7 +60,7 @@ public class MeerkatCountingTests
         Meerkat.ResetDatabase();
         Action act = () => Meerkat.Count<TestEntity, string>();
         act.Throws<InvalidOperationException>()
-            .WithMessage("The database connection has not been initialized. Call Connect() before carrying out any operations.");
+            .WithMessage("The database connection has not been initialised. Call Connect() before carrying out any operations.");
     }
 
     [Fact]
@@ -69,7 +69,7 @@ public class MeerkatCountingTests
         Meerkat.ResetDatabase();
         Action act = () => Meerkat.Exists<TestEntity, string>();
         act.Throws<InvalidOperationException>()
-            .WithMessage("The database connection has not been initialized. Call Connect() before carrying out any operations.");
+            .WithMessage("The database connection has not been initialised. Call Connect() before carrying out any operations.");
     }
 
     [Fact]
@@ -78,6 +78,22 @@ public class MeerkatCountingTests
         Meerkat.ResetDatabase();
         Action act = () => { _ = Meerkat.ExistsAsync<TestEntity, string>(); };
         act.Throws<InvalidOperationException>()
-            .WithMessage("The database connection has not been initialized. Call Connect() before carrying out any operations.");
+            .WithMessage("The database connection has not been initialised. Call Connect() before carrying out any operations.");
+    }
+
+    [Fact]
+    public void Count_WithIncludeDeleted_ShouldCallCountDocuments()
+    {
+        Meerkat.Count<TestEntity, string>(includeDeleted: true);
+        _mockCollection.Verify(x => x.CountDocuments(It.IsAny<FilterDefinition<TestEntity>>(), It.IsAny<CountOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public void Exists_WithIncludeDeleted_ShouldThrowExceptionIfNotConnected()
+    {
+        Meerkat.ResetDatabase();
+        Action act = () => Meerkat.Exists<TestEntity, string>(includeDeleted: true);
+        act.Throws<InvalidOperationException>()
+            .WithMessage("The database connection has not been initialised. Call Connect() before carrying out any operations.");
     }
 }

@@ -100,7 +100,7 @@ public class MeerkatPartialUpdatesTests
     public async Task UpdateOneAsync_ShouldCallUpdateOneAsync()
     {
         await Meerkat.UpdateOne<PartialUpdateTestModel, ObjectId>(x => x.Name == "test")
-            .Push(x => x.Tags, "honor")
+            .Push(x => x.Tags, "honour")
             .ExecuteAsync();
 
         _mockCollection.Verify(x => x.UpdateOneAsync(
@@ -202,7 +202,7 @@ public class MeerkatPartialUpdatesTests
         Meerkat.Update<PartialUpdateTestModel, ObjectId>(ObjectId.GenerateNewId())
             .Set(x => x.Name, "Ada")
             .Unset(x => x.Nickname)
-            .Push(x => x.Tags, "honor")
+            .Push(x => x.Tags, "honour")
             .Pull(x => x.Tags, "draft")
             .AddToSet(x => x.Tags, "alumni")
             .Inc(x => x.Value, 1)
@@ -255,6 +255,6 @@ public class MeerkatPartialUpdatesTests
         Meerkat.ResetDatabase();
         Action act = () => Meerkat.Update<PartialUpdateTestModel, ObjectId>(ObjectId.GenerateNewId());
         act.Throws<InvalidOperationException>()
-            .WithMessage("The database connection has not been initialized. Call Connect() before carrying out any operations.");
+            .WithMessage("The database connection has not been initialised. Call Connect() before carrying out any operations.");
     }
 }

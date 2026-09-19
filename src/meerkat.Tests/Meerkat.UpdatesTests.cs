@@ -296,7 +296,7 @@ public class MeerkatUpdatesTests
         Meerkat.ResetDatabase();
         Action act = () => Meerkat.IncrementById<CounterTestModel, ObjectId, int>(ObjectId.GenerateNewId(), x => x.Value);
         act.Throws<InvalidOperationException>()
-            .WithMessage("The database connection has not been initialized. Call Connect() before carrying out any operations.");
+            .WithMessage("The database connection has not been initialised. Call Connect() before carrying out any operations.");
     }
 
     [Fact]
@@ -305,7 +305,7 @@ public class MeerkatUpdatesTests
         Meerkat.ResetDatabase();
         Action act = () => Meerkat.DecrementById<CounterTestModel, ObjectId, int>(ObjectId.GenerateNewId(), x => x.Value);
         act.Throws<InvalidOperationException>()
-            .WithMessage("The database connection has not been initialized. Call Connect() before carrying out any operations.");
+            .WithMessage("The database connection has not been initialised. Call Connect() before carrying out any operations.");
     }
 
     [Fact]
@@ -314,7 +314,7 @@ public class MeerkatUpdatesTests
         Meerkat.ResetDatabase();
         Action act = () => Meerkat.IncrementMany<CounterTestModel, ObjectId, int>(x => true, x => x.Value);
         act.Throws<InvalidOperationException>()
-            .WithMessage("The database connection has not been initialized. Call Connect() before carrying out any operations.");
+            .WithMessage("The database connection has not been initialised. Call Connect() before carrying out any operations.");
     }
 
     [Fact]
@@ -323,6 +323,6 @@ public class MeerkatUpdatesTests
         Meerkat.ResetDatabase();
         Action act = () => { _ = Meerkat.IncrementByIdAndGetUpdated<CounterTestModel, ObjectId, int>(ObjectId.GenerateNewId(), x => x.Value); };
         act.Throws<InvalidOperationException>()
-            .WithMessage("The database connection has not been initialized. Call Connect() before carrying out any operations.");
+            .WithMessage("The database connection has not been initialised. Call Connect() before carrying out any operations.");
     }
 }

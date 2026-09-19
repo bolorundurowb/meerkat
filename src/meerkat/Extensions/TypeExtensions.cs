@@ -14,6 +14,8 @@ internal static class TypeExtensions
 
     private static readonly ConcurrentDictionary<string, bool> TimestampTrackCache = new();
 
+    private static readonly ConcurrentDictionary<string, bool> SoftDeleteCache = new();
+
     private static readonly Regex Whitespace = new("\\s+", RegexOptions.Compiled);
 
     public static string GetCollectionName(this Type type)
@@ -52,6 +54,21 @@ internal static class TypeExtensions
         TimestampTrackCache[cacheKey] = shouldTrack;
 
         return shouldTrack;
+    }
+
+    public static bool ShouldSoftDelete(this Type type)
+    {
+        var cacheKey = type.FullName ?? type.Name;
+
+        if (SoftDeleteCache.TryGetValue(cacheKey, out var softDelete))
+            return softDelete;
+
+        var collectionAttribute = type.GetCustomAttribute<CollectionAttribute>();
+        var shouldSoftDelete = collectionAttribute?.SoftDelete ?? false;
+
+        SoftDeleteCache[cacheKey] = shouldSoftDelete;
+
+        return shouldSoftDelete;
     }
 
     public static IEnumerable<PropertyInfo> AttributedWith<TAttribute>(this Type type) where TAttribute : Attribute

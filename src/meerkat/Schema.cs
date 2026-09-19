@@ -7,6 +7,7 @@ using meerkat.Attributes;
 using meerkat.Constants;
 using meerkat.Exceptions;
 using meerkat.Extensions;
+using meerkat.Serialization;
 using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
 
@@ -34,6 +35,20 @@ public abstract class Schema<TId> where TId : IEquatable<TId>
     /// Gets the timestamp indicating when the document was last updated.
     /// </summary>
     public DateTime? UpdatedAt { get; private set; }
+
+    /// <summary>
+    /// Gets the timestamp indicating when the document was soft-deleted.
+    /// Null when the document is active. Persisted as a UTC BSON DateTime.
+    /// </summary>
+    [BsonIgnoreIfNull]
+    [BsonSerializer(typeof(UtcNullableDateTimeOffsetSerializer))]
+    public DateTimeOffset? DeletedAt { get; private set; }
+
+    /// <summary>
+    /// Gets a value indicating whether the document has been soft-deleted.
+    /// </summary>
+    [BsonIgnore]
+    public bool IsDeleted => DeletedAt != null;
 
     /// <summary>
     /// Saves or updates the current instance in the corresponding MongoDB collection synchronously.
@@ -77,6 +92,72 @@ public abstract class Schema<TId> where TId : IEquatable<TId>
     }
 
     /// <summary>
+    /// Soft-deletes this document when the schema opts into soft delete; otherwise physically deletes it.
+    /// </summary>
+    public void Delete(CancellationToken cancellationToken = default)
+    {
+        var collection = Meerkat.GetCollectionForType<Schema<TId>, TId>(this);
+        if (GetType().ShouldSoftDelete())
+        {
+            collection.UpdateOne(x => x.Id.Equals(Id),
+                Meerkat.BuildSoftDeleteUpdate<Schema<TId>, TId>(GetType()),
+                cancellationToken: cancellationToken);
+            MarkDeleted();
+            return;
+        }
+
+        collection.DeleteOne(x => x.Id.Equals(Id), cancellationToken);
+    }
+
+    /// <summary>
+    /// Soft-deletes this document when the schema opts into soft delete; otherwise physically deletes it.
+    /// </summary>
+    public async Task DeleteAsync(CancellationToken cancellationToken = default)
+    {
+        var collection = Meerkat.GetCollectionForType<Schema<TId>, TId>(this);
+        if (GetType().ShouldSoftDelete())
+        {
+            await collection.UpdateOneAsync(x => x.Id.Equals(Id),
+                Meerkat.BuildSoftDeleteUpdate<Schema<TId>, TId>(GetType()),
+                cancellationToken: cancellationToken);
+            MarkDeleted();
+            return;
+        }
+
+        await collection.DeleteOneAsync(x => x.Id.Equals(Id), cancellationToken);
+    }
+
+    /// <summary>
+    /// Restores this document if the schema opts into soft delete; otherwise a no-op.
+    /// </summary>
+    public void Restore(CancellationToken cancellationToken = default)
+    {
+        if (!GetType().ShouldSoftDelete())
+            return;
+
+        var collection = Meerkat.GetCollectionForType<Schema<TId>, TId>(this);
+        collection.UpdateOne(x => x.Id.Equals(Id),
+            Meerkat.BuildRestoreUpdate<Schema<TId>, TId>(GetType()),
+            cancellationToken: cancellationToken);
+        MarkRestored();
+    }
+
+    /// <summary>
+    /// Restores this document if the schema opts into soft delete; otherwise a no-op.
+    /// </summary>
+    public async Task RestoreAsync(CancellationToken cancellationToken = default)
+    {
+        if (!GetType().ShouldSoftDelete())
+            return;
+
+        var collection = Meerkat.GetCollectionForType<Schema<TId>, TId>(this);
+        await collection.UpdateOneAsync(x => x.Id.Equals(Id),
+            Meerkat.BuildRestoreUpdate<Schema<TId>, TId>(GetType()),
+            cancellationToken: cancellationToken);
+        MarkRestored();
+    }
+
+    /// <summary>
     /// A virtual method that is invoked before the entity is persisted.
     /// Can be overridden to provide custom pre-save logic.
     /// </summary>
@@ -103,6 +184,24 @@ public abstract class Schema<TId> where TId : IEquatable<TId>
             CreatedAt ??= now;
             UpdatedAt = now;
         }
+    }
+
+    internal void MarkDeleted()
+    {
+        DeletedAt = DateTimeOffset.UtcNow;
+        TouchUpdatedAt();
+    }
+
+    internal void MarkRestored()
+    {
+        DeletedAt = null;
+        TouchUpdatedAt();
+    }
+
+    private void TouchUpdatedAt()
+    {
+        if (GetType().ShouldTrackTimestamps())
+            UpdatedAt = DateTime.UtcNow;
     }
 
     internal void HandleLowercaseTransformations()

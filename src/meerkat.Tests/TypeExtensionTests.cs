@@ -45,6 +45,22 @@ public class TypeExtensionTests
         typeof(Order).ShouldTrackTimestamps().Must().BeFalse();
     }
 
+    [Attributes.Collection(SoftDelete = true)]
+    private class SoftDeletedUser : Schema<Guid> { }
+
+    [Fact]
+    public void ShouldSoftDelete_ShouldReturnTrue_WhenAttributeEnablesSoftDelete()
+    {
+        typeof(SoftDeletedUser).ShouldSoftDelete().Must().BeTrue();
+    }
+
+    [Fact]
+    public void ShouldSoftDelete_ShouldReturnFalse_WhenAttributeMissingOrDisabled()
+    {
+        typeof(Product).ShouldSoftDelete().Must().BeFalse();
+        typeof(CustomUser).ShouldSoftDelete().Must().BeFalse();
+    }
+
     private class AttributedClass
     {
         [Lowercase]

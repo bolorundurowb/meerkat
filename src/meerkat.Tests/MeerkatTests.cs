@@ -27,7 +27,7 @@ public class MeerkatTests
         Meerkat.ResetDatabase();
         var act = () => { _ = Meerkat.Database; };
         act.Throws<InvalidOperationException>()
-            .WithMessage("The database connection has not been initialized. Call Connect() before carrying out any operations.");
+            .WithMessage("The database connection has not been initialised. Call Connect() before carrying out any operations.");
     }
 
     [Attributes.Collection(Name = "test_students")]
@@ -67,6 +67,6 @@ public class MeerkatTests
         Meerkat.ResetDatabase();
         var act = () => { _ = Meerkat.Collection<TestStudent, Guid>(); };
         act.Throws<InvalidOperationException>()
-            .WithMessage("The database connection has not been initialized. Call Connect() before carrying out any operations.");
+            .WithMessage("The database connection has not been initialised. Call Connect() before carrying out any operations.");
     }
 }

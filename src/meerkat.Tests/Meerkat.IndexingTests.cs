@@ -167,4 +167,25 @@ public class MeerkatIndexingTests
 
         Meerkat.SchemasWithCheckedIndices.ContainsKey(typeof(IndexedEntity).FullName!).Must().BeTrue();
     }
+
+    [Attributes.Collection(SoftDelete = true)]
+    public class SoftDeleteIndexedEntity : Schema<Guid>
+    {
+        public string Name { get; set; }
+    }
+
+    [Fact]
+    public void HandleIndexing_ShouldCreateDeletedAtIndex_WhenSoftDeleteEnabled()
+    {
+        var mockCol = new Mock<IMongoCollection<SoftDeleteIndexedEntity>>();
+        var mockIdx = new Mock<IMongoIndexManager<SoftDeleteIndexedEntity>>();
+        mockCol.Setup(x => x.Indexes).Returns(mockIdx.Object);
+
+        Meerkat.HandleIndexing<SoftDeleteIndexedEntity, Guid>(typeof(SoftDeleteIndexedEntity), mockCol.Object);
+
+        mockIdx.Verify(x => x.CreateOne(
+            It.Is<CreateIndexModel<SoftDeleteIndexedEntity>>(m => m.Options.Name == "deleted_at_idx"),
+            null,
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
 }

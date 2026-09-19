@@ -34,7 +34,7 @@ public class MeerkatTransactionsIT
     public async Task WithTransactionAsync_CommitsBothWrites()
     {
         Meerkat.ResetDatabase();
-        Meerkat.Connect("mongodb://localhost:27017/testdb");
+        Meerkat.Connect(TestDatabase.ConnectionString);
         var orderId = ObjectId.GenerateNewId();
 
         await Meerkat.WithTransactionAsync(async _ =>
@@ -55,7 +55,7 @@ public class MeerkatTransactionsIT
     public async Task WithTransactionAsync_RollsBackOnException()
     {
         Meerkat.ResetDatabase();
-        Meerkat.Connect("mongodb://localhost:27017/testdb");
+        Meerkat.Connect(TestDatabase.ConnectionString);
         var orderId = ObjectId.GenerateNewId();
 
         await Xunit.Assert.ThrowsAnyAsync<Exception>(() => Meerkat.WithTransactionAsync(async _ =>
@@ -72,7 +72,7 @@ public class MeerkatTransactionsIT
     public async Task WithTransactionAsync_ReadsUncommittedWithinCallback()
     {
         Meerkat.ResetDatabase();
-        Meerkat.Connect("mongodb://localhost:27017/testdb");
+        Meerkat.Connect(TestDatabase.ConnectionString);
         var orderId = ObjectId.GenerateNewId();
 
         var seen = await Meerkat.WithTransactionAsync(async _ =>

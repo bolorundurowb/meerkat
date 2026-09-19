@@ -32,7 +32,7 @@ public class MeerkatIndexingIT
     public async Task EnsureIndexesAsync_CreatesAndVerifiesIndexes()
     {
         Meerkat.ResetDatabase();
-        Meerkat.Connect("mongodb://localhost:27017/testdb");
+        Meerkat.Connect(TestDatabase.ConnectionString);
 
         await Meerkat.EnsureIndexesAsync<IndexEnsureEntity, ObjectId>();
         await Meerkat.EnsureIndexesAsync<IndexEnsureEntity, ObjectId>();
@@ -47,7 +47,7 @@ public class MeerkatIndexingIT
     public async Task EnsureIndexesAsync_TypeList_CreatesForEach()
     {
         Meerkat.ResetDatabase();
-        Meerkat.Connect("mongodb://localhost:27017/testdb");
+        Meerkat.Connect(TestDatabase.ConnectionString);
 
         await Meerkat.EnsureIndexesAsync(new[] { typeof(IndexEnsureEntity) });
 

@@ -68,6 +68,57 @@ public class MeerkatIndexingTests
         public string Name { get; set; }
     }
 
+    public class CompoundUniqueIndexEntity : Schema<Guid>
+    {
+        [CompoundIndex(Name = "ux", IndexOrder = IndexOrder.Ascending, Unique = true)]
+        public string InitiatorId { get; set; }
+
+        [CompoundIndex(Name = "ux", IndexOrder = IndexOrder.Descending, Unique = true)]
+        public int Year { get; set; }
+    }
+
+    public class CompoundNonUniqueIndexEntity : Schema<Guid>
+    {
+        [CompoundIndex(Name = "non_ux", IndexOrder = IndexOrder.Ascending, Unique = false)]
+        public string InitiatorId { get; set; }
+
+        [CompoundIndex(Name = "non_ux", IndexOrder = IndexOrder.Descending)]
+        public int Year { get; set; }
+    }
+
+    public class CompoundMixedUniqueIndexEntity : Schema<Guid>
+    {
+        [CompoundIndex(Name = "mixed_ux", Unique = true)]
+        public string FieldA { get; set; }
+
+        [CompoundIndex(Name = "mixed_ux", Unique = false)]
+        public string FieldB { get; set; }
+    }
+
+    public class SingleFieldTtlEntity : Schema<Guid>
+    {
+        [SingleFieldIndex(Name = "ttl_idx", ExpireAfter = "30d")]
+        public DateTime Timestamp { get; set; }
+    }
+
+    public class SingleFieldTtlNullableDateTimeEntity : Schema<Guid>
+    {
+        [SingleFieldIndex(Name = "ttl_null_idx", ExpireAfter = "12h")]
+        public DateTime? ExpireAt { get; set; }
+    }
+
+    public class SingleFieldTtlInvalidTypeEntity : Schema<Guid>
+    {
+        [SingleFieldIndex(ExpireAfter = "30d")]
+        public string NotADate { get; set; }
+    }
+
+    public class SingleFieldNoExpireAfterEntity : Schema<Guid>
+    {
+        [SingleFieldIndex]
+        public DateTime Timestamp { get; set; }
+    }
+
     private readonly Mock<IMongoCollection<IndexedEntity>> _mockCollection;
     private readonly Mock<IMongoIndexManager<IndexedEntity>> _mockIndexes;
 
@@ -162,6 +213,71 @@ public class MeerkatIndexingTests
 
         _mockIndexes.Verify(x => x.CreateMany(
             It.IsAny<IEnumerable<CreateIndexModel<IndexedEntity>>>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public void BuildCompoundIndexModels_WithUniqueOption_ShouldSetUniqueFlag()
+    {
+        var models = Meerkat.BuildCompoundIndexModels<CompoundUniqueIndexEntity>(typeof(CompoundUniqueIndexEntity));
+        models.Must().HaveCount(1);
+        models[0].Options.Name.Must().Be("ux");
+        models[0].Options.Unique.Must().Be(true);
+    }
+
+    [Fact]
+    public void BuildCompoundIndexModels_WithNonUniqueOption_ShouldSetUniqueFalse()
+    {
+        var models = Meerkat.BuildCompoundIndexModels<CompoundNonUniqueIndexEntity>(typeof(CompoundNonUniqueIndexEntity));
+        models.Must().HaveCount(1);
+        models[0].Options.Name.Must().Be("non_ux");
+        models[0].Options.Unique.Must().Be(false);
+    }
+
+    [Fact]
+    public void BuildCompoundIndexModels_WithMixedUniqueOptions_ShouldThrowInvalidAttributeException()
+    {
+        Action act = () => Meerkat.BuildCompoundIndexModels<CompoundMixedUniqueIndexEntity>(typeof(CompoundMixedUniqueIndexEntity));
+
+        act.Throws<InvalidAttributeException>()
+            .WithMessage("Members of a compound index group must agree on the 'Unique' value.");
+    }
+
+    [Fact]
+    public void BuildSingleFieldIndexModels_WithExpireAfter_ShouldSetExpireAfterOption()
+    {
+        var models = Meerkat.BuildSingleFieldIndexModels<SingleFieldTtlEntity>(typeof(SingleFieldTtlEntity));
+
+        models.Must().HaveCount(1);
+        models[0].Options.Name.Must().Be("ttl_idx");
+        models[0].Options.ExpireAfter.Must().Be(TimeSpan.FromDays(30));
+    }
+
+    [Fact]
+    public void BuildSingleFieldIndexModels_WithNullableDateTimeAndExpireAfter_ShouldSetExpireAfterOption()
+    {
+        var models = Meerkat.BuildSingleFieldIndexModels<SingleFieldTtlNullableDateTimeEntity>(typeof(SingleFieldTtlNullableDateTimeEntity));
+
+        models.Must().HaveCount(1);
+        models[0].Options.Name.Must().Be("ttl_null_idx");
+        models[0].Options.ExpireAfter.Must().Be(TimeSpan.FromHours(12));
+    }
+
+    [Fact]
+    public void BuildSingleFieldIndexModels_WithExpireAfterOnInvalidType_ShouldThrowInvalidAttributeException()
+    {
+        Action act = () => Meerkat.BuildSingleFieldIndexModels<SingleFieldTtlInvalidTypeEntity>(typeof(SingleFieldTtlInvalidTypeEntity));
+
+        act.Throws<InvalidAttributeException>()
+            .WithMessage("The 'ExpireAfter' TTL option can only be applied to DateTime or DateTime? fields.");
+    }
+
+    [Fact]
+    public void BuildSingleFieldIndexModels_WithoutExpireAfter_ShouldHaveNullExpireAfter()
+    {
+        var models = Meerkat.BuildSingleFieldIndexModels<SingleFieldNoExpireAfterEntity>(typeof(SingleFieldNoExpireAfterEntity));
+
+        models.Must().HaveCount(1);
+        models[0].Options.ExpireAfter.Must().BeNull();
     }
 
     [Fact]

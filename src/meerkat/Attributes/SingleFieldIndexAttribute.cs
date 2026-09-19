@@ -28,4 +28,11 @@ public class SingleFieldIndexAttribute : Attribute
     /// Defaults to <c>false</c>.
     /// </summary>
     public bool Sparse { get; set; } = false;
+
+    /// <summary>
+    /// Gets or sets the TTL (Time-To-Live) duration string after which documents will expire (e.g. "30d", "12h", "45m", "90s").
+    /// Only applicable to <see cref="DateTime"/> or <see cref="Nullable{DateTime}"/> fields.
+    /// Defaults to <c>null</c> (no expiry).
+    /// </summary>
+    public string? ExpireAfter { get; set; }
 }

@@ -36,11 +36,45 @@ public class MeerkatCollectionsTests
     }
 
     [Fact]
+    public void SaveAll_ShouldCallBulkWrite_WithSession_WhenAmbientSessionActive()
+    {
+        var mockSession = new Mock<IClientSessionHandle>().Object;
+        Meerkat.CurrentSession.Value = mockSession;
+        try
+        {
+            var entities = new List<TestEntity> { new TestEntity { Id = "1" }, new TestEntity { Id = "2" } };
+            entities.SaveAll<TestEntity, string>();
+            _mockCollection.Verify(x => x.BulkWrite(mockSession, It.IsAny<IEnumerable<WriteModel<TestEntity>>>(), It.IsAny<BulkWriteOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            Meerkat.CurrentSession.Value = null;
+        }
+    }
+
+    [Fact]
     public async Task SaveAllAsync_ShouldCallBulkWriteAsync()
     {
         var entities = new List<TestEntity> { new TestEntity { Id = "1" }, new TestEntity { Id = "2" } };
         await entities.SaveAllAsync<TestEntity, string>();
         _mockCollection.Verify(x => x.BulkWriteAsync(It.IsAny<IEnumerable<WriteModel<TestEntity>>>(), It.IsAny<BulkWriteOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task SaveAllAsync_ShouldCallBulkWriteAsync_WithSession_WhenAmbientSessionActive()
+    {
+        var mockSession = new Mock<IClientSessionHandle>().Object;
+        Meerkat.CurrentSession.Value = mockSession;
+        try
+        {
+            var entities = new List<TestEntity> { new TestEntity { Id = "1" }, new TestEntity { Id = "2" } };
+            await entities.SaveAllAsync<TestEntity, string>();
+            _mockCollection.Verify(x => x.BulkWriteAsync(mockSession, It.IsAny<IEnumerable<WriteModel<TestEntity>>>(), It.IsAny<BulkWriteOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            Meerkat.CurrentSession.Value = null;
+        }
     }
 
     [Fact]
@@ -51,5 +85,13 @@ public class MeerkatCollectionsTests
         Action act = () => entities.SaveAll<TestEntity, string>();
         act.Throws<InvalidOperationException>()
             .WithMessage("The database connection has not been initialised. Call Connect() before carrying out any operations.");
+    }
+
+    [Fact]
+    public async Task SaveAllAsync_ShouldThrowExceptionIfNotConnected()
+    {
+        Meerkat.ResetDatabase();
+        var entities = new List<TestEntity> { new TestEntity { Id = "1" } };
+        await Xunit.Assert.ThrowsAsync<InvalidOperationException>(() => entities.SaveAllAsync<TestEntity, string>());
     }
 }

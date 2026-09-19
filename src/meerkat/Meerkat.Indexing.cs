@@ -417,7 +417,7 @@ public static partial class Meerkat
         return false;
     }
 
-    private static Type ResolveSchemaIdType(Type schemaType)
+    internal static Type ResolveSchemaIdType(Type schemaType)
     {
         for (var baseType = schemaType; baseType != null; baseType = baseType.BaseType)
         {

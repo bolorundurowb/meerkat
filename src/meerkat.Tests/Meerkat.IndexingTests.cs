@@ -748,8 +748,18 @@ public class MeerkatIndexingTests
 
         Meerkat.EnsureIndexes<IndexedEntity, Guid>();
 
-        _mockIndexes.Verify(x => x.CreateMany(It.IsAny<IEnumerable<CreateIndexModel<IndexedEntity>>>(), It.IsAny<CancellationToken>()), Times.AtLeastOnce());
+        _mockIndexes.Verify(x => x.CreateMany(It.IsAny<IEnumerable<CreateIndexModel<IndexedEntity>>>(), It.IsAny<CancellationToken>()), Times.Once);
         Meerkat.SchemasWithCheckedIndices.ContainsKey(typeof(IndexedEntity).FullName!).Must().BeTrue();
+    }
+
+    [Fact]
+    public void EnsureIndexes_Generic_ShouldThrow_WhenDatabaseNotInitialised()
+    {
+        Meerkat.ResetDatabase();
+
+        var act = () => Meerkat.EnsureIndexes<IndexedEntity, Guid>();
+        act.Throws<InvalidOperationException>()
+            .WithMessage("The database connection has not been initialised. Call Connect() before carrying out any operations.");
     }
 
     [Fact]
@@ -770,8 +780,17 @@ public class MeerkatIndexingTests
 
         await Meerkat.EnsureIndexesAsync<IndexedEntity, Guid>();
 
-        _mockIndexes.Verify(x => x.CreateManyAsync(It.IsAny<IEnumerable<CreateIndexModel<IndexedEntity>>>(), It.IsAny<CancellationToken>()), Times.AtLeastOnce());
+        _mockIndexes.Verify(x => x.CreateManyAsync(It.IsAny<IEnumerable<CreateIndexModel<IndexedEntity>>>(), It.IsAny<CancellationToken>()), Times.Once);
         Meerkat.SchemasWithCheckedIndices.ContainsKey(typeof(IndexedEntity).FullName!).Must().BeTrue();
+    }
+
+    [Fact]
+    public async Task EnsureIndexesAsync_Generic_ShouldThrow_WhenDatabaseNotInitialised()
+    {
+        Meerkat.ResetDatabase();
+
+        await Xunit.Assert.ThrowsAsync<InvalidOperationException>(() =>
+            Meerkat.EnsureIndexesAsync<IndexedEntity, Guid>());
     }
 
     [Fact]

@@ -358,14 +358,24 @@ public static partial class Meerkat
     private static void EnsureIndexesCore<TSchema, TId>(CancellationToken ct)
         where TSchema : Schema<TId> where TId : IEquatable<TId>
     {
-        var collection = GetCollectionForType<TSchema, TId>();
+        if (Database == null)
+            throw new InvalidOperationException(
+                $"The database connection has not been initialised. Call {nameof(Connect)}() before carrying out any operations.");
+
+        var collectionName = typeof(TSchema).GetCollectionName();
+        var collection = Database.GetCollection<TSchema>(collectionName);
         EnsureIndexesOnCollection<TSchema>(typeof(TSchema), collection, ct);
     }
 
     private static async Task EnsureIndexesCoreAsync<TSchema, TId>(CancellationToken ct)
         where TSchema : Schema<TId> where TId : IEquatable<TId>
     {
-        var collection = GetCollectionForType<TSchema, TId>();
+        if (Database == null)
+            throw new InvalidOperationException(
+                $"The database connection has not been initialised. Call {nameof(Connect)}() before carrying out any operations.");
+
+        var collectionName = typeof(TSchema).GetCollectionName();
+        var collection = Database.GetCollection<TSchema>(collectionName);
         await EnsureIndexesOnCollectionAsync<TSchema>(typeof(TSchema), collection, ct).ConfigureAwait(false);
     }
 
@@ -425,6 +435,6 @@ public static partial class Meerkat
                 return baseType.GetGenericArguments()[0];
         }
 
-        throw new ArgumentException($"Type '{schemaType.FullName}' does not inherit from Schema<>.", nameof(schemaType));
+        throw new ArgumentException($"Type '{schemaType.FullName}' does not inherit from Schema<TId>.");
     }
 }

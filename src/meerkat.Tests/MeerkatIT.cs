@@ -1,3 +1,5 @@
+using meerkat.Attributes;
+using meerkat.Enums;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using OmniAssert;
@@ -6,6 +8,41 @@ namespace meerkat.Tests;
 
 [CollectionDefinition("MeerkatIntegrationTests", DisableParallelization = true)]
 public class MeerkatIntegrationTestsCollection;
+
+internal static class TestDatabase
+{
+    private static string? _connectionString;
+
+    public static string ConnectionString
+    {
+        get
+        {
+            if (_connectionString != null)
+                return _connectionString;
+
+            var envUri = Environment.GetEnvironmentVariable("MEERKAT_MONGO_URI");
+            if (!string.IsNullOrWhiteSpace(envUri))
+            {
+                _connectionString = envUri;
+                return _connectionString;
+            }
+
+            // Try authenticated connection first (common in local docker setup)
+            try
+            {
+                var client = new MongoClient("mongodb://user:password@localhost:27017/testdb?authSource=admin");
+                client.GetDatabase("testdb").RunCommand((Command<BsonDocument>)"{ping:1}");
+                _connectionString = "mongodb://user:password@localhost:27017/testdb?authSource=admin";
+                return _connectionString;
+            }
+            catch
+            {
+                _connectionString = "mongodb://localhost:27017/testdb";
+                return _connectionString;
+            }
+        }
+    }
+}
 
 [Attributes.Collection(Name = "integration_test_counters")]
 public class IntegrationCounter : Schema<ObjectId>
@@ -21,15 +58,22 @@ public class IntegrationCounter : Schema<ObjectId>
     }
 }
 
-[Collection("MeerkatIntegrationTests")]
+[Xunit.Collection("MeerkatIntegrationTests")]
 [Trait("Category", "Integration")]
 public class MeerkatIT
 {
+    public MeerkatIT()
+    {
+        Meerkat.ResetDatabase();
+        Meerkat.Connect(TestDatabase.ConnectionString);
+        Meerkat.Collection<IntegrationCounter, ObjectId>().DeleteMany(Builders<IntegrationCounter>.Filter.Empty);
+    }
+
     [Fact]
     public void IncrementAndDecrementById_ShouldUpdateFieldValue()
     {
         Meerkat.ResetDatabase();
-        Meerkat.Connect("mongodb://localhost:27017/testdb");
+        Meerkat.Connect(TestDatabase.ConnectionString);
 
         var counter = new IntegrationCounter { Name = "test", Value = 10 };
         counter.Save();
@@ -47,7 +91,7 @@ public class MeerkatIT
     public void IncrementOneAndGetUpdated_ShouldReturnUpdatedDocument()
     {
         Meerkat.ResetDatabase();
-        Meerkat.Connect("mongodb://localhost:27017/testdb");
+        Meerkat.Connect(TestDatabase.ConnectionString);
 
         var counter = new IntegrationCounter { Name = "get-updated", Score = 50.5 };
         counter.Save();
@@ -63,7 +107,7 @@ public class MeerkatIT
     public void IncrementMany_ShouldUpdateAllMatchingDocuments()
     {
         Meerkat.ResetDatabase();
-        Meerkat.Connect("mongodb://localhost:27017/testdb");
+        Meerkat.Connect(TestDatabase.ConnectionString);
 
         var c1 = new IntegrationCounter { Name = "group", Value = 1 };
         var c2 = new IntegrationCounter { Name = "group", Value = 2 };
@@ -88,7 +132,7 @@ public class MeerkatIT
     public void DecrementByFilter_ShouldUpdateMatchingDocument()
     {
         Meerkat.ResetDatabase();
-        Meerkat.Connect("mongodb://localhost:27017/testdb");
+        Meerkat.Connect(TestDatabase.ConnectionString);
 
         var counter = new IntegrationCounter { Name = "filter-test", Total = 100 };
         counter.Save();
@@ -105,7 +149,7 @@ public class MeerkatIT
     public void SequentialPartialSets_ShouldNotClobberIndependentFields()
     {
         Meerkat.ResetDatabase();
-        Meerkat.Connect("mongodb://localhost:27017/testdb");
+        Meerkat.Connect(TestDatabase.ConnectionString);
 
         var counter = new IntegrationCounter { Name = "partial", Value = 1 };
         counter.Save();
@@ -136,15 +180,22 @@ public class IntegrationSoftDeleteDoc : Schema<ObjectId>
     }
 }
 
-[Collection("MeerkatIntegrationTests")]
+[Xunit.Collection("MeerkatIntegrationTests")]
 [Trait("Category", "Integration")]
 public class MeerkatSoftDeleteIT
 {
+    public MeerkatSoftDeleteIT()
+    {
+        Meerkat.ResetDatabase();
+        Meerkat.Connect(TestDatabase.ConnectionString);
+        Meerkat.Collection<IntegrationSoftDeleteDoc, ObjectId>().DeleteMany(Builders<IntegrationSoftDeleteDoc>.Filter.Empty);
+    }
+
     [Fact]
     public void SoftDelete_ShouldHideRestoreAndHardRemoveDocuments()
     {
         Meerkat.ResetDatabase();
-        Meerkat.Connect("mongodb://localhost:27017/testdb");
+        Meerkat.Connect(TestDatabase.ConnectionString);
 
         var doc = new IntegrationSoftDeleteDoc { Name = "keep-me" };
         doc.Save();
@@ -175,5 +226,98 @@ public class MeerkatSoftDeleteIT
 
         Meerkat.HardRemoveById<IntegrationSoftDeleteDoc, ObjectId>(doc.Id);
         Meerkat.FindById<IntegrationSoftDeleteDoc, ObjectId>(doc.Id, includeDeleted: true).Must().BeNull();
+    }
+}
+
+[Attributes.Collection(Name = "integration_compound_unique")]
+public class IntegrationCompoundUniqueDoc : Schema<ObjectId>
+{
+    [CompoundIndex(Name = "ux", IndexOrder = IndexOrder.Ascending, Unique = true)]
+    public string InitiatorId { get; set; }
+
+    [CompoundIndex(Name = "ux", IndexOrder = IndexOrder.Descending, Unique = true)]
+    public int Year { get; set; }
+
+    public IntegrationCompoundUniqueDoc()
+    {
+        Id = ObjectId.GenerateNewId();
+    }
+}
+
+[Xunit.Collection("MeerkatIntegrationTests")]
+[Trait("Category", "Integration")]
+public class MeerkatCompoundUniqueIndexIT
+{
+    public MeerkatCompoundUniqueIndexIT()
+    {
+        Meerkat.ResetDatabase();
+        Meerkat.Connect(TestDatabase.ConnectionString);
+        Meerkat.Collection<IntegrationCompoundUniqueDoc, ObjectId>().DeleteMany(Builders<IntegrationCompoundUniqueDoc>.Filter.Empty);
+    }
+
+    [Fact]
+    public void CompoundUniqueIndex_ShouldRejectDuplicateEntries()
+    {
+        var doc1 = new IntegrationCompoundUniqueDoc { InitiatorId = "user_123", Year = 2026 };
+        doc1.Save();
+
+        var doc2 = new IntegrationCompoundUniqueDoc { InitiatorId = "user_123", Year = 2026 };
+        Action act = () => doc2.Save();
+        act.Throws<MongoWriteException>();
+    }
+
+    [Fact]
+    public void CompoundUniqueIndex_ShouldAllowDifferentCombinations()
+    {
+        var doc1 = new IntegrationCompoundUniqueDoc { InitiatorId = "user_123", Year = 2025 };
+        var doc2 = new IntegrationCompoundUniqueDoc { InitiatorId = "user_123", Year = 2026 };
+        var doc3 = new IntegrationCompoundUniqueDoc { InitiatorId = "user_456", Year = 2026 };
+
+        doc1.Save();
+        doc2.Save();
+        doc3.Save();
+
+        var count = Meerkat.Count<IntegrationCompoundUniqueDoc, ObjectId>();
+        count.Must().Be(3);
+    }
+}
+
+[Attributes.Collection(Name = "integration_ttl")]
+public class IntegrationTtlDoc : Schema<ObjectId>
+{
+    [SingleFieldIndex(Name = "ttl_idx", ExpireAfter = "1s")]
+    public DateTime CreatedAtUtc { get; set; }
+
+    public string Payload { get; set; }
+
+    public IntegrationTtlDoc()
+    {
+        Id = ObjectId.GenerateNewId();
+    }
+}
+
+[Xunit.Collection("MeerkatIntegrationTests")]
+[Trait("Category", "Integration")]
+public class MeerkatTtlIndexIT
+{
+    public MeerkatTtlIndexIT()
+    {
+        Meerkat.ResetDatabase();
+        Meerkat.Connect(TestDatabase.ConnectionString);
+        Meerkat.Collection<IntegrationTtlDoc, ObjectId>().DeleteMany(Builders<IntegrationTtlDoc>.Filter.Empty);
+    }
+
+    [Fact]
+    public void TtlIndex_ShouldBeCreatedWithOptions()
+    {
+        var doc = new IntegrationTtlDoc { CreatedAtUtc = DateTime.UtcNow, Payload = "test-ttl" };
+        doc.Save();
+
+        var collection = Meerkat.Collection<IntegrationTtlDoc, ObjectId>();
+        var indexes = collection.Indexes.List().ToList();
+        var ttlIndex = indexes.FirstOrDefault(idx => idx["name"].AsString == "ttl_idx");
+
+        ttlIndex.Must().NotBeNull();
+        ttlIndex!["expireAfterSeconds"].ToInt64().Must().Be(1);
     }
 }

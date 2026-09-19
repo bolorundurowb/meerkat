@@ -1,5 +1,6 @@
 using meerkat.Attributes;
 using meerkat.Enums;
+using meerkat.Exceptions;
 using MongoDB.Driver;
 using Moq;
 using OmniAssert;
@@ -48,6 +49,57 @@ public class MeerkatIndexingTests
     {
         [GeospatialIndex(IndexType = GeospatialIndexType.TwoD)]
         public double[] Location { get; set; }
+    }
+
+    public class CompoundUniqueIndexEntity : Schema<Guid>
+    {
+        [CompoundIndex(Name = "ux", IndexOrder = IndexOrder.Ascending, Unique = true)]
+        public string InitiatorId { get; set; }
+
+        [CompoundIndex(Name = "ux", IndexOrder = IndexOrder.Descending, Unique = true)]
+        public int Year { get; set; }
+    }
+
+    public class CompoundNonUniqueIndexEntity : Schema<Guid>
+    {
+        [CompoundIndex(Name = "non_ux", IndexOrder = IndexOrder.Ascending, Unique = false)]
+        public string InitiatorId { get; set; }
+
+        [CompoundIndex(Name = "non_ux", IndexOrder = IndexOrder.Descending)]
+        public int Year { get; set; }
+    }
+
+    public class CompoundMixedUniqueIndexEntity : Schema<Guid>
+    {
+        [CompoundIndex(Name = "mixed_ux", Unique = true)]
+        public string FieldA { get; set; }
+
+        [CompoundIndex(Name = "mixed_ux", Unique = false)]
+        public string FieldB { get; set; }
+    }
+
+    public class SingleFieldTtlEntity : Schema<Guid>
+    {
+        [SingleFieldIndex(Name = "ttl_idx", ExpireAfter = "30d")]
+        public DateTime Timestamp { get; set; }
+    }
+
+    public class SingleFieldTtlNullableDateTimeEntity : Schema<Guid>
+    {
+        [SingleFieldIndex(Name = "ttl_null_idx", ExpireAfter = "12h")]
+        public DateTime? ExpireAt { get; set; }
+    }
+
+    public class SingleFieldTtlInvalidTypeEntity : Schema<Guid>
+    {
+        [SingleFieldIndex(ExpireAfter = "30d")]
+        public string NotADate { get; set; }
+    }
+
+    public class SingleFieldNoExpireAfterEntity : Schema<Guid>
+    {
+        [SingleFieldIndex]
+        public DateTime Timestamp { get; set; }
     }
 
     private readonly Mock<IMongoCollection<IndexedEntity>> _mockCollection;
@@ -155,6 +207,109 @@ public class MeerkatIndexingTests
         Meerkat.HandleCompoundFieldIndexing(typeof(NoIndexEntity), mockCol.Object);
 
         mockIdx.Verify(x => x.CreateOne(It.IsAny<CreateIndexModel<NoIndexEntity>>(), null, It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public void HandleCompoundFieldIndexing_WithUniqueOption_ShouldSetUniqueFlag()
+    {
+        var mockCol = new Mock<IMongoCollection<CompoundUniqueIndexEntity>>();
+        var mockIdx = new Mock<IMongoIndexManager<CompoundUniqueIndexEntity>>();
+        mockCol.Setup(x => x.Indexes).Returns(mockIdx.Object);
+
+        Meerkat.HandleCompoundFieldIndexing(typeof(CompoundUniqueIndexEntity), mockCol.Object);
+
+        mockIdx.Verify(x => x.CreateOne(
+            It.Is<CreateIndexModel<CompoundUniqueIndexEntity>>(m =>
+                m.Options.Name == "ux" && m.Options.Unique == true),
+            null,
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public void HandleCompoundFieldIndexing_WithNonUniqueOption_ShouldSetUniqueFalse()
+    {
+        var mockCol = new Mock<IMongoCollection<CompoundNonUniqueIndexEntity>>();
+        var mockIdx = new Mock<IMongoIndexManager<CompoundNonUniqueIndexEntity>>();
+        mockCol.Setup(x => x.Indexes).Returns(mockIdx.Object);
+
+        Meerkat.HandleCompoundFieldIndexing(typeof(CompoundNonUniqueIndexEntity), mockCol.Object);
+
+        mockIdx.Verify(x => x.CreateOne(
+            It.Is<CreateIndexModel<CompoundNonUniqueIndexEntity>>(m =>
+                m.Options.Name == "non_ux" && m.Options.Unique == false),
+            null,
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public void HandleCompoundFieldIndexing_WithMixedUniqueOptions_ShouldThrowInvalidAttributeException()
+    {
+        var mockCol = new Mock<IMongoCollection<CompoundMixedUniqueIndexEntity>>();
+        var mockIdx = new Mock<IMongoIndexManager<CompoundMixedUniqueIndexEntity>>();
+        mockCol.Setup(x => x.Indexes).Returns(mockIdx.Object);
+
+        Action act = () => Meerkat.HandleCompoundFieldIndexing(typeof(CompoundMixedUniqueIndexEntity), mockCol.Object);
+
+        act.Throws<InvalidAttributeException>()
+            .WithMessage("Members of a compound index group must agree on the 'Unique' value.");
+    }
+
+    [Fact]
+    public void HandleSingleFieldIndexing_WithExpireAfter_ShouldSetExpireAfterOption()
+    {
+        var mockCol = new Mock<IMongoCollection<SingleFieldTtlEntity>>();
+        var mockIdx = new Mock<IMongoIndexManager<SingleFieldTtlEntity>>();
+        mockCol.Setup(x => x.Indexes).Returns(mockIdx.Object);
+
+        Meerkat.HandleSingleFieldIndexing(typeof(SingleFieldTtlEntity), mockCol.Object);
+
+        mockIdx.Verify(x => x.CreateMany(
+            It.Is<IEnumerable<CreateIndexModel<SingleFieldTtlEntity>>>(models =>
+                models.Any(m => m.Options.Name == "ttl_idx" && m.Options.ExpireAfter == TimeSpan.FromDays(30))),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public void HandleSingleFieldIndexing_WithNullableDateTimeAndExpireAfter_ShouldSetExpireAfterOption()
+    {
+        var mockCol = new Mock<IMongoCollection<SingleFieldTtlNullableDateTimeEntity>>();
+        var mockIdx = new Mock<IMongoIndexManager<SingleFieldTtlNullableDateTimeEntity>>();
+        mockCol.Setup(x => x.Indexes).Returns(mockIdx.Object);
+
+        Meerkat.HandleSingleFieldIndexing(typeof(SingleFieldTtlNullableDateTimeEntity), mockCol.Object);
+
+        mockIdx.Verify(x => x.CreateMany(
+            It.Is<IEnumerable<CreateIndexModel<SingleFieldTtlNullableDateTimeEntity>>>(models =>
+                models.Any(m => m.Options.Name == "ttl_null_idx" && m.Options.ExpireAfter == TimeSpan.FromHours(12))),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public void HandleSingleFieldIndexing_WithExpireAfterOnInvalidType_ShouldThrowInvalidAttributeException()
+    {
+        var mockCol = new Mock<IMongoCollection<SingleFieldTtlInvalidTypeEntity>>();
+        var mockIdx = new Mock<IMongoIndexManager<SingleFieldTtlInvalidTypeEntity>>();
+        mockCol.Setup(x => x.Indexes).Returns(mockIdx.Object);
+
+        Action act = () => Meerkat.HandleSingleFieldIndexing(typeof(SingleFieldTtlInvalidTypeEntity), mockCol.Object);
+
+        act.Throws<InvalidAttributeException>()
+            .WithMessage("The 'ExpireAfter' TTL option can only be applied to DateTime or DateTime? fields.");
+    }
+
+    [Fact]
+    public void HandleSingleFieldIndexing_WithoutExpireAfter_ShouldHaveNullExpireAfter()
+    {
+        var mockCol = new Mock<IMongoCollection<SingleFieldNoExpireAfterEntity>>();
+        var mockIdx = new Mock<IMongoIndexManager<SingleFieldNoExpireAfterEntity>>();
+        mockCol.Setup(x => x.Indexes).Returns(mockIdx.Object);
+
+        Meerkat.HandleSingleFieldIndexing(typeof(SingleFieldNoExpireAfterEntity), mockCol.Object);
+
+        mockIdx.Verify(x => x.CreateMany(
+            It.Is<IEnumerable<CreateIndexModel<SingleFieldNoExpireAfterEntity>>>(models =>
+                models.Any(m => m.Options.ExpireAfter == null)),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

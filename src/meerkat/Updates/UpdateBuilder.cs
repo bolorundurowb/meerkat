@@ -24,7 +24,7 @@ public sealed class UpdateBuilder<TSchema, TId>
     internal UpdateBuilder(IMongoCollection<TSchema> collection, FilterDefinition<TSchema> filter, bool isMany)
     {
         _collection = collection;
-        _filter = filter;
+        _filter = Meerkat.ApplySoftDeleteFilter<TSchema, TId>(filter);
         _isMany = isMany;
     }
 

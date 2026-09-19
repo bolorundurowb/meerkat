@@ -100,4 +100,27 @@ public class MeerkatIT
         updated.Must().NotBeNull();
         updated.Total.Must().Be(75);
     }
+
+    [Fact]
+    public void SequentialPartialSets_ShouldNotClobberIndependentFields()
+    {
+        Meerkat.ResetDatabase();
+        Meerkat.Connect("mongodb://localhost:27017/testdb");
+
+        var counter = new IntegrationCounter { Name = "partial", Value = 1 };
+        counter.Save();
+
+        Meerkat.Update<IntegrationCounter, ObjectId>(counter.Id)
+            .Set(x => x.Name, "renamed")
+            .Execute();
+
+        Meerkat.Update<IntegrationCounter, ObjectId>(counter.Id)
+            .Set(x => x.Value, 99)
+            .Execute();
+
+        var updated = Meerkat.FindById<IntegrationCounter, ObjectId>(counter.Id);
+        updated.Must().NotBeNull();
+        updated.Name.Must().Be("renamed");
+        updated.Value.Must().Be(99);
+    }
 }

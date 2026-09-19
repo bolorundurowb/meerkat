@@ -90,8 +90,12 @@ public sealed class UpdateBuilder<TSchema, TId>
     {
         var update = BuildUpdate();
         return _isMany
-            ? _collection.UpdateMany(_filter, update, cancellationToken: cancellationToken)
-            : _collection.UpdateOne(_filter, update, cancellationToken: cancellationToken);
+            ? Meerkat.WithAmbientSession(
+                session => _collection.UpdateMany(session, _filter, update, cancellationToken: cancellationToken),
+                () => _collection.UpdateMany(_filter, update, cancellationToken: cancellationToken))
+            : Meerkat.WithAmbientSession(
+                session => _collection.UpdateOne(session, _filter, update, cancellationToken: cancellationToken),
+                () => _collection.UpdateOne(_filter, update, cancellationToken: cancellationToken));
     }
 
     /// <summary>
@@ -101,8 +105,12 @@ public sealed class UpdateBuilder<TSchema, TId>
     {
         var update = BuildUpdate();
         return _isMany
-            ? _collection.UpdateManyAsync(_filter, update, cancellationToken: cancellationToken)
-            : _collection.UpdateOneAsync(_filter, update, cancellationToken: cancellationToken);
+            ? Meerkat.WithAmbientSessionAsync(
+                session => _collection.UpdateManyAsync(session, _filter, update, cancellationToken: cancellationToken),
+                () => _collection.UpdateManyAsync(_filter, update, cancellationToken: cancellationToken))
+            : Meerkat.WithAmbientSessionAsync(
+                session => _collection.UpdateOneAsync(session, _filter, update, cancellationToken: cancellationToken),
+                () => _collection.UpdateOneAsync(_filter, update, cancellationToken: cancellationToken));
     }
 
     /// <summary>
@@ -112,11 +120,18 @@ public sealed class UpdateBuilder<TSchema, TId>
     public TSchema? ExecuteAndGetUpdated(CancellationToken cancellationToken = default)
     {
         EnsureSingleDocumentUpdate();
-        return _collection.FindOneAndUpdate(
-            _filter,
-            BuildUpdate(),
-            new FindOneAndUpdateOptions<TSchema> { ReturnDocument = ReturnDocument.After },
-            cancellationToken);
+        var update = BuildUpdate();
+        return Meerkat.WithAmbientSession(
+            session => _collection.FindOneAndUpdate(session,
+                _filter,
+                update,
+                new FindOneAndUpdateOptions<TSchema> { ReturnDocument = ReturnDocument.After },
+                cancellationToken),
+            () => _collection.FindOneAndUpdate(
+                _filter,
+                update,
+                new FindOneAndUpdateOptions<TSchema> { ReturnDocument = ReturnDocument.After },
+                cancellationToken));
     }
 
     /// <summary>
@@ -126,11 +141,18 @@ public sealed class UpdateBuilder<TSchema, TId>
     public Task<TSchema?> ExecuteAndGetUpdatedAsync(CancellationToken cancellationToken = default)
     {
         EnsureSingleDocumentUpdate();
-        return _collection.FindOneAndUpdateAsync(
-            _filter,
-            BuildUpdate(),
-            new FindOneAndUpdateOptions<TSchema> { ReturnDocument = ReturnDocument.After },
-            cancellationToken);
+        var update = BuildUpdate();
+        return Meerkat.WithAmbientSessionAsync(
+            session => _collection.FindOneAndUpdateAsync(session,
+                _filter,
+                update,
+                new FindOneAndUpdateOptions<TSchema> { ReturnDocument = ReturnDocument.After },
+                cancellationToken),
+            () => _collection.FindOneAndUpdateAsync(
+                _filter,
+                update,
+                new FindOneAndUpdateOptions<TSchema> { ReturnDocument = ReturnDocument.After },
+                cancellationToken));
     }
 
     private void EnsureSingleDocumentUpdate()

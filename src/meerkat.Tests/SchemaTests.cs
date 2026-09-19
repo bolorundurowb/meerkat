@@ -36,7 +36,13 @@ public class SchemaTests
         public int Number { get; set; }
     }
 
-    private class SaveTestEntity : Schema<string>
+    public class SaveTestEntity : Schema<string>
+    {
+        public string Name { get; set; }
+    }
+
+    [Attributes.Collection(SoftDelete = true)]
+    public class SoftDeleteSaveTestEntity : Schema<string>
     {
         public string Name { get; set; }
     }
@@ -48,9 +54,11 @@ public class SchemaTests
     {
         _mockDb = new Mock<IMongoDatabase>();
         _mockSchemaCollection = new Mock<IMongoCollection<Schema<string>>>();
+
         _mockDb.Setup(x => x.GetCollection<Schema<string>>(It.IsAny<string>(), It.IsAny<MongoCollectionSettings>()))
                .Returns(_mockSchemaCollection.Object);
         _mockSchemaCollection.Setup(x => x.Indexes).Returns(new Mock<IMongoIndexManager<Schema<string>>>().Object);
+
         Meerkat.ResetDatabase();
         Meerkat._database = new Lazy<IMongoDatabase>(() => _mockDb.Object);
     }
@@ -166,11 +174,155 @@ public class SchemaTests
     }
 
     [Fact]
+    public void Save_ShouldCallReplaceOne_WithSession_WhenAmbientSessionActive()
+    {
+        var mockSession = new Mock<IClientSessionHandle>().Object;
+        Meerkat.CurrentSession.Value = mockSession;
+        try
+        {
+            var entity = new SaveTestEntity { Id = "123", Name = "Test" };
+            entity.Save();
+            _mockSchemaCollection.Verify(x => x.ReplaceOne(mockSession, It.IsAny<FilterDefinition<Schema<string>>>(), entity, It.IsAny<ReplaceOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            Meerkat.CurrentSession.Value = null;
+        }
+    }
+
+    [Fact]
+    public async Task SaveAsync_ShouldCallReplaceOneAsync_WithSession_WhenAmbientSessionActive()
+    {
+        var mockSession = new Mock<IClientSessionHandle>().Object;
+        Meerkat.CurrentSession.Value = mockSession;
+        try
+        {
+            var entity = new SaveTestEntity { Id = "123", Name = "Test" };
+            await entity.SaveAsync();
+            _mockSchemaCollection.Verify(x => x.ReplaceOneAsync(mockSession, It.IsAny<FilterDefinition<Schema<string>>>(), entity, It.IsAny<ReplaceOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            Meerkat.CurrentSession.Value = null;
+        }
+    }
+
+    [Fact]
     public void Delete_ShouldCallDeleteOne_WhenSoftDeleteDisabled()
     {
         var entity = new SaveTestEntity { Id = "123", Name = "Test" };
         entity.Delete();
         _mockSchemaCollection.Verify(x => x.DeleteOne(It.IsAny<FilterDefinition<Schema<string>>>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public void Delete_ShouldCallDeleteOne_WithSession_WhenSoftDeleteDisabledAndAmbientSessionActive()
+    {
+        var mockSession = new Mock<IClientSessionHandle>().Object;
+        Meerkat.CurrentSession.Value = mockSession;
+        try
+        {
+            var entity = new SaveTestEntity { Id = "123", Name = "Test" };
+            entity.Delete();
+            _mockSchemaCollection.Verify(x => x.DeleteOne(mockSession, It.IsAny<FilterDefinition<Schema<string>>>(), It.IsAny<DeleteOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            Meerkat.CurrentSession.Value = null;
+        }
+    }
+
+    [Fact]
+    public async Task DeleteAsync_ShouldCallDeleteOneAsync_WhenSoftDeleteDisabled()
+    {
+        var entity = new SaveTestEntity { Id = "123", Name = "Test" };
+        await entity.DeleteAsync();
+        _mockSchemaCollection.Verify(x => x.DeleteOneAsync(It.IsAny<FilterDefinition<Schema<string>>>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_ShouldCallDeleteOneAsync_WithSession_WhenSoftDeleteDisabledAndAmbientSessionActive()
+    {
+        var mockSession = new Mock<IClientSessionHandle>().Object;
+        Meerkat.CurrentSession.Value = mockSession;
+        try
+        {
+            var entity = new SaveTestEntity { Id = "123", Name = "Test" };
+            await entity.DeleteAsync();
+            _mockSchemaCollection.Verify(x => x.DeleteOneAsync(mockSession, It.IsAny<FilterDefinition<Schema<string>>>(), It.IsAny<DeleteOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            Meerkat.CurrentSession.Value = null;
+        }
+    }
+
+    [Fact]
+    public void Delete_ShouldCallUpdateOne_WhenSoftDeleteEnabled()
+    {
+        var entity = new SoftDeleteSaveTestEntity { Id = "123", Name = "Test" };
+        entity.Delete();
+        _mockSchemaCollection.Verify(x => x.UpdateOne(
+            It.IsAny<FilterDefinition<Schema<string>>>(),
+            It.IsAny<UpdateDefinition<Schema<string>>>(),
+            It.IsAny<UpdateOptions>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public void Delete_ShouldCallUpdateOne_WithSession_WhenSoftDeleteEnabledAndAmbientSessionActive()
+    {
+        var mockSession = new Mock<IClientSessionHandle>().Object;
+        Meerkat.CurrentSession.Value = mockSession;
+        try
+        {
+            var entity = new SoftDeleteSaveTestEntity { Id = "123", Name = "Test" };
+            entity.Delete();
+            _mockSchemaCollection.Verify(x => x.UpdateOne(
+                mockSession,
+                It.IsAny<FilterDefinition<Schema<string>>>(),
+                It.IsAny<UpdateDefinition<Schema<string>>>(),
+                It.IsAny<UpdateOptions>(),
+                It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            Meerkat.CurrentSession.Value = null;
+        }
+    }
+
+    [Fact]
+    public async Task DeleteAsync_ShouldCallUpdateOneAsync_WhenSoftDeleteEnabled()
+    {
+        var entity = new SoftDeleteSaveTestEntity { Id = "123", Name = "Test" };
+        await entity.DeleteAsync();
+        _mockSchemaCollection.Verify(x => x.UpdateOneAsync(
+            It.IsAny<FilterDefinition<Schema<string>>>(),
+            It.IsAny<UpdateDefinition<Schema<string>>>(),
+            It.IsAny<UpdateOptions>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_ShouldCallUpdateOneAsync_WithSession_WhenSoftDeleteEnabledAndAmbientSessionActive()
+    {
+        var mockSession = new Mock<IClientSessionHandle>().Object;
+        Meerkat.CurrentSession.Value = mockSession;
+        try
+        {
+            var entity = new SoftDeleteSaveTestEntity { Id = "123", Name = "Test" };
+            await entity.DeleteAsync();
+            _mockSchemaCollection.Verify(x => x.UpdateOneAsync(
+                mockSession,
+                It.IsAny<FilterDefinition<Schema<string>>>(),
+                It.IsAny<UpdateDefinition<Schema<string>>>(),
+                It.IsAny<UpdateOptions>(),
+                It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            Meerkat.CurrentSession.Value = null;
+        }
     }
 
     [Fact]
@@ -183,6 +335,86 @@ public class SchemaTests
             It.IsAny<UpdateDefinition<Schema<string>>>(),
             It.IsAny<UpdateOptions>(),
             It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task RestoreAsync_ShouldBeNoOp_WhenSoftDeleteDisabled()
+    {
+        var entity = new SaveTestEntity { Id = "123", Name = "Test" };
+        await entity.RestoreAsync();
+        _mockSchemaCollection.Verify(x => x.UpdateOneAsync(
+            It.IsAny<FilterDefinition<Schema<string>>>(),
+            It.IsAny<UpdateDefinition<Schema<string>>>(),
+            It.IsAny<UpdateOptions>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public void Restore_ShouldCallUpdateOne_WhenSoftDeleteEnabled()
+    {
+        var entity = new SoftDeleteSaveTestEntity { Id = "123", Name = "Test" };
+        entity.Restore();
+        _mockSchemaCollection.Verify(x => x.UpdateOne(
+            It.IsAny<FilterDefinition<Schema<string>>>(),
+            It.IsAny<UpdateDefinition<Schema<string>>>(),
+            It.IsAny<UpdateOptions>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public void Restore_ShouldCallUpdateOne_WithSession_WhenSoftDeleteEnabledAndAmbientSessionActive()
+    {
+        var mockSession = new Mock<IClientSessionHandle>().Object;
+        Meerkat.CurrentSession.Value = mockSession;
+        try
+        {
+            var entity = new SoftDeleteSaveTestEntity { Id = "123", Name = "Test" };
+            entity.Restore();
+            _mockSchemaCollection.Verify(x => x.UpdateOne(
+                mockSession,
+                It.IsAny<FilterDefinition<Schema<string>>>(),
+                It.IsAny<UpdateDefinition<Schema<string>>>(),
+                It.IsAny<UpdateOptions>(),
+                It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            Meerkat.CurrentSession.Value = null;
+        }
+    }
+
+    [Fact]
+    public async Task RestoreAsync_ShouldCallUpdateOneAsync_WhenSoftDeleteEnabled()
+    {
+        var entity = new SoftDeleteSaveTestEntity { Id = "123", Name = "Test" };
+        await entity.RestoreAsync();
+        _mockSchemaCollection.Verify(x => x.UpdateOneAsync(
+            It.IsAny<FilterDefinition<Schema<string>>>(),
+            It.IsAny<UpdateDefinition<Schema<string>>>(),
+            It.IsAny<UpdateOptions>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task RestoreAsync_ShouldCallUpdateOneAsync_WithSession_WhenSoftDeleteEnabledAndAmbientSessionActive()
+    {
+        var mockSession = new Mock<IClientSessionHandle>().Object;
+        Meerkat.CurrentSession.Value = mockSession;
+        try
+        {
+            var entity = new SoftDeleteSaveTestEntity { Id = "123", Name = "Test" };
+            await entity.RestoreAsync();
+            _mockSchemaCollection.Verify(x => x.UpdateOneAsync(
+                mockSession,
+                It.IsAny<FilterDefinition<Schema<string>>>(),
+                It.IsAny<UpdateDefinition<Schema<string>>>(),
+                It.IsAny<UpdateOptions>(),
+                It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            Meerkat.CurrentSession.Value = null;
+        }
     }
 
     [Fact]

@@ -65,7 +65,9 @@ public abstract class Schema<TId> where TId : IEquatable<TId>
         if (collection == null)
             throw new Exception("Collection is null for Schema<TId>");
 
-        collection.ReplaceOne(x => x.Id.Equals(Id), this, MongoDbConstants.ReplaceOptions);
+        Meerkat.WithAmbientSession(
+            session => collection.ReplaceOne(session, x => x.Id.Equals(Id), this, MongoDbConstants.ReplaceOptions),
+            () => collection.ReplaceOne(x => x.Id.Equals(Id), this, MongoDbConstants.ReplaceOptions));
         PostSave();
     }
 
@@ -86,8 +88,11 @@ public abstract class Schema<TId> where TId : IEquatable<TId>
         if (collection == null)
             throw new Exception("Collection is null for Schema<TId> Async");
 
-        await collection.ReplaceOneAsync(x => x.Id.Equals(Id), this, MongoDbConstants.ReplaceOptions,
-            cancellationToken);
+        await Meerkat.WithAmbientSessionAsync(
+            session => collection.ReplaceOneAsync(session, x => x.Id.Equals(Id), this, MongoDbConstants.ReplaceOptions,
+                cancellationToken),
+            () => collection.ReplaceOneAsync(x => x.Id.Equals(Id), this, MongoDbConstants.ReplaceOptions,
+                cancellationToken));
         PostSave();
     }
 
@@ -99,14 +104,20 @@ public abstract class Schema<TId> where TId : IEquatable<TId>
         var collection = Meerkat.GetCollectionForType<Schema<TId>, TId>(this);
         if (GetType().ShouldSoftDelete())
         {
-            collection.UpdateOne(x => x.Id.Equals(Id),
-                Meerkat.BuildSoftDeleteUpdate<Schema<TId>, TId>(GetType()),
-                cancellationToken: cancellationToken);
+            Meerkat.WithAmbientSession(
+                session => collection.UpdateOne(session, x => x.Id.Equals(Id),
+                    Meerkat.BuildSoftDeleteUpdate<Schema<TId>, TId>(GetType()),
+                    cancellationToken: cancellationToken),
+                () => collection.UpdateOne(x => x.Id.Equals(Id),
+                    Meerkat.BuildSoftDeleteUpdate<Schema<TId>, TId>(GetType()),
+                    cancellationToken: cancellationToken));
             MarkDeleted();
             return;
         }
 
-        collection.DeleteOne(x => x.Id.Equals(Id), cancellationToken);
+        Meerkat.WithAmbientSession(
+            session => collection.DeleteOne(session, x => x.Id.Equals(Id), cancellationToken: cancellationToken),
+            () => collection.DeleteOne(x => x.Id.Equals(Id), cancellationToken));
     }
 
     /// <summary>
@@ -117,14 +128,20 @@ public abstract class Schema<TId> where TId : IEquatable<TId>
         var collection = Meerkat.GetCollectionForType<Schema<TId>, TId>(this);
         if (GetType().ShouldSoftDelete())
         {
-            await collection.UpdateOneAsync(x => x.Id.Equals(Id),
-                Meerkat.BuildSoftDeleteUpdate<Schema<TId>, TId>(GetType()),
-                cancellationToken: cancellationToken);
+            await Meerkat.WithAmbientSessionAsync(
+                session => collection.UpdateOneAsync(session, x => x.Id.Equals(Id),
+                    Meerkat.BuildSoftDeleteUpdate<Schema<TId>, TId>(GetType()),
+                    cancellationToken: cancellationToken),
+                () => collection.UpdateOneAsync(x => x.Id.Equals(Id),
+                    Meerkat.BuildSoftDeleteUpdate<Schema<TId>, TId>(GetType()),
+                    cancellationToken: cancellationToken));
             MarkDeleted();
             return;
         }
 
-        await collection.DeleteOneAsync(x => x.Id.Equals(Id), cancellationToken);
+        await Meerkat.WithAmbientSessionAsync(
+            session => collection.DeleteOneAsync(session, x => x.Id.Equals(Id), cancellationToken: cancellationToken),
+            () => collection.DeleteOneAsync(x => x.Id.Equals(Id), cancellationToken));
     }
 
     /// <summary>
@@ -136,9 +153,13 @@ public abstract class Schema<TId> where TId : IEquatable<TId>
             return;
 
         var collection = Meerkat.GetCollectionForType<Schema<TId>, TId>(this);
-        collection.UpdateOne(x => x.Id.Equals(Id),
-            Meerkat.BuildRestoreUpdate<Schema<TId>, TId>(GetType()),
-            cancellationToken: cancellationToken);
+        Meerkat.WithAmbientSession(
+            session => collection.UpdateOne(session, x => x.Id.Equals(Id),
+                Meerkat.BuildRestoreUpdate<Schema<TId>, TId>(GetType()),
+                cancellationToken: cancellationToken),
+            () => collection.UpdateOne(x => x.Id.Equals(Id),
+                Meerkat.BuildRestoreUpdate<Schema<TId>, TId>(GetType()),
+                cancellationToken: cancellationToken));
         MarkRestored();
     }
 
@@ -151,9 +172,13 @@ public abstract class Schema<TId> where TId : IEquatable<TId>
             return;
 
         var collection = Meerkat.GetCollectionForType<Schema<TId>, TId>(this);
-        await collection.UpdateOneAsync(x => x.Id.Equals(Id),
-            Meerkat.BuildRestoreUpdate<Schema<TId>, TId>(GetType()),
-            cancellationToken: cancellationToken);
+        await Meerkat.WithAmbientSessionAsync(
+            session => collection.UpdateOneAsync(session, x => x.Id.Equals(Id),
+                Meerkat.BuildRestoreUpdate<Schema<TId>, TId>(GetType()),
+                cancellationToken: cancellationToken),
+            () => collection.UpdateOneAsync(x => x.Id.Equals(Id),
+                Meerkat.BuildRestoreUpdate<Schema<TId>, TId>(GetType()),
+                cancellationToken: cancellationToken));
         MarkRestored();
     }
 

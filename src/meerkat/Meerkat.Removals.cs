@@ -26,9 +26,15 @@ public static partial class Meerkat
         var collection = GetCollectionForType<TSchema, TId>();
         var filter = ApplySoftDeleteFilter<TSchema, TId>(Builders<TSchema>.Filter.Where(x => x.Id.Equals(entityId)));
         if (typeof(TSchema).ShouldSoftDelete())
-            collection.UpdateOne(filter, BuildSoftDeleteUpdate<TSchema, TId>(), cancellationToken: cancellationToken);
+            WithAmbientSession(
+                session => collection.UpdateOne(session, filter, BuildSoftDeleteUpdate<TSchema, TId>(),
+                    cancellationToken: cancellationToken),
+                () => collection.UpdateOne(filter, BuildSoftDeleteUpdate<TSchema, TId>(),
+                    cancellationToken: cancellationToken));
         else
-            collection.DeleteOne(x => x.Id.Equals(entityId), cancellationToken);
+            WithAmbientSession(
+                session => collection.DeleteOne(session, x => x.Id.Equals(entityId), cancellationToken: cancellationToken),
+                () => collection.DeleteOne(x => x.Id.Equals(entityId), cancellationToken));
     }
 
     /// <summary>
@@ -45,10 +51,15 @@ public static partial class Meerkat
         var collection = GetCollectionForType<TSchema, TId>();
         var filter = ApplySoftDeleteFilter<TSchema, TId>(Builders<TSchema>.Filter.Where(x => x.Id.Equals(entityId)));
         if (typeof(TSchema).ShouldSoftDelete())
-            return collection.UpdateOneAsync(filter, BuildSoftDeleteUpdate<TSchema, TId>(),
-                cancellationToken: cancellationToken);
+            return WithAmbientSessionAsync(
+                session => collection.UpdateOneAsync(session, filter, BuildSoftDeleteUpdate<TSchema, TId>(),
+                    cancellationToken: cancellationToken),
+                () => collection.UpdateOneAsync(filter, BuildSoftDeleteUpdate<TSchema, TId>(),
+                    cancellationToken: cancellationToken));
 
-        return collection.DeleteOneAsync(x => x.Id.Equals(entityId), cancellationToken);
+        return WithAmbientSessionAsync(
+            session => collection.DeleteOneAsync(session, x => x.Id.Equals(entityId), cancellationToken: cancellationToken),
+            () => collection.DeleteOneAsync(x => x.Id.Equals(entityId), cancellationToken));
     }
 
     /// <summary>
@@ -65,9 +76,15 @@ public static partial class Meerkat
         var collection = GetCollectionForType<TSchema, TId>();
         var filter = ApplySoftDeleteFilter<TSchema, TId>(predicate);
         if (typeof(TSchema).ShouldSoftDelete())
-            collection.UpdateOne(filter, BuildSoftDeleteUpdate<TSchema, TId>(), cancellationToken: cancellationToken);
+            WithAmbientSession(
+                session => collection.UpdateOne(session, filter, BuildSoftDeleteUpdate<TSchema, TId>(),
+                    cancellationToken: cancellationToken),
+                () => collection.UpdateOne(filter, BuildSoftDeleteUpdate<TSchema, TId>(),
+                    cancellationToken: cancellationToken));
         else
-            collection.DeleteOne(predicate, cancellationToken);
+            WithAmbientSession(
+                session => collection.DeleteOne(session, predicate, cancellationToken: cancellationToken),
+                () => collection.DeleteOne(predicate, cancellationToken));
     }
 
     /// <summary>
@@ -84,10 +101,15 @@ public static partial class Meerkat
         var collection = GetCollectionForType<TSchema, TId>();
         var filter = ApplySoftDeleteFilter<TSchema, TId>(predicate);
         if (typeof(TSchema).ShouldSoftDelete())
-            return collection.UpdateOneAsync(filter, BuildSoftDeleteUpdate<TSchema, TId>(),
-                cancellationToken: cancellationToken);
+            return WithAmbientSessionAsync(
+                session => collection.UpdateOneAsync(session, filter, BuildSoftDeleteUpdate<TSchema, TId>(),
+                    cancellationToken: cancellationToken),
+                () => collection.UpdateOneAsync(filter, BuildSoftDeleteUpdate<TSchema, TId>(),
+                    cancellationToken: cancellationToken));
 
-        return collection.DeleteOneAsync(predicate, cancellationToken);
+        return WithAmbientSessionAsync(
+            session => collection.DeleteOneAsync(session, predicate, cancellationToken: cancellationToken),
+            () => collection.DeleteOneAsync(predicate, cancellationToken));
     }
 
     /// <summary>
@@ -104,9 +126,15 @@ public static partial class Meerkat
         var collection = GetCollectionForType<TSchema, TId>();
         var filter = ApplySoftDeleteFilter<TSchema, TId>(predicate);
         if (typeof(TSchema).ShouldSoftDelete())
-            collection.UpdateMany(filter, BuildSoftDeleteUpdate<TSchema, TId>(), cancellationToken: cancellationToken);
+            WithAmbientSession(
+                session => collection.UpdateMany(session, filter, BuildSoftDeleteUpdate<TSchema, TId>(),
+                    cancellationToken: cancellationToken),
+                () => collection.UpdateMany(filter, BuildSoftDeleteUpdate<TSchema, TId>(),
+                    cancellationToken: cancellationToken));
         else
-            collection.DeleteMany(predicate, cancellationToken);
+            WithAmbientSession(
+                session => collection.DeleteMany(session, predicate, cancellationToken: cancellationToken),
+                () => collection.DeleteMany(predicate, cancellationToken));
     }
 
     /// <summary>
@@ -123,53 +151,88 @@ public static partial class Meerkat
         var collection = GetCollectionForType<TSchema, TId>();
         var filter = ApplySoftDeleteFilter<TSchema, TId>(predicate);
         if (typeof(TSchema).ShouldSoftDelete())
-            return collection.UpdateManyAsync(filter, BuildSoftDeleteUpdate<TSchema, TId>(),
-                cancellationToken: cancellationToken);
+            return WithAmbientSessionAsync(
+                session => collection.UpdateManyAsync(session, filter, BuildSoftDeleteUpdate<TSchema, TId>(),
+                    cancellationToken: cancellationToken),
+                () => collection.UpdateManyAsync(filter, BuildSoftDeleteUpdate<TSchema, TId>(),
+                    cancellationToken: cancellationToken));
 
-        return collection.DeleteManyAsync(predicate, cancellationToken);
+        return WithAmbientSessionAsync(
+            session => collection.DeleteManyAsync(session, predicate, cancellationToken: cancellationToken),
+            () => collection.DeleteManyAsync(predicate, cancellationToken));
     }
 
     /// <summary>
     /// Permanently deletes an entity by its unique identifier, including soft-deleted documents.
     /// </summary>
     public static void HardRemoveById<TSchema, TId>(TId entityId, CancellationToken cancellationToken = default)
-        where TSchema : Schema<TId> where TId : IEquatable<TId> =>
-        GetCollectionForType<TSchema, TId>().DeleteOne(x => x.Id.Equals(entityId), cancellationToken);
+        where TSchema : Schema<TId> where TId : IEquatable<TId>
+    {
+        var collection = GetCollectionForType<TSchema, TId>();
+        WithAmbientSession(
+            session => collection.DeleteOne(session, x => x.Id.Equals(entityId), cancellationToken: cancellationToken),
+            () => collection.DeleteOne(x => x.Id.Equals(entityId), cancellationToken));
+    }
 
     /// <summary>
     /// Permanently deletes an entity by its unique identifier asynchronously, including soft-deleted documents.
     /// </summary>
     public static Task HardRemoveByIdAsync<TSchema, TId>(TId entityId, CancellationToken cancellationToken = default)
-        where TSchema : Schema<TId> where TId : IEquatable<TId> =>
-        GetCollectionForType<TSchema, TId>().DeleteOneAsync(x => x.Id.Equals(entityId), cancellationToken);
+        where TSchema : Schema<TId> where TId : IEquatable<TId>
+    {
+        var collection = GetCollectionForType<TSchema, TId>();
+        return WithAmbientSessionAsync(
+            session => collection.DeleteOneAsync(session, x => x.Id.Equals(entityId), cancellationToken: cancellationToken),
+            () => collection.DeleteOneAsync(x => x.Id.Equals(entityId), cancellationToken));
+    }
 
     /// <summary>
     /// Permanently deletes the first entity that matches the given predicate, including soft-deleted documents.
     /// </summary>
     public static void HardRemoveOne<TSchema, TId>(Expression<Func<TSchema, bool>> predicate,
-        CancellationToken cancellationToken = default) where TSchema : Schema<TId> where TId : IEquatable<TId> =>
-        GetCollectionForType<TSchema, TId>().DeleteOne(predicate, cancellationToken);
+        CancellationToken cancellationToken = default) where TSchema : Schema<TId> where TId : IEquatable<TId>
+    {
+        var collection = GetCollectionForType<TSchema, TId>();
+        WithAmbientSession(
+            session => collection.DeleteOne(session, predicate, cancellationToken: cancellationToken),
+            () => collection.DeleteOne(predicate, cancellationToken));
+    }
 
     /// <summary>
     /// Permanently deletes the first entity that matches the given predicate asynchronously, including soft-deleted documents.
     /// </summary>
     public static Task HardRemoveOneAsync<TSchema, TId>(Expression<Func<TSchema, bool>> predicate,
-        CancellationToken cancellationToken = default) where TSchema : Schema<TId> where TId : IEquatable<TId> =>
-        GetCollectionForType<TSchema, TId>().DeleteOneAsync(predicate, cancellationToken);
+        CancellationToken cancellationToken = default) where TSchema : Schema<TId> where TId : IEquatable<TId>
+    {
+        var collection = GetCollectionForType<TSchema, TId>();
+        return WithAmbientSessionAsync(
+            session => collection.DeleteOneAsync(session, predicate, cancellationToken: cancellationToken),
+            () => collection.DeleteOneAsync(predicate, cancellationToken));
+    }
 
     /// <summary>
     /// Permanently deletes multiple entities that match the given predicate, including soft-deleted documents.
     /// </summary>
     public static void HardRemove<TSchema, TId>(Expression<Func<TSchema, bool>> predicate,
-        CancellationToken cancellationToken = default) where TSchema : Schema<TId> where TId : IEquatable<TId> =>
-        GetCollectionForType<TSchema, TId>().DeleteMany(predicate, cancellationToken);
+        CancellationToken cancellationToken = default) where TSchema : Schema<TId> where TId : IEquatable<TId>
+    {
+        var collection = GetCollectionForType<TSchema, TId>();
+        WithAmbientSession(
+            session => collection.DeleteMany(session, predicate, cancellationToken: cancellationToken),
+            () => collection.DeleteMany(predicate, cancellationToken));
+    }
 
     /// <summary>
     /// Permanently deletes multiple entities that match the given predicate asynchronously, including soft-deleted documents.
     /// </summary>
     public static Task HardRemoveAsync<TSchema, TId>(Expression<Func<TSchema, bool>> predicate,
-        CancellationToken cancellationToken = default) where TSchema : Schema<TId> where TId : IEquatable<TId> =>
-        GetCollectionForType<TSchema, TId>().DeleteManyAsync(predicate, cancellationToken);
+        CancellationToken cancellationToken = default) where TSchema : Schema<TId> where TId : IEquatable<TId>
+    {
+        var collection = GetCollectionForType<TSchema, TId>();
+        return WithAmbientSessionAsync(
+            session => collection.DeleteManyAsync(session, predicate, cancellationToken: cancellationToken),
+            () => collection.DeleteManyAsync(predicate, cancellationToken));
+    }
 
     /// <summary>
     /// Restores a soft-deleted entity by its unique identifier. No-op when the schema does not opt into soft delete.
@@ -180,8 +243,12 @@ public static partial class Meerkat
         if (!typeof(TSchema).ShouldSoftDelete())
             return;
 
-        GetCollectionForType<TSchema, TId>().UpdateOne(x => x.Id.Equals(entityId),
-            BuildRestoreUpdate<TSchema, TId>(), cancellationToken: cancellationToken);
+        var collection = GetCollectionForType<TSchema, TId>();
+        WithAmbientSession(
+            session => collection.UpdateOne(session, x => x.Id.Equals(entityId),
+                BuildRestoreUpdate<TSchema, TId>(), cancellationToken: cancellationToken),
+            () => collection.UpdateOne(x => x.Id.Equals(entityId),
+                BuildRestoreUpdate<TSchema, TId>(), cancellationToken: cancellationToken));
     }
 
     /// <summary>
@@ -193,8 +260,12 @@ public static partial class Meerkat
         if (!typeof(TSchema).ShouldSoftDelete())
             return Task.CompletedTask;
 
-        return GetCollectionForType<TSchema, TId>().UpdateOneAsync(x => x.Id.Equals(entityId),
-            BuildRestoreUpdate<TSchema, TId>(), cancellationToken: cancellationToken);
+        var collection = GetCollectionForType<TSchema, TId>();
+        return WithAmbientSessionAsync(
+            session => collection.UpdateOneAsync(session, x => x.Id.Equals(entityId),
+                BuildRestoreUpdate<TSchema, TId>(), cancellationToken: cancellationToken),
+            () => collection.UpdateOneAsync(x => x.Id.Equals(entityId),
+                BuildRestoreUpdate<TSchema, TId>(), cancellationToken: cancellationToken));
     }
 
     /// <summary>
@@ -206,8 +277,12 @@ public static partial class Meerkat
         if (!typeof(TSchema).ShouldSoftDelete())
             return;
 
-        GetCollectionForType<TSchema, TId>().UpdateOne(predicate, BuildRestoreUpdate<TSchema, TId>(),
-            cancellationToken: cancellationToken);
+        var collection = GetCollectionForType<TSchema, TId>();
+        WithAmbientSession(
+            session => collection.UpdateOne(session, predicate, BuildRestoreUpdate<TSchema, TId>(),
+                cancellationToken: cancellationToken),
+            () => collection.UpdateOne(predicate, BuildRestoreUpdate<TSchema, TId>(),
+                cancellationToken: cancellationToken));
     }
 
     /// <summary>
@@ -219,8 +294,12 @@ public static partial class Meerkat
         if (!typeof(TSchema).ShouldSoftDelete())
             return Task.CompletedTask;
 
-        return GetCollectionForType<TSchema, TId>().UpdateOneAsync(predicate, BuildRestoreUpdate<TSchema, TId>(),
-            cancellationToken: cancellationToken);
+        var collection = GetCollectionForType<TSchema, TId>();
+        return WithAmbientSessionAsync(
+            session => collection.UpdateOneAsync(session, predicate, BuildRestoreUpdate<TSchema, TId>(),
+                cancellationToken: cancellationToken),
+            () => collection.UpdateOneAsync(predicate, BuildRestoreUpdate<TSchema, TId>(),
+                cancellationToken: cancellationToken));
     }
 
     /// <summary>
@@ -232,8 +311,12 @@ public static partial class Meerkat
         if (!typeof(TSchema).ShouldSoftDelete())
             return;
 
-        GetCollectionForType<TSchema, TId>().UpdateMany(predicate, BuildRestoreUpdate<TSchema, TId>(),
-            cancellationToken: cancellationToken);
+        var collection = GetCollectionForType<TSchema, TId>();
+        WithAmbientSession(
+            session => collection.UpdateMany(session, predicate, BuildRestoreUpdate<TSchema, TId>(),
+                cancellationToken: cancellationToken),
+            () => collection.UpdateMany(predicate, BuildRestoreUpdate<TSchema, TId>(),
+                cancellationToken: cancellationToken));
     }
 
     /// <summary>
@@ -245,7 +328,11 @@ public static partial class Meerkat
         if (!typeof(TSchema).ShouldSoftDelete())
             return Task.CompletedTask;
 
-        return GetCollectionForType<TSchema, TId>().UpdateManyAsync(predicate, BuildRestoreUpdate<TSchema, TId>(),
-            cancellationToken: cancellationToken);
+        var collection = GetCollectionForType<TSchema, TId>();
+        return WithAmbientSessionAsync(
+            session => collection.UpdateManyAsync(session, predicate, BuildRestoreUpdate<TSchema, TId>(),
+                cancellationToken: cancellationToken),
+            () => collection.UpdateManyAsync(predicate, BuildRestoreUpdate<TSchema, TId>(),
+                cancellationToken: cancellationToken));
     }
 }

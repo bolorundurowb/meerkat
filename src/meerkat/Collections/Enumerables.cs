@@ -27,7 +27,9 @@ public static class Enumerables
         ProcessEntitiesPreSave<TSchema, TId>(entityList);
 
         var collection = Meerkat.GetCollectionForType<TSchema, TId>();
-        collection.BulkWrite(operations, BulkInsertOptions);
+        Meerkat.WithAmbientSession(
+            session => collection.BulkWrite(session, operations, BulkInsertOptions),
+            () => collection.BulkWrite(operations, BulkInsertOptions));
 
         ProcessEntitiesPostSaves<TSchema, TId>(entityList);
     }
@@ -49,7 +51,9 @@ public static class Enumerables
         ProcessEntitiesPreSave<TSchema, TId>(entityList);
 
         var collection = Meerkat.GetCollectionForType<TSchema, TId>();
-        await collection.BulkWriteAsync(operations, BulkInsertOptions, cancellationToken);
+        await Meerkat.WithAmbientSessionAsync(
+            session => collection.BulkWriteAsync(session, operations, BulkInsertOptions, cancellationToken),
+            () => collection.BulkWriteAsync(operations, BulkInsertOptions, cancellationToken));
 
         ProcessEntitiesPostSaves<TSchema, TId>(entityList);
     }

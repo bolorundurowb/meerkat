@@ -36,6 +36,16 @@ using meerkat;
 Meerkat.Connect("mongodb://user:password@host:port/database-name");
 ```
 
+To create and verify attribute indexes at startup, call `EnsureIndexesAsync` right after `Connect`:
+
+```csharp
+await Meerkat.EnsureIndexesAsync(typeof(MyApp).Assembly);
+```
+
+This scans the assembly for concrete `Schema<TId>` types, creates any indexes declared via the
+index attributes, and throws `IndexVerificationException` if an expected index is missing. See
+[Indexing](#indexing).
+
 ## Defining Models
 
 All models must inherit from `Schema<TId>`, where `TId` is the type of the document's unique identifier. The `Id`
@@ -435,6 +445,69 @@ public class Location : Schema<Guid>
 | `UniqueIndex`      | Single property     | `Name`, `Sparse`                                   |
 | `CompoundIndex`    | Multiple properties | `Name` (groups fields), `IndexOrder`, `Unique`     |
 | `GeospatialIndex`  | Single property     | `Name`, `IndexType`                                |
+
+### Verifying indexes at startup
+
+Indexes are also created lazily on first collection access, but a type that is never queried never
+gets its indexes. To guarantee indexes exist before the app serves traffic, call one of the
+`EnsureIndexes` overloads after `Connect`:
+
+```csharp
+// a single type
+await Meerkat.EnsureIndexesAsync<User, Guid>();
+
+// a set of types
+await Meerkat.EnsureIndexesAsync(new[] { typeof(User), typeof(Order) });
+
+// every concrete Schema<TId> in an assembly
+await Meerkat.EnsureIndexesAsync(typeof(User).Assembly);
+
+// sync variants
+Meerkat.EnsureIndexes<User, Guid>();
+Meerkat.EnsureIndexes(typeof(User).Assembly);
+```
+
+`EnsureIndexes` creates the expected indexes (idempotently) and then lists the collection's indexes
+to confirm each one is present. If an index is missing or could not be created, it throws
+`IndexVerificationException` with the collection name and the missing indexes. Named indexes are
+matched by name; unnamed indexes are matched by key pattern (and uniqueness/sparse where set).
+
+## Transactions
+
+Meerkat exposes ambient multi-document transactions. Writes and reads issued inside the callback
+automatically join the transaction — no session parameter is required on the existing `Save`,
+`Remove*`, `Update*`, `Increment*`, `Count*`, and `Query`/`Find*` APIs.
+
+> **Note:** transactions require a replica set or sharded cluster. A standalone MongoDB instance
+> cannot run transactions.
+
+```csharp
+await Meerkat.WithTransactionAsync(async _ =>
+{
+    var order = new Order { Number = "1001" };
+    await order.SaveAsync();
+
+    var line = new OrderLine { OrderId = order.Id, Qty = 2 };
+    await line.SaveAsync();
+});
+```
+
+- If the callback completes, the transaction commits.
+- If the callback throws, the transaction rolls back all of its writes.
+- Reads inside the callback see uncommitted writes made earlier in the same transaction.
+- Nested `WithTransaction`/`WithTransactionAsync` calls throw `InvalidOperationException`.
+
+Sync and returning overloads are also available:
+
+```csharp
+Meerkat.WithTransaction(() => { /* ... */ });
+
+var result = await Meerkat.WithTransactionAsync(async _ =>
+{
+    // ...
+    return 42;
+});
+```
 
 ## Data Transformations
 

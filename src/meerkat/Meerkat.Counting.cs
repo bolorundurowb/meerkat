@@ -27,9 +27,11 @@ public static partial class Meerkat
         where TSchema : Schema<TId> where TId : IEquatable<TId>
     {
         FilterDefinition<TSchema> filter = predicate ?? FilterDefinition<TSchema>.Empty;
-        return GetCollectionForType<TSchema, TId>()
-            .CountDocuments(ApplySoftDeleteFilter<TSchema, TId>(filter, includeDeleted),
-                cancellationToken: cancellationToken);
+        var collection = GetCollectionForType<TSchema, TId>();
+        var filterDefinition = ApplySoftDeleteFilter<TSchema, TId>(filter, includeDeleted);
+        return WithAmbientSession(
+            session => collection.CountDocuments(session, filterDefinition, cancellationToken: cancellationToken),
+            () => collection.CountDocuments(filterDefinition, cancellationToken: cancellationToken));
     }
 
     /// <summary>
@@ -46,9 +48,11 @@ public static partial class Meerkat
         where TSchema : Schema<TId> where TId : IEquatable<TId>
     {
         FilterDefinition<TSchema> filter = predicate ?? FilterDefinition<TSchema>.Empty;
-        return GetCollectionForType<TSchema, TId>()
-            .CountDocumentsAsync(ApplySoftDeleteFilter<TSchema, TId>(filter, includeDeleted),
-                cancellationToken: cancellationToken);
+        var collection = GetCollectionForType<TSchema, TId>();
+        var filterDefinition = ApplySoftDeleteFilter<TSchema, TId>(filter, includeDeleted);
+        return WithAmbientSessionAsync(
+            session => collection.CountDocumentsAsync(session, filterDefinition, cancellationToken: cancellationToken),
+            () => collection.CountDocumentsAsync(filterDefinition, cancellationToken: cancellationToken));
     }
 
     /// <summary>

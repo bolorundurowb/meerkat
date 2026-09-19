@@ -30,6 +30,24 @@ public class MeerkatTests
             .WithMessage("The database connection has not been initialised. Call Connect() before carrying out any operations.");
     }
 
+    [Fact]
+    public void Client_ShouldInitializeMongoClient()
+    {
+        Meerkat.ResetDatabase();
+        var connectionString = "mongodb://localhost:27017/testdb";
+        Meerkat.Connect(connectionString);
+        Meerkat.Client.Must().NotBeNull();
+    }
+
+    [Fact]
+    public void Client_ShouldThrowExceptionIfNotConnected()
+    {
+        Meerkat.ResetDatabase();
+        var act = () => { _ = Meerkat.Client; };
+        act.Throws<InvalidOperationException>()
+            .WithMessage("The database connection has not been initialised. Call Connect() before carrying out any operations.");
+    }
+
     [Attributes.Collection(Name = "test_students")]
     private class TestStudent : Schema<Guid>
     {

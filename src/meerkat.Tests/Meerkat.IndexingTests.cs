@@ -1,6 +1,8 @@
 using meerkat.Attributes;
 using meerkat.Enums;
 using meerkat.Exceptions;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using Moq;
 using OmniAssert;
@@ -25,7 +27,7 @@ public class MeerkatIndexingTests
         public string Category { get; set; }
 
         [CompoundIndex(Name = "compound_idx", IndexOrder = IndexOrder.Descending)]
-        public new DateTime CreatedAt { get; set; }
+        public decimal TotalAmount { get; set; }
     }
 
     public class NoIndexEntity : Schema<Guid>
@@ -49,6 +51,21 @@ public class MeerkatIndexingTests
     {
         [GeospatialIndex(IndexType = GeospatialIndexType.TwoD)]
         public double[] Location { get; set; }
+    }
+
+    [Attributes.Collection(SoftDelete = true)]
+    public class SoftDeleteIndexedEntity : Schema<Guid>
+    {
+        public string Name { get; set; }
+    }
+
+    public abstract class AbstractSchema : Schema<Guid>
+    {
+    }
+
+    public class NotASchema
+    {
+        public string Name { get; set; }
     }
 
     public class CompoundUniqueIndexEntity : Schema<Guid>
@@ -76,6 +93,55 @@ public class MeerkatIndexingTests
 
         [CompoundIndex(Name = "mixed_ux", Unique = false)]
         public string FieldB { get; set; }
+    }
+
+    public class CompoundMultiOrderEntity : Schema<Guid>
+    {
+        [CompoundIndex(Name = "multi_order_idx", IndexOrder = IndexOrder.Descending)]
+        public string FieldDesc { get; set; }
+
+        [CompoundIndex(Name = "multi_order_idx", IndexOrder = IndexOrder.Hashed)]
+        public string FieldHashed { get; set; }
+    }
+
+    public class InvalidOrderSingleEntity : Schema<Guid>
+    {
+        [SingleFieldIndex(IndexOrder = (IndexOrder)999)]
+        public string Field { get; set; }
+    }
+
+    public class InvalidGeospatialEntity : Schema<Guid>
+    {
+        [GeospatialIndex(IndexType = (GeospatialIndexType)999)]
+        public double[] Location { get; set; }
+    }
+
+    public class InvalidOrderCompoundEntity : Schema<Guid>
+    {
+        [CompoundIndex(Name = "invalid_compound", IndexOrder = (IndexOrder)999)]
+        public string Field { get; set; }
+    }
+
+    public class IntermediateBaseSchema<TId> : Schema<TId> where TId : IEquatable<TId>
+    {
+    }
+
+    public class DeepDerivedSchema : IntermediateBaseSchema<Guid>
+    {
+        [UniqueIndex(Name = "deep_unique")]
+        public string DeepCode { get; set; }
+    }
+
+    public class SingleFieldUnnamedEntity : Schema<Guid>
+    {
+        [SingleFieldIndex(IndexOrder = IndexOrder.Ascending)]
+        public string Title { get; set; }
+    }
+
+    public class UniqueUnnamedEntity : Schema<Guid>
+    {
+        [UniqueIndex(Sparse = true)]
+        public string Sku { get; set; }
     }
 
     public class SingleFieldTtlEntity : Schema<Guid>
@@ -110,33 +176,86 @@ public class MeerkatIndexingTests
         _mockCollection = new Mock<IMongoCollection<IndexedEntity>>();
         _mockIndexes = new Mock<IMongoIndexManager<IndexedEntity>>();
         _mockCollection.Setup(x => x.Indexes).Returns(_mockIndexes.Object);
+        _mockCollection.Setup(x => x.CollectionNamespace)
+            .Returns(CollectionNamespace.FromFullName("testdb.indexedentities"));
+        _mockCollection.Setup(x => x.DocumentSerializer)
+            .Returns(BsonSerializer.LookupSerializer<IndexedEntity>());
+        _mockCollection.Setup(x => x.Settings)
+            .Returns(new MongoCollectionSettings());
         Meerkat.SchemasWithCheckedIndices.Clear();
     }
 
     [Fact]
-    public void HandleIndexing_ShouldCreateCorrectIndices()
+    public void BuildIndexModels_ShouldReturnAllAttributeIndexes()
+    {
+        var models = Meerkat.BuildIndexModels<IndexedEntity>(typeof(IndexedEntity));
+
+        models.Select(m => m.Options.Name).Must().Contain("unique_name");
+        models.Select(m => m.Options.Name).Must().Contain("single_age");
+        models.Select(m => m.Options.Name).Must().Contain("geo_location");
+        models.Select(m => m.Options.Name).Must().Contain("compound_idx");
+        models.Must().HaveCount(4);
+    }
+
+    [Fact]
+    public void BuildUniqueIndexModels_ShouldSetUniqueAndSparseOptions()
+    {
+        var models = Meerkat.BuildUniqueIndexModels<IndexedEntity>(typeof(IndexedEntity));
+
+        models.Must().HaveCount(1);
+        var model = models[0];
+        model.Options.Name.Must().Be("unique_name");
+        model.Options.Unique.Value.Must().BeTrue();
+        model.Options.Sparse.Value.Must().BeTrue();
+    }
+
+    [Fact]
+    public void BuildSingleFieldIndexModels_ShouldHonourIndexOrder()
+    {
+        var ascending = Meerkat.BuildSingleFieldIndexModels<SingleFieldAscEntity>(typeof(SingleFieldAscEntity));
+        ascending.Must().HaveCount(1);
+        RenderKeys(ascending[0]).GetValue("Name", 0).ToInt32().Must().Be(1);
+
+        var hashed = Meerkat.BuildSingleFieldIndexModels<SingleFieldHashedEntity>(typeof(SingleFieldHashedEntity));
+        hashed.Must().HaveCount(1);
+        RenderKeys(hashed[0]).GetValue("Name", "").AsString.Must().Be("hashed");
+    }
+
+    [Fact]
+    public void BuildGeospatialIndexModels_ShouldHonourIndexType()
+    {
+        var twoD = Meerkat.BuildGeospatialIndexModels<Geospatial2DEntity>(typeof(Geospatial2DEntity));
+        twoD.Must().HaveCount(1);
+        RenderKeys(twoD[0]).GetValue("Location", "").AsString.Must().Be("2d");
+
+        var sphere = Meerkat.BuildGeospatialIndexModels<IndexedEntity>(typeof(IndexedEntity));
+        sphere.Must().HaveCount(1);
+        RenderKeys(sphere[0]).GetValue("Location", "").AsString.Must().Be("2dsphere");
+    }
+
+    [Fact]
+    public void BuildIndexModels_ShouldReturnEmpty_WhenNoAttributes()
+    {
+        Meerkat.BuildIndexModels<NoIndexEntity>(typeof(NoIndexEntity)).Must().HaveCount(0);
+    }
+
+    [Fact]
+    public void BuildIndexModels_ShouldIncludeDeletedAtIndex_WhenSoftDeleteEnabled()
+    {
+        var models = Meerkat.BuildIndexModels<SoftDeleteIndexedEntity>(typeof(SoftDeleteIndexedEntity));
+
+        models.Select(m => m.Options.Name).Must().Contain("deleted_at_idx");
+    }
+
+    [Fact]
+    public void HandleIndexing_ShouldApplyAllModelsOnce()
     {
         Meerkat.HandleIndexing<IndexedEntity, Guid>(typeof(IndexedEntity), _mockCollection.Object);
 
         _mockIndexes.Verify(x => x.CreateMany(
-            It.Is<IEnumerable<CreateIndexModel<IndexedEntity>>>(models =>
-                models.Any(m => m.Options.Name == "unique_name" && m.Options.Unique == true && m.Options.Sparse == true)),
-            It.IsAny<CancellationToken>()), Times.AtLeastOnce);
-
-        _mockIndexes.Verify(x => x.CreateMany(
-            It.Is<IEnumerable<CreateIndexModel<IndexedEntity>>>(models =>
-                models.Any(m => m.Options.Name == "single_age")),
-            It.IsAny<CancellationToken>()), Times.AtLeastOnce);
-
-        _mockIndexes.Verify(x => x.CreateMany(
-            It.Is<IEnumerable<CreateIndexModel<IndexedEntity>>>(models =>
-                models.Any(m => m.Options.Name == "geo_location")),
-            It.IsAny<CancellationToken>()), Times.AtLeastOnce);
-
-        _mockIndexes.Verify(x => x.CreateOne(
-            It.Is<CreateIndexModel<IndexedEntity>>(m => m.Options.Name == "compound_idx"),
-            null,
+            It.Is<IEnumerable<CreateIndexModel<IndexedEntity>>>(models => models.Count() == 4),
             It.IsAny<CancellationToken>()), Times.Once);
+        Meerkat.SchemasWithCheckedIndices.ContainsKey(typeof(IndexedEntity).FullName!).Must().BeTrue();
     }
 
     [Fact]
@@ -145,202 +264,735 @@ public class MeerkatIndexingTests
         Meerkat.HandleIndexing<IndexedEntity, Guid>(typeof(IndexedEntity), _mockCollection.Object);
         Meerkat.HandleIndexing<IndexedEntity, Guid>(typeof(IndexedEntity), _mockCollection.Object);
 
-        _mockIndexes.Verify(x => x.CreateMany(It.IsAny<IEnumerable<CreateIndexModel<IndexedEntity>>>(), It.IsAny<CancellationToken>()), Times.AtLeastOnce);
-        _mockIndexes.Verify(x => x.CreateOne(It.IsAny<CreateIndexModel<IndexedEntity>>(), null, It.IsAny<CancellationToken>()), Times.Once);
+        _mockIndexes.Verify(x => x.CreateMany(
+            It.IsAny<IEnumerable<CreateIndexModel<IndexedEntity>>>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public void HandleUniqueIndexing_ShouldDoNothing_WhenNoAttributes()
+    public void BuildCompoundIndexModels_WithUniqueOption_ShouldSetUniqueFlag()
     {
-        var mockCol = new Mock<IMongoCollection<NoIndexEntity>>();
-        var mockIdx = new Mock<IMongoIndexManager<NoIndexEntity>>();
-        mockCol.Setup(x => x.Indexes).Returns(mockIdx.Object);
-
-        Meerkat.HandleUniqueIndexing(typeof(NoIndexEntity), mockCol.Object);
-
-        mockIdx.Verify(x => x.CreateMany(It.IsAny<IEnumerable<CreateIndexModel<NoIndexEntity>>>(), It.IsAny<CancellationToken>()), Times.Never);
+        var models = Meerkat.BuildCompoundIndexModels<CompoundUniqueIndexEntity>(typeof(CompoundUniqueIndexEntity));
+        models.Must().HaveCount(1);
+        models[0].Options.Name.Must().Be("ux");
+        models[0].Options.Unique.Must().Be(true);
     }
 
     [Fact]
-    public void HandleSingleFieldIndexing_WithAscendingOrder_ShouldCreateIndex()
+    public void BuildCompoundIndexModels_WithNonUniqueOption_ShouldSetUniqueFalse()
     {
-        var mockCol = new Mock<IMongoCollection<SingleFieldAscEntity>>();
-        var mockIdx = new Mock<IMongoIndexManager<SingleFieldAscEntity>>();
-        mockCol.Setup(x => x.Indexes).Returns(mockIdx.Object);
-
-        Meerkat.HandleSingleFieldIndexing(typeof(SingleFieldAscEntity), mockCol.Object);
-
-        mockIdx.Verify(x => x.CreateMany(It.IsAny<IEnumerable<CreateIndexModel<SingleFieldAscEntity>>>(), It.IsAny<CancellationToken>()), Times.Once);
+        var models = Meerkat.BuildCompoundIndexModels<CompoundNonUniqueIndexEntity>(typeof(CompoundNonUniqueIndexEntity));
+        models.Must().HaveCount(1);
+        models[0].Options.Name.Must().Be("non_ux");
+        models[0].Options.Unique.Must().Be(false);
     }
 
     [Fact]
-    public void HandleSingleFieldIndexing_WithHashedOrder_ShouldCreateIndex()
+    public void BuildCompoundIndexModels_WithMixedUniqueOptions_ShouldThrowInvalidAttributeException()
     {
-        var mockCol = new Mock<IMongoCollection<SingleFieldHashedEntity>>();
-        var mockIdx = new Mock<IMongoIndexManager<SingleFieldHashedEntity>>();
-        mockCol.Setup(x => x.Indexes).Returns(mockIdx.Object);
-
-        Meerkat.HandleSingleFieldIndexing(typeof(SingleFieldHashedEntity), mockCol.Object);
-
-        mockIdx.Verify(x => x.CreateMany(It.IsAny<IEnumerable<CreateIndexModel<SingleFieldHashedEntity>>>(), It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public void HandleGeospatialFieldIndexing_WithTwoDType_ShouldCreateIndex()
-    {
-        var mockCol = new Mock<IMongoCollection<Geospatial2DEntity>>();
-        var mockIdx = new Mock<IMongoIndexManager<Geospatial2DEntity>>();
-        mockCol.Setup(x => x.Indexes).Returns(mockIdx.Object);
-
-        Meerkat.HandleGeospatialFieldIndexing(typeof(Geospatial2DEntity), mockCol.Object);
-
-        mockIdx.Verify(x => x.CreateMany(It.IsAny<IEnumerable<CreateIndexModel<Geospatial2DEntity>>>(), It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public void HandleCompoundFieldIndexing_ShouldDoNothing_WhenNoAttributes()
-    {
-        var mockCol = new Mock<IMongoCollection<NoIndexEntity>>();
-        var mockIdx = new Mock<IMongoIndexManager<NoIndexEntity>>();
-        mockCol.Setup(x => x.Indexes).Returns(mockIdx.Object);
-
-        Meerkat.HandleCompoundFieldIndexing(typeof(NoIndexEntity), mockCol.Object);
-
-        mockIdx.Verify(x => x.CreateOne(It.IsAny<CreateIndexModel<NoIndexEntity>>(), null, It.IsAny<CancellationToken>()), Times.Never);
-    }
-
-    [Fact]
-    public void HandleCompoundFieldIndexing_WithUniqueOption_ShouldSetUniqueFlag()
-    {
-        var mockCol = new Mock<IMongoCollection<CompoundUniqueIndexEntity>>();
-        var mockIdx = new Mock<IMongoIndexManager<CompoundUniqueIndexEntity>>();
-        mockCol.Setup(x => x.Indexes).Returns(mockIdx.Object);
-
-        Meerkat.HandleCompoundFieldIndexing(typeof(CompoundUniqueIndexEntity), mockCol.Object);
-
-        mockIdx.Verify(x => x.CreateOne(
-            It.Is<CreateIndexModel<CompoundUniqueIndexEntity>>(m =>
-                m.Options.Name == "ux" && m.Options.Unique == true),
-            null,
-            It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public void HandleCompoundFieldIndexing_WithNonUniqueOption_ShouldSetUniqueFalse()
-    {
-        var mockCol = new Mock<IMongoCollection<CompoundNonUniqueIndexEntity>>();
-        var mockIdx = new Mock<IMongoIndexManager<CompoundNonUniqueIndexEntity>>();
-        mockCol.Setup(x => x.Indexes).Returns(mockIdx.Object);
-
-        Meerkat.HandleCompoundFieldIndexing(typeof(CompoundNonUniqueIndexEntity), mockCol.Object);
-
-        mockIdx.Verify(x => x.CreateOne(
-            It.Is<CreateIndexModel<CompoundNonUniqueIndexEntity>>(m =>
-                m.Options.Name == "non_ux" && m.Options.Unique == false),
-            null,
-            It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public void HandleCompoundFieldIndexing_WithMixedUniqueOptions_ShouldThrowInvalidAttributeException()
-    {
-        var mockCol = new Mock<IMongoCollection<CompoundMixedUniqueIndexEntity>>();
-        var mockIdx = new Mock<IMongoIndexManager<CompoundMixedUniqueIndexEntity>>();
-        mockCol.Setup(x => x.Indexes).Returns(mockIdx.Object);
-
-        Action act = () => Meerkat.HandleCompoundFieldIndexing(typeof(CompoundMixedUniqueIndexEntity), mockCol.Object);
+        Action act = () => Meerkat.BuildCompoundIndexModels<CompoundMixedUniqueIndexEntity>(typeof(CompoundMixedUniqueIndexEntity));
 
         act.Throws<InvalidAttributeException>()
             .WithMessage("Members of a compound index group must agree on the 'Unique' value.");
     }
 
     [Fact]
-    public void HandleSingleFieldIndexing_WithExpireAfter_ShouldSetExpireAfterOption()
+    public void BuildSingleFieldIndexModels_WithExpireAfter_ShouldSetExpireAfterOption()
     {
-        var mockCol = new Mock<IMongoCollection<SingleFieldTtlEntity>>();
-        var mockIdx = new Mock<IMongoIndexManager<SingleFieldTtlEntity>>();
-        mockCol.Setup(x => x.Indexes).Returns(mockIdx.Object);
+        var models = Meerkat.BuildSingleFieldIndexModels<SingleFieldTtlEntity>(typeof(SingleFieldTtlEntity));
 
-        Meerkat.HandleSingleFieldIndexing(typeof(SingleFieldTtlEntity), mockCol.Object);
-
-        mockIdx.Verify(x => x.CreateMany(
-            It.Is<IEnumerable<CreateIndexModel<SingleFieldTtlEntity>>>(models =>
-                models.Any(m => m.Options.Name == "ttl_idx" && m.Options.ExpireAfter == TimeSpan.FromDays(30))),
-            It.IsAny<CancellationToken>()), Times.Once);
+        models.Must().HaveCount(1);
+        models[0].Options.Name.Must().Be("ttl_idx");
+        models[0].Options.ExpireAfter.Must().Be(TimeSpan.FromDays(30));
     }
 
     [Fact]
-    public void HandleSingleFieldIndexing_WithNullableDateTimeAndExpireAfter_ShouldSetExpireAfterOption()
+    public void BuildSingleFieldIndexModels_WithNullableDateTimeAndExpireAfter_ShouldSetExpireAfterOption()
     {
-        var mockCol = new Mock<IMongoCollection<SingleFieldTtlNullableDateTimeEntity>>();
-        var mockIdx = new Mock<IMongoIndexManager<SingleFieldTtlNullableDateTimeEntity>>();
-        mockCol.Setup(x => x.Indexes).Returns(mockIdx.Object);
+        var models = Meerkat.BuildSingleFieldIndexModels<SingleFieldTtlNullableDateTimeEntity>(typeof(SingleFieldTtlNullableDateTimeEntity));
 
-        Meerkat.HandleSingleFieldIndexing(typeof(SingleFieldTtlNullableDateTimeEntity), mockCol.Object);
-
-        mockIdx.Verify(x => x.CreateMany(
-            It.Is<IEnumerable<CreateIndexModel<SingleFieldTtlNullableDateTimeEntity>>>(models =>
-                models.Any(m => m.Options.Name == "ttl_null_idx" && m.Options.ExpireAfter == TimeSpan.FromHours(12))),
-            It.IsAny<CancellationToken>()), Times.Once);
+        models.Must().HaveCount(1);
+        models[0].Options.Name.Must().Be("ttl_null_idx");
+        models[0].Options.ExpireAfter.Must().Be(TimeSpan.FromHours(12));
     }
 
     [Fact]
-    public void HandleSingleFieldIndexing_WithExpireAfterOnInvalidType_ShouldThrowInvalidAttributeException()
+    public void BuildSingleFieldIndexModels_WithExpireAfterOnInvalidType_ShouldThrowInvalidAttributeException()
     {
-        var mockCol = new Mock<IMongoCollection<SingleFieldTtlInvalidTypeEntity>>();
-        var mockIdx = new Mock<IMongoIndexManager<SingleFieldTtlInvalidTypeEntity>>();
-        mockCol.Setup(x => x.Indexes).Returns(mockIdx.Object);
-
-        Action act = () => Meerkat.HandleSingleFieldIndexing(typeof(SingleFieldTtlInvalidTypeEntity), mockCol.Object);
+        Action act = () => Meerkat.BuildSingleFieldIndexModels<SingleFieldTtlInvalidTypeEntity>(typeof(SingleFieldTtlInvalidTypeEntity));
 
         act.Throws<InvalidAttributeException>()
             .WithMessage("The 'ExpireAfter' TTL option can only be applied to DateTime or DateTime? fields.");
     }
 
     [Fact]
-    public void HandleSingleFieldIndexing_WithoutExpireAfter_ShouldHaveNullExpireAfter()
+    public void BuildSingleFieldIndexModels_WithoutExpireAfter_ShouldHaveNullExpireAfter()
     {
-        var mockCol = new Mock<IMongoCollection<SingleFieldNoExpireAfterEntity>>();
-        var mockIdx = new Mock<IMongoIndexManager<SingleFieldNoExpireAfterEntity>>();
-        mockCol.Setup(x => x.Indexes).Returns(mockIdx.Object);
+        var models = Meerkat.BuildSingleFieldIndexModels<SingleFieldNoExpireAfterEntity>(typeof(SingleFieldNoExpireAfterEntity));
 
-        Meerkat.HandleSingleFieldIndexing(typeof(SingleFieldNoExpireAfterEntity), mockCol.Object);
-
-        mockIdx.Verify(x => x.CreateMany(
-            It.Is<IEnumerable<CreateIndexModel<SingleFieldNoExpireAfterEntity>>>(models =>
-                models.Any(m => m.Options.ExpireAfter == null)),
-            It.IsAny<CancellationToken>()), Times.Once);
+        models.Must().HaveCount(1);
+        models[0].Options.ExpireAfter.Must().BeNull();
     }
 
     [Fact]
-    public void HandleIndexing_ShouldDoNothing_WhenCollectionIndexesIsNull()
+    public void HandleIndexing_ShouldThrow_WhenIndexManagerIsNull()
     {
         var mockCol = new Mock<IMongoCollection<IndexedEntity>>();
         mockCol.Setup(x => x.Indexes).Returns((IMongoIndexManager<IndexedEntity>?)null);
+        mockCol.Setup(x => x.CollectionNamespace).Returns(CollectionNamespace.FromFullName("testdb.indexedentities"));
 
-        Meerkat.HandleIndexing<IndexedEntity, Guid>(typeof(IndexedEntity), mockCol.Object);
+        var act = () => Meerkat.HandleIndexing<IndexedEntity, Guid>(typeof(IndexedEntity), mockCol.Object);
 
-        Meerkat.SchemasWithCheckedIndices.ContainsKey(typeof(IndexedEntity).FullName!).Must().BeTrue();
-    }
-
-    [Attributes.Collection(SoftDelete = true)]
-    public class SoftDeleteIndexedEntity : Schema<Guid>
-    {
-        public string Name { get; set; }
+        act.Throws<IndexVerificationException>();
     }
 
     [Fact]
-    public void HandleIndexing_ShouldCreateDeletedAtIndex_WhenSoftDeleteEnabled()
+    public void VerifyIndexes_ShouldThrow_WhenNamedIndexMissing()
     {
-        var mockCol = new Mock<IMongoCollection<SoftDeleteIndexedEntity>>();
-        var mockIdx = new Mock<IMongoIndexManager<SoftDeleteIndexedEntity>>();
-        mockCol.Setup(x => x.Indexes).Returns(mockIdx.Object);
+        var models = Meerkat.BuildUniqueIndexModels<IndexedEntity>(typeof(IndexedEntity));
+        _mockIndexes.Setup(x => x.List()).Returns(CreateIndexCursor(
+            new BsonDocument { { "name", "_id_" }, { "key", new BsonDocument { { "_id", 1 } } } }));
 
-        Meerkat.HandleIndexing<SoftDeleteIndexedEntity, Guid>(typeof(SoftDeleteIndexedEntity), mockCol.Object);
+        var act = () => Meerkat.VerifyIndexes(models, _mockCollection.Object);
 
-        mockIdx.Verify(x => x.CreateOne(
-            It.Is<CreateIndexModel<SoftDeleteIndexedEntity>>(m => m.Options.Name == "deleted_at_idx"),
-            null,
+        act.Throws<IndexVerificationException>();
+    }
+
+    [Fact]
+    public void VerifyIndexes_ShouldNotThrow_WhenAllNamedPresent()
+    {
+        var models = Meerkat.BuildUniqueIndexModels<IndexedEntity>(typeof(IndexedEntity));
+        _mockIndexes.Setup(x => x.List()).Returns(CreateIndexCursor(
+            new BsonDocument { { "name", "_id_" }, { "key", new BsonDocument { { "_id", 1 } } } },
+            new BsonDocument { { "name", "unique_name" }, { "key", new BsonDocument { { "Name", 1 } } } }));
+
+        Meerkat.VerifyIndexes(models, _mockCollection.Object);
+    }
+
+    [Fact]
+    public void VerifyIndexes_ShouldNotThrow_WhenNoModels()
+    {
+        Meerkat.VerifyIndexes(new List<CreateIndexModel<IndexedEntity>>(), _mockCollection.Object);
+    }
+
+    [Fact]
+    public void GetSchemaTypes_ShouldReturnOnlyConcreteSchemaTypes()
+    {
+        var types = Meerkat.GetSchemaTypes(typeof(IndexedEntity).Assembly).ToList();
+
+        types.Must().Contain(typeof(IndexedEntity));
+        types.Must().NotContain(typeof(AbstractSchema));
+        types.Must().NotContain(typeof(NotASchema));
+    }
+
+    [Fact]
+    public void ApplyIndexes_ShouldDoNothing_WhenModelsListIsEmpty()
+    {
+        Meerkat.ApplyIndexes(new List<CreateIndexModel<IndexedEntity>>(), _mockCollection.Object);
+        _mockIndexes.Verify(x => x.CreateMany(It.IsAny<IEnumerable<CreateIndexModel<IndexedEntity>>>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public void ApplyIndexes_ShouldThrow_WhenIndexesIsNull()
+    {
+        var mockCol = new Mock<IMongoCollection<IndexedEntity>>();
+        mockCol.Setup(x => x.Indexes).Returns((IMongoIndexManager<IndexedEntity>?)null);
+        mockCol.Setup(x => x.CollectionNamespace).Returns(CollectionNamespace.FromFullName("testdb.indexedentities"));
+
+        var models = Meerkat.BuildUniqueIndexModels<IndexedEntity>(typeof(IndexedEntity));
+        var act = () => Meerkat.ApplyIndexes(models, mockCol.Object);
+
+        act.Throws<IndexVerificationException>();
+    }
+
+    [Fact]
+    public async Task ApplyIndexesAsync_ShouldDoNothing_WhenModelsListIsEmpty()
+    {
+        await Meerkat.ApplyIndexesAsync(new List<CreateIndexModel<IndexedEntity>>(), _mockCollection.Object);
+        _mockIndexes.Verify(x => x.CreateManyAsync(It.IsAny<IEnumerable<CreateIndexModel<IndexedEntity>>>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ApplyIndexesAsync_ShouldThrow_WhenIndexesIsNull()
+    {
+        var mockCol = new Mock<IMongoCollection<IndexedEntity>>();
+        mockCol.Setup(x => x.Indexes).Returns((IMongoIndexManager<IndexedEntity>?)null);
+        mockCol.Setup(x => x.CollectionNamespace).Returns(CollectionNamespace.FromFullName("testdb.indexedentities"));
+
+        var models = Meerkat.BuildUniqueIndexModels<IndexedEntity>(typeof(IndexedEntity));
+        await Xunit.Assert.ThrowsAsync<IndexVerificationException>(() => Meerkat.ApplyIndexesAsync(models, mockCol.Object));
+    }
+
+    [Fact]
+    public async Task ApplyIndexesAsync_ShouldCallCreateManyAsync_WhenModelsArePresent()
+    {
+        var models = Meerkat.BuildUniqueIndexModels<IndexedEntity>(typeof(IndexedEntity));
+        await Meerkat.ApplyIndexesAsync(models, _mockCollection.Object);
+
+        _mockIndexes.Verify(x => x.CreateManyAsync(
+            It.Is<IEnumerable<CreateIndexModel<IndexedEntity>>>(m => m.Count() == 1),
             It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task VerifyIndexesAsync_ShouldDoNothing_WhenModelsListIsEmpty()
+    {
+        await Meerkat.VerifyIndexesAsync(new List<CreateIndexModel<IndexedEntity>>(), _mockCollection.Object);
+        _mockIndexes.Verify(x => x.ListAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task VerifyIndexesAsync_ShouldThrow_WhenIndexesIsNull()
+    {
+        var mockCol = new Mock<IMongoCollection<IndexedEntity>>();
+        mockCol.Setup(x => x.Indexes).Returns((IMongoIndexManager<IndexedEntity>?)null);
+        mockCol.Setup(x => x.CollectionNamespace).Returns(CollectionNamespace.FromFullName("testdb.indexedentities"));
+
+        var models = Meerkat.BuildUniqueIndexModels<IndexedEntity>(typeof(IndexedEntity));
+        await Xunit.Assert.ThrowsAsync<IndexVerificationException>(() => Meerkat.VerifyIndexesAsync(models, mockCol.Object));
+    }
+
+    [Fact]
+    public async Task VerifyIndexesAsync_ShouldThrow_WhenNamedIndexMissing()
+    {
+        var models = Meerkat.BuildUniqueIndexModels<IndexedEntity>(typeof(IndexedEntity));
+        _mockIndexes.Setup(x => x.ListAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(CreateAsyncIndexCursor(
+                new BsonDocument { { "name", "_id_" }, { "key", new BsonDocument { { "_id", 1 } } } }));
+
+        await Xunit.Assert.ThrowsAsync<IndexVerificationException>(() =>
+            Meerkat.VerifyIndexesAsync(models, _mockCollection.Object));
+    }
+
+    [Fact]
+    public async Task VerifyIndexesAsync_ShouldNotThrow_WhenAllNamedPresent()
+    {
+        var models = Meerkat.BuildUniqueIndexModels<IndexedEntity>(typeof(IndexedEntity));
+        _mockIndexes.Setup(x => x.ListAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(CreateAsyncIndexCursor(
+                new BsonDocument { { "name", "_id_" }, { "key", new BsonDocument { { "_id", 1 } } } },
+                new BsonDocument { { "name", "unique_name" }, { "key", new BsonDocument { { "Name", 1 } } } }));
+
+        await Meerkat.VerifyIndexesAsync(models, _mockCollection.Object);
+    }
+
+    [Fact]
+    public void VerifyIndexes_ShouldMatchUnnamedIndex_WhenKeysAndOptionsMatch()
+    {
+        var mockCol = new Mock<IMongoCollection<UniqueUnnamedEntity>>();
+        var mockIdx = new Mock<IMongoIndexManager<UniqueUnnamedEntity>>();
+        mockCol.Setup(x => x.Indexes).Returns(mockIdx.Object);
+        mockCol.Setup(x => x.CollectionNamespace).Returns(CollectionNamespace.FromFullName("testdb.uniqueunnamed"));
+        mockCol.Setup(x => x.DocumentSerializer).Returns(BsonSerializer.LookupSerializer<UniqueUnnamedEntity>());
+        mockCol.Setup(x => x.Settings).Returns(new MongoCollectionSettings());
+
+        var models = Meerkat.BuildUniqueIndexModels<UniqueUnnamedEntity>(typeof(UniqueUnnamedEntity));
+        mockIdx.Setup(x => x.List(It.IsAny<CancellationToken>())).Returns(CreateIndexCursor(
+            new BsonDocument { { "name", "Sku_1" }, { "key", new BsonDocument { { "Sku", 1 } } }, { "unique", true }, { "sparse", true } }));
+
+        Meerkat.VerifyIndexes(models, mockCol.Object);
+    }
+
+    [Fact]
+    public void VerifyIndexes_ShouldThrow_WhenUnnamedIndexUniqueOptionMismatches()
+    {
+        var mockCol = new Mock<IMongoCollection<UniqueUnnamedEntity>>();
+        var mockIdx = new Mock<IMongoIndexManager<UniqueUnnamedEntity>>();
+        mockCol.Setup(x => x.Indexes).Returns(mockIdx.Object);
+        mockCol.Setup(x => x.CollectionNamespace).Returns(CollectionNamespace.FromFullName("testdb.uniqueunnamed"));
+        mockCol.Setup(x => x.DocumentSerializer).Returns(BsonSerializer.LookupSerializer<UniqueUnnamedEntity>());
+        mockCol.Setup(x => x.Settings).Returns(new MongoCollectionSettings());
+
+        var models = Meerkat.BuildUniqueIndexModels<UniqueUnnamedEntity>(typeof(UniqueUnnamedEntity));
+        mockIdx.Setup(x => x.List(It.IsAny<CancellationToken>())).Returns(CreateIndexCursor(
+            new BsonDocument { { "name", "Sku_1" }, { "key", new BsonDocument { { "Sku", 1 } } }, { "unique", false }, { "sparse", true } }));
+
+        var act = () => Meerkat.VerifyIndexes(models, mockCol.Object);
+        act.Throws<IndexVerificationException>();
+    }
+
+    [Fact]
+    public void VerifyIndexes_ShouldThrow_WhenUnnamedIndexSparseOptionMismatches()
+    {
+        var mockCol = new Mock<IMongoCollection<UniqueUnnamedEntity>>();
+        var mockIdx = new Mock<IMongoIndexManager<UniqueUnnamedEntity>>();
+        mockCol.Setup(x => x.Indexes).Returns(mockIdx.Object);
+        mockCol.Setup(x => x.CollectionNamespace).Returns(CollectionNamespace.FromFullName("testdb.uniqueunnamed"));
+        mockCol.Setup(x => x.DocumentSerializer).Returns(BsonSerializer.LookupSerializer<UniqueUnnamedEntity>());
+        mockCol.Setup(x => x.Settings).Returns(new MongoCollectionSettings());
+
+        var models = Meerkat.BuildUniqueIndexModels<UniqueUnnamedEntity>(typeof(UniqueUnnamedEntity));
+        mockIdx.Setup(x => x.List(It.IsAny<CancellationToken>())).Returns(CreateIndexCursor(
+            new BsonDocument { { "name", "Sku_1" }, { "key", new BsonDocument { { "Sku", 1 } } }, { "unique", true }, { "sparse", false } }));
+
+        var act = () => Meerkat.VerifyIndexes(models, mockCol.Object);
+        act.Throws<IndexVerificationException>();
+    }
+
+    [Fact]
+    public void VerifyIndexes_ShouldThrow_WhenUnnamedIndexKeyElementCountMismatches()
+    {
+        var mockCol = new Mock<IMongoCollection<SingleFieldUnnamedEntity>>();
+        var mockIdx = new Mock<IMongoIndexManager<SingleFieldUnnamedEntity>>();
+        mockCol.Setup(x => x.Indexes).Returns(mockIdx.Object);
+        mockCol.Setup(x => x.CollectionNamespace).Returns(CollectionNamespace.FromFullName("testdb.singlefieldunnamed"));
+        mockCol.Setup(x => x.DocumentSerializer).Returns(BsonSerializer.LookupSerializer<SingleFieldUnnamedEntity>());
+        mockCol.Setup(x => x.Settings).Returns(new MongoCollectionSettings());
+
+        var models = Meerkat.BuildSingleFieldIndexModels<SingleFieldUnnamedEntity>(typeof(SingleFieldUnnamedEntity));
+        mockIdx.Setup(x => x.List(It.IsAny<CancellationToken>())).Returns(CreateIndexCursor(
+            new BsonDocument { { "name", "other_idx" }, { "key", new BsonDocument { { "Title", 1 }, { "Extra", 1 } } } }));
+
+        var act = () => Meerkat.VerifyIndexes(models, mockCol.Object);
+        act.Throws<IndexVerificationException>();
+    }
+
+    [Fact]
+    public void VerifyIndexes_ShouldThrow_WhenUnnamedIndexKeyElementNameMismatches()
+    {
+        var mockCol = new Mock<IMongoCollection<SingleFieldUnnamedEntity>>();
+        var mockIdx = new Mock<IMongoIndexManager<SingleFieldUnnamedEntity>>();
+        mockCol.Setup(x => x.Indexes).Returns(mockIdx.Object);
+        mockCol.Setup(x => x.CollectionNamespace).Returns(CollectionNamespace.FromFullName("testdb.singlefieldunnamed"));
+        mockCol.Setup(x => x.DocumentSerializer).Returns(BsonSerializer.LookupSerializer<SingleFieldUnnamedEntity>());
+        mockCol.Setup(x => x.Settings).Returns(new MongoCollectionSettings());
+
+        var models = Meerkat.BuildSingleFieldIndexModels<SingleFieldUnnamedEntity>(typeof(SingleFieldUnnamedEntity));
+        mockIdx.Setup(x => x.List(It.IsAny<CancellationToken>())).Returns(CreateIndexCursor(
+            new BsonDocument { { "name", "other_idx" }, { "key", new BsonDocument { { "DifferentTitle", 1 } } } }));
+
+        var act = () => Meerkat.VerifyIndexes(models, mockCol.Object);
+        act.Throws<IndexVerificationException>();
+    }
+
+    [Fact]
+    public void VerifyIndexes_ShouldThrow_WhenUnnamedIndexKeyElementValueMismatches()
+    {
+        var mockCol = new Mock<IMongoCollection<SingleFieldUnnamedEntity>>();
+        var mockIdx = new Mock<IMongoIndexManager<SingleFieldUnnamedEntity>>();
+        mockCol.Setup(x => x.Indexes).Returns(mockIdx.Object);
+        mockCol.Setup(x => x.CollectionNamespace).Returns(CollectionNamespace.FromFullName("testdb.singlefieldunnamed"));
+        mockCol.Setup(x => x.DocumentSerializer).Returns(BsonSerializer.LookupSerializer<SingleFieldUnnamedEntity>());
+        mockCol.Setup(x => x.Settings).Returns(new MongoCollectionSettings());
+
+        var models = Meerkat.BuildSingleFieldIndexModels<SingleFieldUnnamedEntity>(typeof(SingleFieldUnnamedEntity));
+        mockIdx.Setup(x => x.List(It.IsAny<CancellationToken>())).Returns(CreateIndexCursor(
+            new BsonDocument { { "name", "other_idx" }, { "key", new BsonDocument { { "Title", -1 } } } }));
+
+        var act = () => Meerkat.VerifyIndexes(models, mockCol.Object);
+        act.Throws<IndexVerificationException>();
+    }
+
+    [Fact]
+    public void VerifyIndexes_ShouldThrow_WhenIndexDocumentMissingKeyProperty()
+    {
+        var mockCol = new Mock<IMongoCollection<SingleFieldUnnamedEntity>>();
+        var mockIdx = new Mock<IMongoIndexManager<SingleFieldUnnamedEntity>>();
+        mockCol.Setup(x => x.Indexes).Returns(mockIdx.Object);
+        mockCol.Setup(x => x.CollectionNamespace).Returns(CollectionNamespace.FromFullName("testdb.singlefieldunnamed"));
+        mockCol.Setup(x => x.DocumentSerializer).Returns(BsonSerializer.LookupSerializer<SingleFieldUnnamedEntity>());
+        mockCol.Setup(x => x.Settings).Returns(new MongoCollectionSettings());
+
+        var models = Meerkat.BuildSingleFieldIndexModels<SingleFieldUnnamedEntity>(typeof(SingleFieldUnnamedEntity));
+        mockIdx.Setup(x => x.List(It.IsAny<CancellationToken>())).Returns(CreateIndexCursor(
+            new BsonDocument { { "name", "no_key_doc" } }));
+
+        var act = () => Meerkat.VerifyIndexes(models, mockCol.Object);
+        act.Throws<IndexVerificationException>();
+    }
+
+    [Fact]
+    public async Task VerifyIndexesAsync_ShouldMatchUnnamedIndex_WhenKeysAndOptionsMatch()
+    {
+        var mockCol = new Mock<IMongoCollection<UniqueUnnamedEntity>>();
+        var mockIdx = new Mock<IMongoIndexManager<UniqueUnnamedEntity>>();
+        mockCol.Setup(x => x.Indexes).Returns(mockIdx.Object);
+        mockCol.Setup(x => x.CollectionNamespace).Returns(CollectionNamespace.FromFullName("testdb.uniqueunnamed"));
+        mockCol.Setup(x => x.DocumentSerializer).Returns(BsonSerializer.LookupSerializer<UniqueUnnamedEntity>());
+        mockCol.Setup(x => x.Settings).Returns(new MongoCollectionSettings());
+
+        var models = Meerkat.BuildUniqueIndexModels<UniqueUnnamedEntity>(typeof(UniqueUnnamedEntity));
+        mockIdx.Setup(x => x.ListAsync(It.IsAny<CancellationToken>())).ReturnsAsync(CreateAsyncIndexCursor(
+            new BsonDocument { { "name", "Sku_1" }, { "key", new BsonDocument { { "Sku", 1 } } }, { "unique", true }, { "sparse", true } }));
+
+        await Meerkat.VerifyIndexesAsync(models, mockCol.Object);
+    }
+
+    [Fact]
+    public async Task VerifyIndexesAsync_ShouldThrow_WhenUnnamedIndexMissing()
+    {
+        var mockCol = new Mock<IMongoCollection<UniqueUnnamedEntity>>();
+        var mockIdx = new Mock<IMongoIndexManager<UniqueUnnamedEntity>>();
+        mockCol.Setup(x => x.Indexes).Returns(mockIdx.Object);
+        mockCol.Setup(x => x.CollectionNamespace).Returns(CollectionNamespace.FromFullName("testdb.uniqueunnamed"));
+        mockCol.Setup(x => x.DocumentSerializer).Returns(BsonSerializer.LookupSerializer<UniqueUnnamedEntity>());
+        mockCol.Setup(x => x.Settings).Returns(new MongoCollectionSettings());
+
+        var models = Meerkat.BuildUniqueIndexModels<UniqueUnnamedEntity>(typeof(UniqueUnnamedEntity));
+        mockIdx.Setup(x => x.ListAsync(It.IsAny<CancellationToken>())).ReturnsAsync(CreateAsyncIndexCursor(
+            new BsonDocument { { "name", "_id_" }, { "key", new BsonDocument { { "_id", 1 } } } }));
+
+        await Xunit.Assert.ThrowsAsync<IndexVerificationException>(() =>
+            Meerkat.VerifyIndexesAsync(models, mockCol.Object));
+    }
+
+    [Fact]
+    public void EnsureIndexes_ShouldThrowArgumentNullException_WhenTypesIsNull()
+    {
+        var act = () => Meerkat.EnsureIndexes((IEnumerable<Type>)null!);
+        act.Throws<ArgumentNullException>();
+    }
+
+    [Fact]
+    public void EnsureIndexes_ShouldThrowArgumentNullException_WhenAssemblyIsNull()
+    {
+        var act = () => Meerkat.EnsureIndexes((System.Reflection.Assembly)null!);
+        act.Throws<ArgumentNullException>();
+    }
+
+    [Fact]
+    public async Task EnsureIndexesAsync_ShouldThrowArgumentNullException_WhenTypesIsNull()
+    {
+        await Xunit.Assert.ThrowsAsync<ArgumentNullException>(() =>
+            Meerkat.EnsureIndexesAsync((IEnumerable<Type>)null!));
+    }
+
+    [Fact]
+    public async Task EnsureIndexesAsync_ShouldThrowArgumentNullException_WhenAssemblyIsNull()
+    {
+        await Xunit.Assert.ThrowsAsync<ArgumentNullException>(() =>
+            Meerkat.EnsureIndexesAsync((System.Reflection.Assembly)null!));
+    }
+
+    [Fact]
+    public void EnsureIndexes_ShouldBeNoOp_WhenTypesIsEmpty()
+    {
+        Meerkat.EnsureIndexes(Array.Empty<Type>());
+    }
+
+    [Fact]
+    public async Task EnsureIndexesAsync_ShouldBeNoOp_WhenTypesIsEmpty()
+    {
+        await Meerkat.EnsureIndexesAsync(Array.Empty<Type>());
+    }
+
+    [Fact]
+    public void ResolveSchemaIdType_ShouldResolveDirectSchema()
+    {
+        var idType = Meerkat.ResolveSchemaIdType(typeof(IndexedEntity));
+        idType.Must().Be(typeof(Guid));
+    }
+
+    [Fact]
+    public void ResolveSchemaIdType_ShouldResolveDerivedSchemaHierarchy()
+    {
+        var idType = Meerkat.ResolveSchemaIdType(typeof(DeepDerivedSchema));
+        idType.Must().Be(typeof(Guid));
+    }
+
+    [Fact]
+    public void ResolveSchemaIdType_ShouldThrowArgumentException_WhenTypeDoesNotInheritSchema()
+    {
+        var act = () => Meerkat.ResolveSchemaIdType(typeof(NotASchema));
+        act.Throws<ArgumentException>()
+            .WithMessage("Type 'meerkat.Tests.MeerkatIndexingTests+NotASchema' does not inherit from Schema<TId>.");
+    }
+
+    [Fact]
+    public void BuildSingleFieldIndexModels_ShouldThrowArgumentOutOfRangeException_ForInvalidIndexOrder()
+    {
+        var act = () => Meerkat.BuildSingleFieldIndexModels<InvalidOrderSingleEntity>(typeof(InvalidOrderSingleEntity));
+        act.Throws<ArgumentOutOfRangeException>();
+    }
+
+    [Fact]
+    public void BuildGeospatialIndexModels_ShouldThrowArgumentOutOfRangeException_ForInvalidGeospatialIndexType()
+    {
+        var act = () => Meerkat.BuildGeospatialIndexModels<InvalidGeospatialEntity>(typeof(InvalidGeospatialEntity));
+        act.Throws<ArgumentOutOfRangeException>();
+    }
+
+    [Fact]
+    public void BuildCompoundIndexModels_ShouldThrowArgumentOutOfRangeException_ForInvalidIndexOrder()
+    {
+        var act = () => Meerkat.BuildCompoundIndexModels<InvalidOrderCompoundEntity>(typeof(InvalidOrderCompoundEntity));
+        act.Throws<ArgumentOutOfRangeException>();
+    }
+
+    [Fact]
+    public void BuildCompoundIndexModels_ShouldRenderDescendingAndHashedCompoundIndexesCorrectly()
+    {
+        var models = Meerkat.BuildCompoundIndexModels<CompoundMultiOrderEntity>(typeof(CompoundMultiOrderEntity));
+        models.Must().HaveCount(1);
+        models[0].Options.Name.Must().Be("multi_order_idx");
+
+        var keys = RenderKeys(models[0]);
+        keys.GetValue("FieldDesc").ToInt32().Must().Be(-1);
+        keys.GetValue("FieldHashed").AsString.Must().Be("hashed");
+    }
+
+    [Fact]
+    public void EnsureIndexes_Generic_ShouldEnsureIndexesForSchema()
+    {
+        var mockDb = new Mock<IMongoDatabase>();
+        mockDb.Setup(x => x.GetCollection<IndexedEntity>(It.IsAny<string>(), It.IsAny<MongoCollectionSettings>()))
+            .Returns(_mockCollection.Object);
+
+        _mockIndexes.Setup(x => x.List(It.IsAny<CancellationToken>())).Returns(CreateIndexCursor(
+            new BsonDocument { { "name", "unique_name" }, { "key", new BsonDocument { { "Name", 1 } } } },
+            new BsonDocument { { "name", "single_age" }, { "key", new BsonDocument { { "Age", -1 } } } },
+            new BsonDocument { { "name", "geo_location" }, { "key", new BsonDocument { { "Location", "2dsphere" } } } },
+            new BsonDocument { { "name", "compound_idx" }, { "key", new BsonDocument { { "Category", 1 }, { "TotalAmount", -1 } } } }));
+
+        Meerkat.ResetDatabase();
+        Meerkat._database = new Lazy<IMongoDatabase>(() => mockDb.Object);
+
+        Meerkat.EnsureIndexes<IndexedEntity, Guid>();
+
+        _mockIndexes.Verify(x => x.CreateMany(It.IsAny<IEnumerable<CreateIndexModel<IndexedEntity>>>(), It.IsAny<CancellationToken>()), Times.Once);
+        Meerkat.SchemasWithCheckedIndices.ContainsKey(typeof(IndexedEntity).FullName!).Must().BeTrue();
+    }
+
+    [Fact]
+    public void EnsureIndexes_Generic_ShouldThrow_WhenDatabaseNotInitialised()
+    {
+        Meerkat.ResetDatabase();
+
+        var act = () => Meerkat.EnsureIndexes<IndexedEntity, Guid>();
+        act.Throws<InvalidOperationException>()
+            .WithMessage("The database connection has not been initialised. Call Connect() before carrying out any operations.");
+    }
+
+    [Fact]
+    public async Task EnsureIndexesAsync_Generic_ShouldEnsureIndexesForSchema()
+    {
+        var mockDb = new Mock<IMongoDatabase>();
+        mockDb.Setup(x => x.GetCollection<IndexedEntity>(It.IsAny<string>(), It.IsAny<MongoCollectionSettings>()))
+            .Returns(_mockCollection.Object);
+
+        _mockIndexes.Setup(x => x.ListAsync(It.IsAny<CancellationToken>())).ReturnsAsync(CreateAsyncIndexCursor(
+            new BsonDocument { { "name", "unique_name" }, { "key", new BsonDocument { { "Name", 1 } } } },
+            new BsonDocument { { "name", "single_age" }, { "key", new BsonDocument { { "Age", -1 } } } },
+            new BsonDocument { { "name", "geo_location" }, { "key", new BsonDocument { { "Location", "2dsphere" } } } },
+            new BsonDocument { { "name", "compound_idx" }, { "key", new BsonDocument { { "Category", 1 }, { "TotalAmount", -1 } } } }));
+
+        Meerkat.ResetDatabase();
+        Meerkat._database = new Lazy<IMongoDatabase>(() => mockDb.Object);
+
+        await Meerkat.EnsureIndexesAsync<IndexedEntity, Guid>();
+
+        _mockIndexes.Verify(x => x.CreateManyAsync(It.IsAny<IEnumerable<CreateIndexModel<IndexedEntity>>>(), It.IsAny<CancellationToken>()), Times.Once);
+        Meerkat.SchemasWithCheckedIndices.ContainsKey(typeof(IndexedEntity).FullName!).Must().BeTrue();
+    }
+
+    [Fact]
+    public async Task EnsureIndexesAsync_Generic_ShouldThrow_WhenDatabaseNotInitialised()
+    {
+        Meerkat.ResetDatabase();
+
+        await Xunit.Assert.ThrowsAsync<InvalidOperationException>(() =>
+            Meerkat.EnsureIndexesAsync<IndexedEntity, Guid>());
+    }
+
+    [Fact]
+    public void EnsureIndexesOnCollection_ShouldApplyAndVerify()
+    {
+        _mockIndexes.Setup(x => x.List(It.IsAny<CancellationToken>())).Returns(CreateIndexCursor(
+            new BsonDocument { { "name", "unique_name" }, { "key", new BsonDocument { { "Name", 1 } } } },
+            new BsonDocument { { "name", "single_age" }, { "key", new BsonDocument { { "Age", -1 } } } },
+            new BsonDocument { { "name", "geo_location" }, { "key", new BsonDocument { { "Location", "2dsphere" } } } },
+            new BsonDocument { { "name", "compound_idx" }, { "key", new BsonDocument { { "Category", 1 }, { "TotalAmount", -1 } } } }));
+
+        Meerkat.EnsureIndexesOnCollection(typeof(IndexedEntity), _mockCollection.Object);
+
+        _mockIndexes.Verify(x => x.CreateMany(It.IsAny<IEnumerable<CreateIndexModel<IndexedEntity>>>(), It.IsAny<CancellationToken>()), Times.Once);
+        Meerkat.SchemasWithCheckedIndices.ContainsKey(typeof(IndexedEntity).FullName!).Must().BeTrue();
+    }
+
+    [Fact]
+    public async Task EnsureIndexesOnCollectionAsync_ShouldApplyAndVerifyAsync()
+    {
+        _mockIndexes.Setup(x => x.ListAsync(It.IsAny<CancellationToken>())).ReturnsAsync(CreateAsyncIndexCursor(
+            new BsonDocument { { "name", "unique_name" }, { "key", new BsonDocument { { "Name", 1 } } } },
+            new BsonDocument { { "name", "single_age" }, { "key", new BsonDocument { { "Age", -1 } } } },
+            new BsonDocument { { "name", "geo_location" }, { "key", new BsonDocument { { "Location", "2dsphere" } } } },
+            new BsonDocument { { "name", "compound_idx" }, { "key", new BsonDocument { { "Category", 1 }, { "TotalAmount", -1 } } } }));
+
+        await Meerkat.EnsureIndexesOnCollectionAsync(typeof(IndexedEntity), _mockCollection.Object);
+
+        _mockIndexes.Verify(x => x.CreateManyAsync(It.IsAny<IEnumerable<CreateIndexModel<IndexedEntity>>>(), It.IsAny<CancellationToken>()), Times.Once);
+        Meerkat.SchemasWithCheckedIndices.ContainsKey(typeof(IndexedEntity).FullName!).Must().BeTrue();
+    }
+
+    [Fact]
+    public void EnsureIndexes_WithTypes_ShouldEnsureIndexesForConcreteTypes()
+    {
+        var mockDb = new Mock<IMongoDatabase>();
+        var mockCol = new Mock<IMongoCollection<DeepDerivedSchema>>();
+        var mockIdx = new Mock<IMongoIndexManager<DeepDerivedSchema>>();
+        mockCol.Setup(x => x.Indexes).Returns(mockIdx.Object);
+        mockCol.Setup(x => x.CollectionNamespace).Returns(CollectionNamespace.FromFullName("testdb.deepderivedschemas"));
+        mockCol.Setup(x => x.DocumentSerializer).Returns(BsonSerializer.LookupSerializer<DeepDerivedSchema>());
+        mockCol.Setup(x => x.Settings).Returns(new MongoCollectionSettings());
+        mockDb.Setup(x => x.GetCollection<DeepDerivedSchema>(It.IsAny<string>(), It.IsAny<MongoCollectionSettings>()))
+            .Returns(mockCol.Object);
+
+        mockIdx.Setup(x => x.List(It.IsAny<CancellationToken>())).Returns(CreateIndexCursor(
+            new BsonDocument { { "name", "deep_unique" }, { "key", new BsonDocument { { "DeepCode", 1 } } } }));
+
+        Meerkat.ResetDatabase();
+        Meerkat._database = new Lazy<IMongoDatabase>(() => mockDb.Object);
+
+        Meerkat.EnsureIndexes(new[] { typeof(DeepDerivedSchema) });
+
+        mockIdx.Verify(x => x.CreateMany(It.IsAny<IEnumerable<CreateIndexModel<DeepDerivedSchema>>>(), It.IsAny<CancellationToken>()), Times.Once);
+        Meerkat.SchemasWithCheckedIndices.ContainsKey(typeof(DeepDerivedSchema).FullName!).Must().BeTrue();
+    }
+
+    [Fact]
+    public async Task EnsureIndexesAsync_WithTypes_ShouldEnsureIndexesForConcreteTypes()
+    {
+        var mockDb = new Mock<IMongoDatabase>();
+        var mockCol = new Mock<IMongoCollection<DeepDerivedSchema>>();
+        var mockIdx = new Mock<IMongoIndexManager<DeepDerivedSchema>>();
+        mockCol.Setup(x => x.Indexes).Returns(mockIdx.Object);
+        mockCol.Setup(x => x.CollectionNamespace).Returns(CollectionNamespace.FromFullName("testdb.deepderivedschemas"));
+        mockCol.Setup(x => x.DocumentSerializer).Returns(BsonSerializer.LookupSerializer<DeepDerivedSchema>());
+        mockCol.Setup(x => x.Settings).Returns(new MongoCollectionSettings());
+        mockDb.Setup(x => x.GetCollection<DeepDerivedSchema>(It.IsAny<string>(), It.IsAny<MongoCollectionSettings>()))
+            .Returns(mockCol.Object);
+
+        mockIdx.Setup(x => x.List(It.IsAny<CancellationToken>())).Returns(CreateIndexCursor(
+            new BsonDocument { { "name", "deep_unique" }, { "key", new BsonDocument { { "DeepCode", 1 } } } }));
+        mockIdx.Setup(x => x.ListAsync(It.IsAny<CancellationToken>())).ReturnsAsync(CreateAsyncIndexCursor(
+            new BsonDocument { { "name", "deep_unique" }, { "key", new BsonDocument { { "DeepCode", 1 } } } }));
+
+        Meerkat.ResetDatabase();
+        Meerkat._database = new Lazy<IMongoDatabase>(() => mockDb.Object);
+
+        await Meerkat.EnsureIndexesAsync(new[] { typeof(DeepDerivedSchema) });
+
+        mockIdx.Verify(x => x.CreateManyAsync(It.IsAny<IEnumerable<CreateIndexModel<DeepDerivedSchema>>>(), It.IsAny<CancellationToken>()), Times.Once);
+        Meerkat.SchemasWithCheckedIndices.ContainsKey(typeof(DeepDerivedSchema).FullName!).Must().BeTrue();
+    }
+
+    [Fact]
+    public void EnsureIndexes_WithAssembly_ShouldEnsureIndexesForAssembly()
+    {
+        var mockDb = new Mock<IMongoDatabase>();
+        var mockCol = new Mock<IMongoCollection<IndexedEntity>>();
+        mockCol.Setup(x => x.Indexes).Returns(_mockIndexes.Object);
+        mockCol.Setup(x => x.CollectionNamespace).Returns(CollectionNamespace.FromFullName("testdb.indexedentities"));
+        mockCol.Setup(x => x.DocumentSerializer).Returns(BsonSerializer.LookupSerializer<IndexedEntity>());
+        mockCol.Setup(x => x.Settings).Returns(new MongoCollectionSettings());
+        mockDb.Setup(x => x.GetCollection<IndexedEntity>(It.IsAny<string>(), It.IsAny<MongoCollectionSettings>()))
+            .Returns(mockCol.Object);
+
+        _mockIndexes.Setup(x => x.List(It.IsAny<CancellationToken>())).Returns(CreateIndexCursor(
+            new BsonDocument { { "name", "unique_name" }, { "key", new BsonDocument { { "Name", 1 } } } },
+            new BsonDocument { { "name", "single_age" }, { "key", new BsonDocument { { "Age", -1 } } } },
+            new BsonDocument { { "name", "geo_location" }, { "key", new BsonDocument { { "Location", "2dsphere" } } } },
+            new BsonDocument { { "name", "compound_idx" }, { "key", new BsonDocument { { "Category", 1 }, { "TotalAmount", -1 } } } }));
+
+        Meerkat.ResetDatabase();
+        Meerkat._database = new Lazy<IMongoDatabase>(() => mockDb.Object);
+
+        var mockAssembly = new Mock<System.Reflection.Assembly>();
+        mockAssembly.Setup(a => a.GetTypes()).Returns(new[] { typeof(IndexedEntity) });
+
+        Meerkat.EnsureIndexes(mockAssembly.Object);
+        Meerkat.SchemasWithCheckedIndices.ContainsKey(typeof(IndexedEntity).FullName!).Must().BeTrue();
+    }
+
+    [Fact]
+    public async Task EnsureIndexesAsync_WithAssembly_ShouldEnsureIndexesForAssembly()
+    {
+        var mockDb = new Mock<IMongoDatabase>();
+        var mockCol = new Mock<IMongoCollection<IndexedEntity>>();
+        mockCol.Setup(x => x.Indexes).Returns(_mockIndexes.Object);
+        mockCol.Setup(x => x.CollectionNamespace).Returns(CollectionNamespace.FromFullName("testdb.indexedentities"));
+        mockCol.Setup(x => x.DocumentSerializer).Returns(BsonSerializer.LookupSerializer<IndexedEntity>());
+        mockCol.Setup(x => x.Settings).Returns(new MongoCollectionSettings());
+        mockDb.Setup(x => x.GetCollection<IndexedEntity>(It.IsAny<string>(), It.IsAny<MongoCollectionSettings>()))
+            .Returns(mockCol.Object);
+
+        _mockIndexes.Setup(x => x.ListAsync(It.IsAny<CancellationToken>())).ReturnsAsync(CreateAsyncIndexCursor(
+            new BsonDocument { { "name", "unique_name" }, { "key", new BsonDocument { { "Name", 1 } } } },
+            new BsonDocument { { "name", "single_age" }, { "key", new BsonDocument { { "Age", -1 } } } },
+            new BsonDocument { { "name", "geo_location" }, { "key", new BsonDocument { { "Location", "2dsphere" } } } },
+            new BsonDocument { { "name", "compound_idx" }, { "key", new BsonDocument { { "Category", 1 }, { "TotalAmount", -1 } } } }));
+
+        Meerkat.ResetDatabase();
+        Meerkat._database = new Lazy<IMongoDatabase>(() => mockDb.Object);
+
+        var mockAssembly = new Mock<System.Reflection.Assembly>();
+        mockAssembly.Setup(a => a.GetTypes()).Returns(new[] { typeof(IndexedEntity) });
+
+        await Meerkat.EnsureIndexesAsync(mockAssembly.Object);
+        Meerkat.SchemasWithCheckedIndices.ContainsKey(typeof(IndexedEntity).FullName!).Must().BeTrue();
+    }
+
+    [Fact]
+    public void GetSchemaTypes_ShouldHandleReflectionTypeLoadException()
+    {
+        var mockAssembly = new Mock<System.Reflection.Assembly>();
+        mockAssembly.Setup(a => a.GetTypes()).Throws(new System.Reflection.ReflectionTypeLoadException(
+            new[] { typeof(IndexedEntity), null },
+            new Exception[] { new Exception("Cannot load type") }));
+
+        var types = Meerkat.GetSchemaTypes(mockAssembly.Object).ToList();
+        types.Must().Contain(typeof(IndexedEntity));
+    }
+
+    private static IAsyncCursor<BsonDocument> CreateAsyncIndexCursor(params BsonDocument[] indexes)
+    {
+        var cursor = new Mock<IAsyncCursor<BsonDocument>>();
+        var moved = false;
+        cursor.Setup(c => c.MoveNext(It.IsAny<CancellationToken>()))
+            .Returns(() =>
+            {
+                if (moved || indexes.Length == 0)
+                    return false;
+                moved = true;
+                return true;
+            });
+        cursor.Setup(c => c.MoveNextAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(() =>
+            {
+                if (moved || indexes.Length == 0)
+                    return false;
+                moved = true;
+                return true;
+            });
+        cursor.SetupGet(c => c.Current).Returns(indexes);
+        return cursor.Object;
+    }
+
+    private static IAsyncCursor<BsonDocument> CreateIndexCursor(params BsonDocument[] indexes)
+    {
+        var cursor = new Mock<IAsyncCursor<BsonDocument>>();
+        var moved = false;
+        cursor.Setup(c => c.MoveNext(It.IsAny<CancellationToken>()))
+            .Returns(() =>
+            {
+                if (moved || indexes.Length == 0)
+                    return false;
+                moved = true;
+                return true;
+            });
+        cursor.SetupGet(c => c.Current).Returns(indexes);
+        return cursor.Object;
+    }
+
+    private static BsonDocument RenderKeys<TSchema>(CreateIndexModel<TSchema> model)
+    {
+        var renderArgs = new RenderArgs<TSchema>(
+            BsonSerializer.LookupSerializer<TSchema>(),
+            BsonSerializer.SerializerRegistry,
+            new PathRenderArgs("", false),
+            renderForFind: false,
+            renderForElemMatch: false,
+            renderDollarForm: false,
+            translationOptions: null);
+        return model.Keys.Render(renderArgs);
     }
 }

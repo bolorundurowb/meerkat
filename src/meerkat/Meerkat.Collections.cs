@@ -28,7 +28,7 @@ public static partial class Meerkat
     {
         if (Database == null)
             throw new InvalidOperationException(
-                $"The database connection has not been initialized. Call {nameof(Connect)}() before carrying out any operations.");
+                $"The database connection has not been initialised. Call {nameof(Connect)}() before carrying out any operations.");
 
         var collectionName = type.GetCollectionName();
         var collection = Database.GetCollection<TSchema>(collectionName);

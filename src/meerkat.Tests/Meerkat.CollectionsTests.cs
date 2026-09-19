@@ -50,6 +50,6 @@ public class MeerkatCollectionsTests
         var entities = new List<TestEntity> { new TestEntity { Id = "1" } };
         Action act = () => entities.SaveAll<TestEntity, string>();
         act.Throws<InvalidOperationException>()
-            .WithMessage("The database connection has not been initialized. Call Connect() before carrying out any operations.");
+            .WithMessage("The database connection has not been initialised. Call Connect() before carrying out any operations.");
     }
 }

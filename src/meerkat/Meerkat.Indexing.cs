@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Linq;
+using System.Reflection;
 using meerkat.Attributes;
 using meerkat.Enums;
+using meerkat.Exceptions;
 using meerkat.Extensions;
+using meerkat.Services;
 using MongoDB.Driver;
 
 namespace meerkat;
@@ -55,6 +58,22 @@ public static partial class Meerkat
                 var attribute = x.Key;
                 var memberInfo = x.Value;
 
+                var expireAfter = attribute.ExpireAfter is string d
+                    ? DurationParser.ParseDuration(d)
+                    : (TimeSpan?)null;
+
+                var memberType = memberInfo switch
+                {
+                    PropertyInfo propertyInfo => propertyInfo.PropertyType,
+                    FieldInfo fieldInfo => fieldInfo.FieldType,
+                    _ => null
+                };
+
+                var isDate = memberType == typeof(DateTime) || memberType == typeof(DateTime?);
+                if (expireAfter.HasValue && !isDate)
+                    throw new InvalidAttributeException(
+                        "The 'ExpireAfter' TTL option can only be applied to DateTime or DateTime? fields.");
+
                 var field = new StringFieldDefinition<TSchema>(memberInfo.Name);
                 var definitionBuilder = new IndexKeysDefinitionBuilder<TSchema>();
                 var definition = attribute.IndexOrder switch
@@ -65,7 +84,7 @@ public static partial class Meerkat
                     _ => throw new ArgumentOutOfRangeException()
                 };
                 return new CreateIndexModel<TSchema>(definition,
-                    new CreateIndexOptions { Sparse = attribute.Sparse, Name = attribute.Name });
+                    new CreateIndexOptions { Sparse = attribute.Sparse, Name = attribute.Name, ExpireAfter = expireAfter });
             })
             .ToList();
 
@@ -111,6 +130,11 @@ public static partial class Meerkat
 
         foreach (var nameGroup in groupedIndexes)
         {
+            var uniqueFlags = nameGroup.Value.Select(kvp => kvp.Key.Unique).Distinct().ToList();
+            if (uniqueFlags.Count > 1)
+                throw new InvalidAttributeException(
+                    "Members of a compound index group must agree on the 'Unique' value.");
+
             var indexKeys = Builders<TSchema>.IndexKeys;
             var indexDefinition = nameGroup.Value.Aggregate(indexKeys.Combine(),
                 (current, groupAttributedMembers) =>
@@ -125,7 +149,8 @@ public static partial class Meerkat
                 });
 
             var indexModel =
-                new CreateIndexModel<TSchema>(indexDefinition, new CreateIndexOptions { Name = nameGroup.Key });
+                new CreateIndexModel<TSchema>(indexDefinition,
+                    new CreateIndexOptions { Name = nameGroup.Key, Unique = uniqueFlags.Single() });
             if (collection is { Indexes: not null })
                 collection.Indexes.CreateOne(indexModel);
         }

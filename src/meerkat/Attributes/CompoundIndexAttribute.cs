@@ -21,4 +21,10 @@ public class CompoundIndexAttribute : Attribute
     /// Defaults to <see cref="IndexOrder.Ascending"/>.
     /// </summary>
     public IndexOrder IndexOrder { get; set; } = IndexOrder.Ascending;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the compound index enforces uniqueness.
+    /// Defaults to <c>false</c>.
+    /// </summary>
+    public bool Unique { get; set; }
 }

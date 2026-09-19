@@ -16,7 +16,7 @@ public class MeerkatQueriesTests
         Meerkat.ResetDatabase();
         Action act = () => Meerkat.FindById<TestEntity, string>("123");
         act.Throws<InvalidOperationException>()
-            .WithMessage("The database connection has not been initialized. Call Connect() before carrying out any operations.");
+            .WithMessage("The database connection has not been initialised. Call Connect() before carrying out any operations.");
     }
 
     [Fact]
@@ -25,7 +25,7 @@ public class MeerkatQueriesTests
         Meerkat.ResetDatabase();
         Action act = () => { _ = Meerkat.FindByIdAsync<TestEntity, string>("123"); };
         act.Throws<InvalidOperationException>()
-            .WithMessage("The database connection has not been initialized. Call Connect() before carrying out any operations.");
+            .WithMessage("The database connection has not been initialised. Call Connect() before carrying out any operations.");
     }
 
     [Fact]
@@ -34,7 +34,7 @@ public class MeerkatQueriesTests
         Meerkat.ResetDatabase();
         Action act = () => Meerkat.FindOne<TestEntity, string>(x => x.Name == "test");
         act.Throws<InvalidOperationException>()
-            .WithMessage("The database connection has not been initialized. Call Connect() before carrying out any operations.");
+            .WithMessage("The database connection has not been initialised. Call Connect() before carrying out any operations.");
     }
 
     [Fact]
@@ -43,7 +43,7 @@ public class MeerkatQueriesTests
         Meerkat.ResetDatabase();
         Action act = () => { _ = Meerkat.FindOneAsync<TestEntity, string>(x => x.Name == "test"); };
         act.Throws<InvalidOperationException>()
-            .WithMessage("The database connection has not been initialized. Call Connect() before carrying out any operations.");
+            .WithMessage("The database connection has not been initialised. Call Connect() before carrying out any operations.");
     }
 
     [Fact]
@@ -52,7 +52,7 @@ public class MeerkatQueriesTests
         Meerkat.ResetDatabase();
         Action act = () => Meerkat.FindOne<TestEntity, string>();
         act.Throws<InvalidOperationException>()
-            .WithMessage("The database connection has not been initialized. Call Connect() before carrying out any operations.");
+            .WithMessage("The database connection has not been initialised. Call Connect() before carrying out any operations.");
     }
 
     [Fact]
@@ -61,7 +61,7 @@ public class MeerkatQueriesTests
         Meerkat.ResetDatabase();
         Action act = () => Meerkat.Find<TestEntity, string>(x => x.Name == "test");
         act.Throws<InvalidOperationException>()
-            .WithMessage("The database connection has not been initialized. Call Connect() before carrying out any operations.");
+            .WithMessage("The database connection has not been initialised. Call Connect() before carrying out any operations.");
     }
 
     [Fact]
@@ -70,7 +70,7 @@ public class MeerkatQueriesTests
         Meerkat.ResetDatabase();
         Action act = () => Meerkat.Find<TestEntity, string>();
         act.Throws<InvalidOperationException>()
-            .WithMessage("The database connection has not been initialized. Call Connect() before carrying out any operations.");
+            .WithMessage("The database connection has not been initialised. Call Connect() before carrying out any operations.");
     }
 
     [Fact]
@@ -79,6 +79,24 @@ public class MeerkatQueriesTests
         Meerkat.ResetDatabase();
         Action act = () => { _ = Meerkat.FindAsync<TestEntity, string>(x => x.Name == "test"); };
         act.Throws<InvalidOperationException>()
-            .WithMessage("The database connection has not been initialized. Call Connect() before carrying out any operations.");
+            .WithMessage("The database connection has not been initialised. Call Connect() before carrying out any operations.");
+    }
+
+    [Fact]
+    public void Query_WithIncludeDeleted_ShouldThrowExceptionIfNotConnected()
+    {
+        Meerkat.ResetDatabase();
+        Action act = () => Meerkat.Query<TestEntity, string>(includeDeleted: true);
+        act.Throws<InvalidOperationException>()
+            .WithMessage("The database connection has not been initialised. Call Connect() before carrying out any operations.");
+    }
+
+    [Fact]
+    public void FindById_WithIncludeDeleted_ShouldThrowExceptionIfNotConnected()
+    {
+        Meerkat.ResetDatabase();
+        Action act = () => Meerkat.FindById<TestEntity, string>("123", includeDeleted: true);
+        act.Throws<InvalidOperationException>()
+            .WithMessage("The database connection has not been initialised. Call Connect() before carrying out any operations.");
     }
 }

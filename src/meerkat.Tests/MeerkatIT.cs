@@ -124,3 +124,56 @@ public class MeerkatIT
         updated.Value.Must().Be(99);
     }
 }
+
+[Attributes.Collection(Name = "integration_soft_delete", SoftDelete = true, TrackTimestamps = true)]
+public class IntegrationSoftDeleteDoc : Schema<ObjectId>
+{
+    public string Name { get; set; }
+
+    public IntegrationSoftDeleteDoc()
+    {
+        Id = ObjectId.GenerateNewId();
+    }
+}
+
+[Collection("MeerkatIntegrationTests")]
+[Trait("Category", "Integration")]
+public class MeerkatSoftDeleteIT
+{
+    [Fact]
+    public void SoftDelete_ShouldHideRestoreAndHardRemoveDocuments()
+    {
+        Meerkat.ResetDatabase();
+        Meerkat.Connect("mongodb://localhost:27017/testdb");
+
+        var doc = new IntegrationSoftDeleteDoc { Name = "keep-me" };
+        doc.Save();
+
+        Meerkat.RemoveById<IntegrationSoftDeleteDoc, ObjectId>(doc.Id);
+
+        var hidden = Meerkat.FindById<IntegrationSoftDeleteDoc, ObjectId>(doc.Id);
+        hidden.Must().BeNull();
+
+        var foundDeleted = Meerkat.FindById<IntegrationSoftDeleteDoc, ObjectId>(doc.Id, includeDeleted: true);
+        foundDeleted.Must().NotBeNull();
+        foundDeleted.IsDeleted.Must().BeTrue();
+        foundDeleted.DeletedAt.Must().NotBeNull();
+
+        var includingDeleted = Meerkat.Query<IntegrationSoftDeleteDoc, ObjectId>(includeDeleted: true)
+            .Where(x => x.Id == doc.Id)
+            .ToList();
+        includingDeleted.Must().HaveCount(1);
+
+        Meerkat.Count<IntegrationSoftDeleteDoc, ObjectId>(x => x.Name == "keep-me").Must().Be(0);
+        Meerkat.Count<IntegrationSoftDeleteDoc, ObjectId>(x => x.Name == "keep-me", includeDeleted: true).Must().Be(1);
+
+        Meerkat.RestoreById<IntegrationSoftDeleteDoc, ObjectId>(doc.Id);
+        var restored = Meerkat.FindById<IntegrationSoftDeleteDoc, ObjectId>(doc.Id);
+        restored.Must().NotBeNull();
+        restored.IsDeleted.Must().BeFalse();
+        restored.Name.Must().Be("keep-me");
+
+        Meerkat.HardRemoveById<IntegrationSoftDeleteDoc, ObjectId>(doc.Id);
+        Meerkat.FindById<IntegrationSoftDeleteDoc, ObjectId>(doc.Id, includeDeleted: true).Must().BeNull();
+    }
+}

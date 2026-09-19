@@ -1,5 +1,6 @@
 using meerkat.Attributes;
 using meerkat.Exceptions;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using Moq;
 using OmniAssert;
@@ -85,6 +86,36 @@ public class SchemaTests
     }
 
     [Fact]
+    public void MarkDeleted_ShouldSetDeletedAtAndIsDeleted()
+    {
+        var entity = new UntrackedEntity();
+        entity.IsDeleted.Must().BeFalse();
+        entity.MarkDeleted();
+        entity.DeletedAt.Must().NotBeNull();
+        entity.IsDeleted.Must().BeTrue();
+    }
+
+    [Fact]
+    public void MarkRestored_ShouldClearDeletedAt()
+    {
+        var entity = new UntrackedEntity();
+        entity.MarkDeleted();
+        entity.MarkRestored();
+        entity.DeletedAt.Must().BeNull();
+        entity.IsDeleted.Must().BeFalse();
+    }
+
+    [Fact]
+    public void MarkDeleted_ShouldTouchUpdatedAt_WhenTimestampsTracked()
+    {
+        var entity = new TrackedEntity();
+        entity.HandleTimestamps();
+        entity.MarkDeleted();
+        entity.UpdatedAt.Must().NotBeNull();
+        entity.IsDeleted.Must().BeTrue();
+    }
+
+    [Fact]
     public void HandleLowercaseTransformations_ShouldLowercaseTargetProperties()
     {
         var entity = new TrackedEntity { Email = "TEST@EXAMPLE.COM", Normal = "STAY_SAME" };
@@ -132,5 +163,44 @@ public class SchemaTests
         var entity = new SaveTestEntity { Id = "123", Name = "Test" };
         entity.Save();
         _mockSchemaCollection.Verify(x => x.ReplaceOne(It.IsAny<FilterDefinition<Schema<string>>>(), entity, It.IsAny<ReplaceOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public void Delete_ShouldCallDeleteOne_WhenSoftDeleteDisabled()
+    {
+        var entity = new SaveTestEntity { Id = "123", Name = "Test" };
+        entity.Delete();
+        _mockSchemaCollection.Verify(x => x.DeleteOne(It.IsAny<FilterDefinition<Schema<string>>>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public void Restore_ShouldBeNoOp_WhenSoftDeleteDisabled()
+    {
+        var entity = new SaveTestEntity { Id = "123", Name = "Test" };
+        entity.Restore();
+        _mockSchemaCollection.Verify(x => x.UpdateOne(
+            It.IsAny<FilterDefinition<Schema<string>>>(),
+            It.IsAny<UpdateDefinition<Schema<string>>>(),
+            It.IsAny<UpdateOptions>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public void DeletedAt_ShouldSerialiseAsBsonDateTime_AndOmitIsDeleted()
+    {
+        var entity = new SaveTestEntity { Id = "123" };
+        entity.MarkDeleted();
+        var document = entity.ToBsonDocument();
+        document.Contains("DeletedAt").Must().BeTrue();
+        document["DeletedAt"].BsonType.Must().Be(BsonType.DateTime);
+        document.Contains("IsDeleted").Must().BeFalse();
+    }
+
+    [Fact]
+    public void DeletedAt_ShouldBeOmitted_WhenNull()
+    {
+        var entity = new SaveTestEntity { Id = "123" };
+        var document = entity.ToBsonDocument();
+        document.Contains("DeletedAt").Must().BeFalse();
     }
 }

@@ -61,10 +61,10 @@ Common ID types include `ObjectId`, `Guid`, `string`, and `int` any type that im
 
 ### Collection configuration
 
-Apply the `[Collection]` attribute to control the collection name and timestamp tracking:
+Apply the `[Collection]` attribute to control the collection name, timestamp tracking, and soft delete:
 
 ```csharp
-[Collection(Name = "persons", TrackTimestamps = true)]
+[Collection(Name = "persons", TrackTimestamps = true, SoftDelete = true)]
 public class Student : Schema<ObjectId>
 {
     public string FirstName { get; set; }
@@ -76,6 +76,8 @@ public class Student : Schema<ObjectId>
   version of the class name (e.g., `Student` → `students`).
 - **`TrackTimestamps`** - when `true`, Meerkat automatically sets `CreatedAt` on first save and updates `UpdatedAt` on
   every subsequent save.
+- **`SoftDelete`** - when `true`, `Remove*` sets `DeletedAt` instead of physically deleting, and queries, counts, and
+  updates exclude those documents by default. See [Soft delete](#soft-delete).
 
 ## Querying
 
@@ -174,6 +176,49 @@ await Meerkat.RemoveAsync<Student, ObjectId>(x => x.LastName == "Lovelace");
 Meerkat.Remove<Student, ObjectId>(x => x.LastName == "Lovelace");
 ```
 
+## Soft delete
+
+Opt in per collection with `[Collection(SoftDelete = true)]`. Meerkat stores `DeletedAt` (`DateTimeOffset?`) as a UTC
+BSON date. `IsDeleted` is computed (`DeletedAt != null`) and is not persisted.
+
+When enabled:
+
+- `Query`, `Find*`, `FindById*`, `Count*`, `Exists*`, increment/decrement, and fluent `Update*` exclude documents with
+  `DeletedAt` set.
+- `Remove*` / `RemoveById*` / `RemoveOne*` set `DeletedAt` (and `UpdatedAt` when timestamps are tracked) instead of
+  calling MongoDB `DeleteOne` / `DeleteMany`.
+- A `DeletedAt` index (`deleted_at_idx`) is created automatically.
+
+Pass `includeDeleted: true` to include soft-deleted documents. `Collection<TSchema, TId>()` is always unfiltered.
+
+```csharp
+var active = await Meerkat.FindByIdAsync<Student, ObjectId>(id);
+var includingDeleted = await Meerkat.FindByIdAsync<Student, ObjectId>(id, includeDeleted: true);
+
+var all = await Meerkat.Query<Student, ObjectId>(includeDeleted: true).ToListAsync();
+long includingDeletedCount = await Meerkat.CountAsync<Student, ObjectId>(includeDeleted: true);
+```
+
+Restore a document, or permanently delete it:
+
+```csharp
+await Meerkat.RestoreByIdAsync<Student, ObjectId>(id);
+await Meerkat.RestoreAsync<Student, ObjectId>(x => x.LastName == "Lovelace");
+
+await Meerkat.HardRemoveByIdAsync<Student, ObjectId>(id);
+await Meerkat.HardRemoveAsync<Student, ObjectId>(x => x.LastName == "Lovelace");
+
+// instance helpers (same semantics as the static APIs)
+await student.DeleteAsync();
+await student.RestoreAsync();
+```
+
+`Restore*` is a no-op on types that do not set `SoftDelete = true`. Soft delete does **not** cascade to related
+documents; Meerkat has no association graph.
+
+Unique indexes still apply to soft-deleted rows. If you need uniqueness only among active documents, create a partial
+unique index yourself.
+
 ## Atomic Updates
 
 `Save` / `SaveAsync` replace the entire document. For concurrent or field-level writes, use the fluent updater or the increment/decrement helpers below. These issue MongoDB update operators (`$set`, `$unset`, `$push`, `$pull`, `$addToSet`, `$inc`) instead of a full replace.
@@ -186,7 +231,7 @@ Compose one or more field operations and execute them as a single atomic update.
 await Meerkat.Update<Student, ObjectId>(id)
     .Set(x => x.LastName, "Lovelace")
     .Unset(x => x.Nickname)
-    .Push(x => x.Tags, "honor")
+    .Push(x => x.Tags, "honour")
     .Pull(x => x.Tags, "draft")
     .AddToSet(x => x.Tags, "alumni")
     .Inc(x => x.Age, 1)

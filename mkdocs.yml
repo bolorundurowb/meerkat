@@ -1,0 +1,61 @@
+site_name: Meerkat
+site_description: An ODM for MongoDB in .NET
+site_author: Winner-Timothy Bolorunduro
+site_url: https://bolorundurowb.github.io/meerkat/
+repo_name: bolorundurowb/meerkat
+repo_url: https://github.com/bolorundurowb/meerkat
+edit_uri: edit/master/docs/
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Getting Started: index.md
+  - Defining Models: models.md
+  - Querying: querying.md
+  - Persistence & Transactions: persistence.md
+  - Atomic Updates: updates.md
+  - Indexing: indexing.md
+  - Transforms & Hooks: transforms-hooks.md
+  - Architecture: architecture.md
+  - Breaking Changes: breaking-changes.md

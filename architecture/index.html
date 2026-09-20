@@ -822,6 +822,39 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#6-soft-delete" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Soft Delete
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-ambient-transactions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Ambient Transactions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-index-lifecycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Index Lifecycle
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1011,6 +1044,39 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#6-soft-delete" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Soft Delete
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-ambient-transactions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Ambient Transactions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-index-lifecycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Index Lifecycle
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1157,6 +1223,26 @@
 <li><strong>Timestamps</strong>: Automatically sets <code>UpdatedAt</code> to UTC now if <code>TrackTimestamps = true</code>.</li>
 <li><strong>Bypassed Features</strong>: Bypasses <code>CreatedAt</code>, string case transformations, and <code>PreSave()</code> / <code>PostSave()</code> lifecycle hooks since whole documents are neither deserialised nor fully rewritten.</li>
 </ul>
+<hr />
+<h2 id="6-soft-delete">6. Soft Delete<a class="headerlink" href="#6-soft-delete" title="Permanent link">&para;</a></h2>
+<p>When <code>[Collection(SoftDelete = true)]</code> is set:</p>
+<ul>
+<li><code>Schema&lt;TId&gt;</code> exposes <code>DeletedAt</code> (<code>DateTimeOffset?</code>) and computed <code>IsDeleted</code>.</li>
+<li>Default query, count, existence, and update paths exclude documents where <code>DeletedAt</code> is set.</li>
+<li><code>Remove*</code> and instance <code>Delete</code> set <code>DeletedAt</code> instead of deleting the document.</li>
+<li><code>HardRemove*</code> / <code>HardDelete</code> permanently remove documents; <code>Restore*</code> clears <code>DeletedAt</code>.</li>
+<li>Callers can opt into including deleted documents via <code>includeDeleted: true</code> on query APIs and <code>Query</code>.</li>
+</ul>
+<hr />
+<h2 id="7-ambient-transactions">7. Ambient Transactions<a class="headerlink" href="#7-ambient-transactions" title="Permanent link">&para;</a></h2>
+<p><code>Meerkat.WithTransaction</code> / <code>WithTransactionAsync</code> open a client session, start a transaction, and store the session in <code>AsyncLocal&lt;IClientSessionHandle?&gt;</code>. Nested Meerkat operations (saves, queries, updates, removals) read that ambient session and participate automatically — callers do not pass session handles through each API. On success the transaction commits; on failure it aborts and the ambient session is cleared.</p>
+<hr />
+<h2 id="8-index-lifecycle">8. Index Lifecycle<a class="headerlink" href="#8-index-lifecycle" title="Permanent link">&para;</a></h2>
+<p>Indexes declared via attributes are created in two ways:</p>
+<ol>
+<li><strong>Lazy (default)</strong>: On first <code>GetCollectionForType</code> for a CLR type, Meerkat reflects index attributes and issues <code>CreateMany</code> / <code>CreateOne</code> once per process (tracked in <code>SchemasWithCheckedIndices</code>).</li>
+<li><strong>Eager</strong>: <code>EnsureIndexes</code> / <code>EnsureIndexesAsync</code> scans an assembly for concrete <code>Schema&lt;TId&gt;</code> types, creates indexes up front, and throws <code>IndexVerificationException</code> if an expected index cannot be confirmed.</li>
+</ol>
 
 
 

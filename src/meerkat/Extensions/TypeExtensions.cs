@@ -27,7 +27,7 @@ internal static class TypeExtensions
 
         var collectionAttribute = type.GetCustomAttribute<CollectionAttribute>();
         var attributeName = collectionAttribute?.Name?.Trim();
-        var name = string.IsNullOrWhiteSpace(attributeName) ? type.Name.Pluralize() : attributeName;
+        var name = string.IsNullOrWhiteSpace(attributeName) ? type.Name.Pluralise() : attributeName;
 
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentNullException(nameof(name), "Failed to generate a collection name for the provided type.");

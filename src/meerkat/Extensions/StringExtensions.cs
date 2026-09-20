@@ -5,12 +5,12 @@ namespace meerkat.Extensions;
 
 internal static class StringExtensions
 {
-    public static string Pluralize(this string singular)
+    public static string Pluralise(this string singular)
     {
         if (string.IsNullOrWhiteSpace(singular))
             return singular;
 
-        return PluralizationService.Pluralize(singular);
+        return PluralisationService.Pluralise(singular);
     }
 
     public static string ReplaceLastOccurrence(this string input, string oldValue, string newValue)

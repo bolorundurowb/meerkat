@@ -21,7 +21,7 @@ public sealed class IndexVerificationException : Exception
     public IReadOnlyList<string> FailedIndexes { get; }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="IndexVerificationException"/> class.
+    /// Initialises a new instance of the <see cref="IndexVerificationException"/> class.
     /// </summary>
     /// <param name="collectionName">The name of the collection whose indexes failed verification.</param>
     /// <param name="failedIndexes">The names or key patterns of the missing or failed indexes.</param>

@@ -3,7 +3,7 @@
     <LangVersion>latest</LangVersion>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>meerkat</PackageId>
-    <PackageVersion>2.1.1</PackageVersion>
+    <PackageVersion>3.0.0</PackageVersion>
     <Title>Meerkat</Title>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <Authors>Winner-Timothy Bolorunduro</Authors>
@@ -14,7 +14,16 @@
     <RepositoryUrl>https://github.com/bolorundurowb/meerkat</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>meerkat mongodb mongoose odm mongodb-driver dotnet csharp netstandard orm data-access document-database nosql nuget linq indexing</PackageTags>
-    <PackageReleaseNotes>Fix null collection name errors</PackageReleaseNotes>
+    <PackageReleaseNotes>
+      3.0.0
+      - Add ambient multi-document transactions via WithTransaction / WithTransactionAsync (writes and reads join the session automatically).
+      - Add EnsureIndexes / EnsureIndexesAsync to create and verify attribute indexes at startup; missing indexes throw IndexVerificationException.
+      - Add TTL indexes with SingleFieldIndex.ExpireAfter (durations such as "30d", "12h", or ISO-8601).
+      - Add Unique on CompoundIndex for uniqueness across grouped fields.
+      - Add opt-in soft delete ([Collection(SoftDelete = true)]): queries/counts/updates skip deleted documents by default; Restore* and HardRemove* for restore and permanent delete.
+      - Add fluent atomic partial updates (Set, Unset, Push, Pull, AddToSet, Inc) with Update / UpdateOne / UpdateMany.
+      - Replace mongo-url-parser with ciu-parser for connection-string parsing; bump MongoDB.Driver to 3.12.0.
+    </PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Company>bolorundurowb</Company>
     <NeutralLanguage>en-NG</NeutralLanguage>

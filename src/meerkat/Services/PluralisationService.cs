@@ -1,15 +1,15 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using meerkat.Extensions;
 
 namespace meerkat.Services;
 
-internal static class PluralizationService
+internal static class PluralisationService
 {
-    private static readonly List<PluralizationRule> Rules;
+    private static readonly List<PluralisationRule> Rules;
 
-    static PluralizationService() => Rules =
+    static PluralisationService() => Rules =
     [
         new("s", false, "th", "ph", "ey", "ay", "oy", "uy"),
         new("es", false, "o", "ch", "sh", "ss", "x"),
@@ -22,7 +22,7 @@ internal static class PluralizationService
         new("i", true, "us")
     ];
 
-    public static string Pluralize(string singular)
+    public static string Pluralise(string singular)
     {
         // find matching rule
         var rule = Rules.FirstOrDefault(x => x.IsMatch(singular));
@@ -37,20 +37,20 @@ internal static class PluralizationService
         if (suffix == "us" && singular.Length <= 3)
             return $"{singular}es";
 
-        return rule.Pluralize(suffix, singular);
+        return rule.Pluralise(suffix, singular);
     }
 
-    private class PluralizationRule(string pluralizedSuffix, bool replaceSuffix, params string[] suffixes)
+    private class PluralisationRule(string pluralisedSuffix, bool replaceSuffix, params string[] suffixes)
     {
         private string[] Suffixes { get; set; } = suffixes;
 
-        private string PluralizedSuffix { get; set; } = pluralizedSuffix;
+        private string PluralisedSuffix { get; set; } = pluralisedSuffix;
 
         private bool ReplaceSuffix { get; set; } = replaceSuffix;
 
-        public string Pluralize(string suffix, string input) => ReplaceSuffix
-            ? input.ReplaceLastOccurrence(suffix, PluralizedSuffix)
-            : $"{input}{PluralizedSuffix}";
+        public string Pluralise(string suffix, string input) => ReplaceSuffix
+            ? input.ReplaceLastOccurrence(suffix, PluralisedSuffix)
+            : $"{input}{PluralisedSuffix}";
 
         public bool IsMatch(string input) =>
             Suffixes.Any(x => input.EndsWith(x, StringComparison.InvariantCultureIgnoreCase));

@@ -4,12 +4,12 @@ While `Save` and `SaveAsync` replace the entire document, Meerkat provides fluen
 
 ---
 
-## Behavior & Bypassed Features
+## Behaviour & Bypassed Features
 
 When executing partial updates or atomic increment/decrement operations:
 
 - **Timestamps**: If `TrackTimestamps = true` is enabled on the model's `[Collection]` attribute, `UpdatedAt` is automatically set to UTC now as part of the update.
-- **Skipped Operations**: Field-level updates **bypass** `CreatedAt`, `[Lowercase]`/`[Uppercase]` case transformations, and `PreSave()` / `PostSave()` lifecycle hooks because the complete entity is not materialized or fully rewritten.
+- **Skipped Operations**: Field-level updates **bypass** `CreatedAt`, `[Lowercase]`/`[Uppercase]` case transformations, and `PreSave()` / `PostSave()` lifecycle hooks because the complete entity is not materialised or fully rewritten.
 
 ---
 

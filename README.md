@@ -31,7 +31,7 @@ Install-Package meerkat
 
 ## Quickstart
 
-Initialize connection at startup:
+Initialise connection at startup:
 
 ```csharp
 using meerkat;
@@ -102,6 +102,6 @@ Issues and pull requests are welcome at [github.com/bolorundurowb/meerkat](https
 
 ---
 
-## License
+## Licence
 
-Meerkat is open source software licensed under the [MIT License](LICENSE).
+Meerkat is open source software licensed under the [MIT Licence](LICENSE).

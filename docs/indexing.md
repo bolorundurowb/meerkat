@@ -132,7 +132,7 @@ Meerkat.EnsureIndexes<User, Guid>();
 Meerkat.EnsureIndexes(typeof(User).Assembly);
 ```
 
-### Verification Behavior
+### Verification Behaviour
 
 `EnsureIndexes` creates the expected indexes (idempotently) and checks the collection's indexes in MongoDB to verify that each declared index exists.
 

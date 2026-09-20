@@ -105,7 +105,7 @@ public class Student : Schema<ObjectId>
 }
 ```
 
-### Behavior When Enabled
+### Behaviour When Enabled
 
 - **Queries & Counts**: `Query`, `Find*`, `FindById*`, `Count*`, `Exists*`, increment/decrement, and fluent `Update*` automatically exclude soft-deleted documents.
 - **Deletions**: `Remove*`, `RemoveById*`, `RemoveOne*`, and `student.DeleteAsync()` set `DeletedAt` (and `UpdatedAt` if timestamps are tracked) instead of issuing a physical MongoDB delete command.

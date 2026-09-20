@@ -36,7 +36,7 @@ The generic type parameter `TId` requires `IEquatable<TId>`. Common ID types sup
 
 ## Collection Configuration
 
-Apply the `[Collection]` attribute to customize collection names, timestamp tracking, and soft deletion:
+Apply the `[Collection]` attribute to customise collection names, timestamp tracking, and soft deletion:
 
 ```csharp
 using meerkat;
@@ -55,7 +55,7 @@ public class Student : Schema<ObjectId>
 
 | Property | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
-| `Name` | `string` | `null` | Overrides the default collection name. If not specified, Meerkat generates a pluralized, lowercased name from the class name (e.g. `Student` → `students`). |
+| `Name` | `string` | `null` | Overrides the default collection name. If not specified, Meerkat generates a pluralised, lowercased name from the class name (e.g. `Student` → `students`). |
 | `TrackTimestamps` | `bool` | `false` | When `true`, automatically sets `CreatedAt` on first save and updates `UpdatedAt` on every save or partial update. |
 | `SoftDelete` | `bool` | `false` | When `true`, enables soft delete. `Remove*` sets `DeletedAt` instead of physically deleting documents, and queries automatically exclude soft-deleted records. |
 
@@ -84,7 +84,7 @@ public class Article : Schema<Guid>
 When `SoftDelete = true` is set:
 
 - `DeletedAt` (`DateTimeOffset?`): Persisted as a UTC BSON date when the document is soft-deleted.
-- `IsDeleted` (`bool`): A computed property returning `DeletedAt != null` (ignored during serialization).
+- `IsDeleted` (`bool`): A computed property returning `DeletedAt != null` (ignored during serialisation).
 - An index on `DeletedAt` (`deleted_at_idx`) is created automatically.
 
 For querying, restoring, and permanently deleting soft-deleted entities, see [Persistence & Transactions](persistence.md#soft-delete).

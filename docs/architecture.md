@@ -18,14 +18,14 @@ Its primary goal is to eliminate boilerplate data-access code and provide intuit
 
 ## 2. Repository Layout
 
-The repository is organized into the core library and a comprehensive test suite:
+The repository is organised into the core library and a comprehensive test suite:
 
 - `src/meerkat`: The .NET Standard 2.0 library containing the ODM logic.
 - `src/meerkat.Tests`: The unit and integration test suite targeting modern .NET.
 
 ### Feature-Split Partials
 
-The core static class `Meerkat` is organized across focused partial classes grouped by responsibility:
+The core static class `Meerkat` is organised across focused partial classes grouped by responsibility:
 
 | File | Responsibility |
 | :--- | :--- |
@@ -87,8 +87,8 @@ Calling `Meerkat.Connect(connectionString)`:
 ### Collection Resolution & Caching
 
 Every operation routes through `GetCollectionForType<TSchema, TId>()`:
-1. **Name Resolution**: Inspects `[Collection(Name = "...")]` on the schema type. If omitted, derives the name using `PluralizationService` (lowercased and pluralized, e.g., `BlogPost` → `blogposts`).
-2. **Index Initialization (Once per Type)**: Checks `ConcurrentDictionary<string, bool> SchemasWithCheckedIndices`. If the schema type has not yet been processed in the current process lifetime, Meerkat inspects index attributes on the type, builds the corresponding MongoDB index models, and creates them asynchronously on the collection.
+1. **Name Resolution**: Inspects `[Collection(Name = "...")]` on the schema type. If omitted, derives the name using `PluralisationService` (lowercased and pluralised, e.g., `BlogPost` → `blogposts`).
+2. **Index Initialisation (Once per Type)**: Checks `ConcurrentDictionary<string, bool> SchemasWithCheckedIndices`. If the schema type has not yet been processed in the current process lifetime, Meerkat inspects index attributes on the type, builds the corresponding MongoDB index models, and creates them asynchronously on the collection.
 3. **Ambient Session Binding**: If an active ambient transaction exists in `AsyncLocal<IClientSessionHandle?> CurrentSession`, operations automatically join the session.
 
 ---
@@ -108,4 +108,4 @@ Meerkat separates write paths into two distinct categories depending on whether 
 
 - **Mechanism**: Issues MongoDB update operators (`$set`, `$unset`, `$push`, `$pull`, `$addToSet`, `$inc`) directly using `UpdateOne`, `UpdateMany`, or `FindOneAndUpdate`.
 - **Timestamps**: Automatically sets `UpdatedAt` to UTC now if `TrackTimestamps = true`.
-- **Bypassed Features**: Bypasses `CreatedAt`, string case transformations, and `PreSave()` / `PostSave()` lifecycle hooks since whole documents are neither deserialized nor fully rewritten.
+- **Bypassed Features**: Bypasses `CreatedAt`, string case transformations, and `PreSave()` / `PostSave()` lifecycle hooks since whole documents are neither deserialised nor fully rewritten.

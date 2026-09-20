@@ -24,17 +24,17 @@ public class ExtensionTests
     [InlineData("Key", "keys")]
     [InlineData("Way", "ways")]
     [InlineData("Guy", "guys")]
-    public void Pluralize_ShouldReturnCorrectPluralForm(string singular, string expectedPlural)
+    public void Pluralise_ShouldReturnCorrectPluralForm(string singular, string expectedPlural)
     {
-        singular.Pluralize().Must().BeIgnoringCase(expectedPlural);
+        singular.Pluralise().Must().BeIgnoringCase(expectedPlural);
     }
 
     [Fact]
-    public void Pluralize_ShouldHandleEmptyOrNullString()
+    public void Pluralise_ShouldHandleEmptyOrNullString()
     {
-        ((string?)null).Pluralize().Must().BeNull();
-        "".Pluralize().Must().Be("");
-        "   ".Pluralize().Must().Be("   ");
+        ((string?)null).Pluralise().Must().BeNull();
+        "".Pluralise().Must().Be("");
+        "   ".Pluralise().Must().Be("   ");
     }
 
     [Theory]

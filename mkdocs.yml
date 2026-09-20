@@ -33,6 +33,7 @@ theme:
 
 markdown_extensions:
   - admonition
+  - attr_list
   - pymdownx.details
   - pymdownx.superfences:
       custom_fences:
@@ -45,6 +46,8 @@ markdown_extensions:
       pygments_lang_class: true
   - pymdownx.inlinehilite
   - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
   - tables
   - toc:
       permalink: true

@@ -109,3 +109,30 @@ Meerkat separates write paths into two distinct categories depending on whether 
 - **Mechanism**: Issues MongoDB update operators (`$set`, `$unset`, `$push`, `$pull`, `$addToSet`, `$inc`) directly using `UpdateOne`, `UpdateMany`, or `FindOneAndUpdate`.
 - **Timestamps**: Automatically sets `UpdatedAt` to UTC now if `TrackTimestamps = true`.
 - **Bypassed Features**: Bypasses `CreatedAt`, string case transformations, and `PreSave()` / `PostSave()` lifecycle hooks since whole documents are neither deserialised nor fully rewritten.
+
+---
+
+## 6. Soft Delete
+
+When `[Collection(SoftDelete = true)]` is set:
+
+- `Schema<TId>` exposes `DeletedAt` (`DateTimeOffset?`) and computed `IsDeleted`.
+- Default query, count, existence, and update paths exclude documents where `DeletedAt` is set.
+- `Remove*` and instance `Delete` set `DeletedAt` instead of deleting the document.
+- `HardRemove*` / `HardDelete` permanently remove documents; `Restore*` clears `DeletedAt`.
+- Callers can opt into including deleted documents via `includeDeleted: true` on query APIs and `Query`.
+
+---
+
+## 7. Ambient Transactions
+
+`Meerkat.WithTransaction` / `WithTransactionAsync` open a client session, start a transaction, and store the session in `AsyncLocal<IClientSessionHandle?>`. Nested Meerkat operations (saves, queries, updates, removals) read that ambient session and participate automatically — callers do not pass session handles through each API. On success the transaction commits; on failure it aborts and the ambient session is cleared.
+
+---
+
+## 8. Index Lifecycle
+
+Indexes declared via attributes are created in two ways:
+
+1. **Lazy (default)**: On first `GetCollectionForType` for a CLR type, Meerkat reflects index attributes and issues `CreateMany` / `CreateOne` once per process (tracked in `SchemasWithCheckedIndices`).
+2. **Eager**: `EnsureIndexes` / `EnsureIndexesAsync` scans an assembly for concrete `Schema<TId>` types, creates indexes up front, and throws `IndexVerificationException` if an expected index cannot be confirmed.

@@ -239,6 +239,13 @@ public class MeerkatPartialUpdatesTests
     }
 
     [Fact]
+    public async Task ExecuteAsync_ShouldThrowIfNoOperationsSpecified()
+    {
+        var act = () => Meerkat.Update<PartialUpdateTestModel, ObjectId>(ObjectId.GenerateNewId()).ExecuteAsync();
+        await Xunit.Assert.ThrowsAsync<InvalidOperationException>(act);
+    }
+
+    [Fact]
     public void ExecuteAndGetUpdated_ShouldThrowForUpdateMany()
     {
         Action act = () => Meerkat.UpdateMany<PartialUpdateTestModel, ObjectId>(x => true)
@@ -247,6 +254,16 @@ public class MeerkatPartialUpdatesTests
 
         act.Throws<InvalidOperationException>()
             .WithMessage("ExecuteAndGetUpdated cannot be used with UpdateMany. Use Execute or ExecuteAsync instead.");
+    }
+
+    [Fact]
+    public async Task ExecuteAndGetUpdatedAsync_ShouldThrowForUpdateMany()
+    {
+        var act = () => Meerkat.UpdateMany<PartialUpdateTestModel, ObjectId>(x => true)
+            .Set(x => x.Name, "Ada")
+            .ExecuteAndGetUpdatedAsync();
+
+        await Xunit.Assert.ThrowsAsync<InvalidOperationException>(act);
     }
 
     [Fact]

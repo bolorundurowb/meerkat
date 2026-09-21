@@ -46,4 +46,19 @@ public class ExtensionTests
     {
         input.ReplaceLastOccurrence(oldValue, newValue).Must().Be(expected);
     }
+
+    private class SampleModel
+    {
+        [Attributes.Lowercase]
+        public string Email { get; set; } = string.Empty;
+    }
+
+    [Fact]
+    public void AttributedWith_Instance_ShouldReturnMatchingProperties()
+    {
+        var model = new SampleModel();
+        var properties = model.AttributedWith<Attributes.LowercaseAttribute>().ToList();
+        properties.Must().HaveCount(1);
+        properties[0].Name.Must().Be("Email");
+    }
 }

@@ -96,4 +96,36 @@ public class MeerkatCountingTests
         act.Throws<InvalidOperationException>()
             .WithMessage("The database connection has not been initialised. Call Connect() before carrying out any operations.");
     }
+
+    [Fact]
+    public void Count_WithAmbientSession_ShouldCallCountDocumentsWithSession()
+    {
+        var mockSession = new Mock<IClientSessionHandle>().Object;
+        Meerkat.CurrentSession.Value = mockSession;
+        try
+        {
+            Meerkat.Count<TestEntity, string>();
+            _mockCollection.Verify(x => x.CountDocuments(mockSession, It.IsAny<FilterDefinition<TestEntity>>(), It.IsAny<CountOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            Meerkat.CurrentSession.Value = null;
+        }
+    }
+
+    [Fact]
+    public async Task CountAsync_WithAmbientSession_ShouldCallCountDocumentsAsyncWithSession()
+    {
+        var mockSession = new Mock<IClientSessionHandle>().Object;
+        Meerkat.CurrentSession.Value = mockSession;
+        try
+        {
+            await Meerkat.CountAsync<TestEntity, string>();
+            _mockCollection.Verify(x => x.CountDocumentsAsync(mockSession, It.IsAny<FilterDefinition<TestEntity>>(), It.IsAny<CountOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            Meerkat.CurrentSession.Value = null;
+        }
+    }
 }

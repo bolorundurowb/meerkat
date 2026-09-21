@@ -325,4 +325,780 @@ public class MeerkatUpdatesTests
         act.Throws<InvalidOperationException>()
             .WithMessage("The database connection has not been initialised. Call Connect() before carrying out any operations.");
     }
+
+    [Fact]
+    public void IncrementById_WithDefaultAmount_ShouldCallUpdateOne()
+    {
+        Meerkat.IncrementById<CounterTestModel, ObjectId, int>(ObjectId.GenerateNewId(), x => x.Value);
+        _mockCollection.Verify(x => x.UpdateOne(
+            It.IsAny<FilterDefinition<CounterTestModel>>(),
+            It.IsAny<UpdateDefinition<CounterTestModel>>(),
+            It.IsAny<UpdateOptions>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task IncrementByIdAsync_WithDefaultAmount_ShouldCallUpdateOneAsync()
+    {
+        await Meerkat.IncrementByIdAsync<CounterTestModel, ObjectId, int>(ObjectId.GenerateNewId(), x => x.Value);
+        _mockCollection.Verify(x => x.UpdateOneAsync(
+            It.IsAny<FilterDefinition<CounterTestModel>>(),
+            It.IsAny<UpdateDefinition<CounterTestModel>>(),
+            It.IsAny<UpdateOptions>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public void DecrementById_WithDefaultAmount_ShouldCallUpdateOne()
+    {
+        Meerkat.DecrementById<CounterTestModel, ObjectId, int>(ObjectId.GenerateNewId(), x => x.Value);
+        _mockCollection.Verify(x => x.UpdateOne(
+            It.IsAny<FilterDefinition<CounterTestModel>>(),
+            It.IsAny<UpdateDefinition<CounterTestModel>>(),
+            It.IsAny<UpdateOptions>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task DecrementByIdAsync_WithDefaultAmount_ShouldCallUpdateOneAsync()
+    {
+        await Meerkat.DecrementByIdAsync<CounterTestModel, ObjectId, int>(ObjectId.GenerateNewId(), x => x.Value);
+        _mockCollection.Verify(x => x.UpdateOneAsync(
+            It.IsAny<FilterDefinition<CounterTestModel>>(),
+            It.IsAny<UpdateDefinition<CounterTestModel>>(),
+            It.IsAny<UpdateOptions>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public void IncrementByFilter_WithDefaultAmount_ShouldCallUpdateOne()
+    {
+        var filter = Builders<CounterTestModel>.Filter.Eq(x => x.Name, "test");
+        Meerkat.IncrementByFilter<CounterTestModel, ObjectId, int>(filter, x => x.Value);
+        _mockCollection.Verify(x => x.UpdateOne(
+            It.IsAny<FilterDefinition<CounterTestModel>>(),
+            It.IsAny<UpdateDefinition<CounterTestModel>>(),
+            It.IsAny<UpdateOptions>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task IncrementByFilterAsync_WithDefaultAmount_ShouldCallUpdateOneAsync()
+    {
+        var filter = Builders<CounterTestModel>.Filter.Eq(x => x.Name, "test");
+        await Meerkat.IncrementByFilterAsync<CounterTestModel, ObjectId, int>(filter, x => x.Value);
+        _mockCollection.Verify(x => x.UpdateOneAsync(
+            It.IsAny<FilterDefinition<CounterTestModel>>(),
+            It.IsAny<UpdateDefinition<CounterTestModel>>(),
+            It.IsAny<UpdateOptions>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public void DecrementByFilter_WithDefaultAmount_ShouldCallUpdateOne()
+    {
+        var filter = Builders<CounterTestModel>.Filter.Eq(x => x.Name, "test");
+        Meerkat.DecrementByFilter<CounterTestModel, ObjectId, int>(filter, x => x.Value);
+        _mockCollection.Verify(x => x.UpdateOne(
+            It.IsAny<FilterDefinition<CounterTestModel>>(),
+            It.IsAny<UpdateDefinition<CounterTestModel>>(),
+            It.IsAny<UpdateOptions>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task DecrementByFilterAsync_WithDefaultAmount_ShouldCallUpdateOneAsync()
+    {
+        var filter = Builders<CounterTestModel>.Filter.Eq(x => x.Name, "test");
+        await Meerkat.DecrementByFilterAsync<CounterTestModel, ObjectId, int>(filter, x => x.Value);
+        _mockCollection.Verify(x => x.UpdateOneAsync(
+            It.IsAny<FilterDefinition<CounterTestModel>>(),
+            It.IsAny<UpdateDefinition<CounterTestModel>>(),
+            It.IsAny<UpdateOptions>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public void IncrementOne_WithDefaultAmount_ShouldCallUpdateOne()
+    {
+        Meerkat.IncrementOne<CounterTestModel, ObjectId, int>(x => x.Name == "test", x => x.Value);
+        _mockCollection.Verify(x => x.UpdateOne(
+            It.IsAny<FilterDefinition<CounterTestModel>>(),
+            It.IsAny<UpdateDefinition<CounterTestModel>>(),
+            It.IsAny<UpdateOptions>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task IncrementOneAsync_WithDefaultAmount_ShouldCallUpdateOneAsync()
+    {
+        await Meerkat.IncrementOneAsync<CounterTestModel, ObjectId, int>(x => x.Name == "test", x => x.Value);
+        _mockCollection.Verify(x => x.UpdateOneAsync(
+            It.IsAny<FilterDefinition<CounterTestModel>>(),
+            It.IsAny<UpdateDefinition<CounterTestModel>>(),
+            It.IsAny<UpdateOptions>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public void DecrementOne_WithDefaultAmount_ShouldCallUpdateOne()
+    {
+        Meerkat.DecrementOne<CounterTestModel, ObjectId, int>(x => x.Name == "test", x => x.Value);
+        _mockCollection.Verify(x => x.UpdateOne(
+            It.IsAny<FilterDefinition<CounterTestModel>>(),
+            It.IsAny<UpdateDefinition<CounterTestModel>>(),
+            It.IsAny<UpdateOptions>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task DecrementOneAsync_WithDefaultAmount_ShouldCallUpdateOneAsync()
+    {
+        await Meerkat.DecrementOneAsync<CounterTestModel, ObjectId, int>(x => x.Name == "test", x => x.Value);
+        _mockCollection.Verify(x => x.UpdateOneAsync(
+            It.IsAny<FilterDefinition<CounterTestModel>>(),
+            It.IsAny<UpdateDefinition<CounterTestModel>>(),
+            It.IsAny<UpdateOptions>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public void IncrementMany_WithDefaultAmount_ShouldCallUpdateMany()
+    {
+        Meerkat.IncrementMany<CounterTestModel, ObjectId, int>(x => x.Name == "group", x => x.Value);
+        _mockCollection.Verify(x => x.UpdateMany(
+            It.IsAny<FilterDefinition<CounterTestModel>>(),
+            It.IsAny<UpdateDefinition<CounterTestModel>>(),
+            It.IsAny<UpdateOptions>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task IncrementManyAsync_WithDefaultAmount_ShouldCallUpdateManyAsync()
+    {
+        await Meerkat.IncrementManyAsync<CounterTestModel, ObjectId, int>(x => x.Name == "group", x => x.Value);
+        _mockCollection.Verify(x => x.UpdateManyAsync(
+            It.IsAny<FilterDefinition<CounterTestModel>>(),
+            It.IsAny<UpdateDefinition<CounterTestModel>>(),
+            It.IsAny<UpdateOptions>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public void DecrementMany_WithDefaultAmount_ShouldCallUpdateMany()
+    {
+        Meerkat.DecrementMany<CounterTestModel, ObjectId, int>(x => x.Name == "group", x => x.Value);
+        _mockCollection.Verify(x => x.UpdateMany(
+            It.IsAny<FilterDefinition<CounterTestModel>>(),
+            It.IsAny<UpdateDefinition<CounterTestModel>>(),
+            It.IsAny<UpdateOptions>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task DecrementManyAsync_WithDefaultAmount_ShouldCallUpdateManyAsync()
+    {
+        await Meerkat.DecrementManyAsync<CounterTestModel, ObjectId, int>(x => x.Name == "group", x => x.Value);
+        _mockCollection.Verify(x => x.UpdateManyAsync(
+            It.IsAny<FilterDefinition<CounterTestModel>>(),
+            It.IsAny<UpdateDefinition<CounterTestModel>>(),
+            It.IsAny<UpdateOptions>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public void IncrementByIdAndGetUpdated_WithDefaultAmount_ShouldCallFindOneAndUpdate()
+    {
+        Meerkat.IncrementByIdAndGetUpdated<CounterTestModel, ObjectId, int>(ObjectId.GenerateNewId(), x => x.Value);
+        _mockCollection.Verify(x => x.FindOneAndUpdate(
+            It.IsAny<FilterDefinition<CounterTestModel>>(),
+            It.IsAny<UpdateDefinition<CounterTestModel>>(),
+            It.IsAny<FindOneAndUpdateOptions<CounterTestModel>>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task IncrementByIdAndGetUpdatedAsync_WithDefaultAmount_ShouldCallFindOneAndUpdateAsync()
+    {
+        await Meerkat.IncrementByIdAndGetUpdatedAsync<CounterTestModel, ObjectId, int>(ObjectId.GenerateNewId(), x => x.Value);
+        _mockCollection.Verify(x => x.FindOneAndUpdateAsync(
+            It.IsAny<FilterDefinition<CounterTestModel>>(),
+            It.IsAny<UpdateDefinition<CounterTestModel>>(),
+            It.IsAny<FindOneAndUpdateOptions<CounterTestModel>>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public void DecrementByIdAndGetUpdated_WithDefaultAmount_ShouldCallFindOneAndUpdate()
+    {
+        Meerkat.DecrementByIdAndGetUpdated<CounterTestModel, ObjectId, int>(ObjectId.GenerateNewId(), x => x.Value);
+        _mockCollection.Verify(x => x.FindOneAndUpdate(
+            It.IsAny<FilterDefinition<CounterTestModel>>(),
+            It.IsAny<UpdateDefinition<CounterTestModel>>(),
+            It.IsAny<FindOneAndUpdateOptions<CounterTestModel>>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task DecrementByIdAndGetUpdatedAsync_WithDefaultAmount_ShouldCallFindOneAndUpdateAsync()
+    {
+        await Meerkat.DecrementByIdAndGetUpdatedAsync<CounterTestModel, ObjectId, int>(ObjectId.GenerateNewId(), x => x.Value);
+        _mockCollection.Verify(x => x.FindOneAndUpdateAsync(
+            It.IsAny<FilterDefinition<CounterTestModel>>(),
+            It.IsAny<UpdateDefinition<CounterTestModel>>(),
+            It.IsAny<FindOneAndUpdateOptions<CounterTestModel>>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public void IncrementOneAndGetUpdated_WithDefaultAmount_ShouldCallFindOneAndUpdate()
+    {
+        Meerkat.IncrementOneAndGetUpdated<CounterTestModel, ObjectId, int>(x => x.Name == "test", x => x.Value);
+        _mockCollection.Verify(x => x.FindOneAndUpdate(
+            It.IsAny<FilterDefinition<CounterTestModel>>(),
+            It.IsAny<UpdateDefinition<CounterTestModel>>(),
+            It.IsAny<FindOneAndUpdateOptions<CounterTestModel>>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task IncrementOneAndGetUpdatedAsync_WithDefaultAmount_ShouldCallFindOneAndUpdateAsync()
+    {
+        await Meerkat.IncrementOneAndGetUpdatedAsync<CounterTestModel, ObjectId, int>(x => x.Name == "test", x => x.Value);
+        _mockCollection.Verify(x => x.FindOneAndUpdateAsync(
+            It.IsAny<FilterDefinition<CounterTestModel>>(),
+            It.IsAny<UpdateDefinition<CounterTestModel>>(),
+            It.IsAny<FindOneAndUpdateOptions<CounterTestModel>>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public void DecrementOneAndGetUpdated_WithDefaultAmount_ShouldCallFindOneAndUpdate()
+    {
+        Meerkat.DecrementOneAndGetUpdated<CounterTestModel, ObjectId, int>(x => x.Name == "test", x => x.Value);
+        _mockCollection.Verify(x => x.FindOneAndUpdate(
+            It.IsAny<FilterDefinition<CounterTestModel>>(),
+            It.IsAny<UpdateDefinition<CounterTestModel>>(),
+            It.IsAny<FindOneAndUpdateOptions<CounterTestModel>>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task DecrementOneAndGetUpdatedAsync_WithDefaultAmount_ShouldCallFindOneAndUpdateAsync()
+    {
+        await Meerkat.DecrementOneAndGetUpdatedAsync<CounterTestModel, ObjectId, int>(x => x.Name == "test", x => x.Value);
+        _mockCollection.Verify(x => x.FindOneAndUpdateAsync(
+            It.IsAny<FilterDefinition<CounterTestModel>>(),
+            It.IsAny<UpdateDefinition<CounterTestModel>>(),
+            It.IsAny<FindOneAndUpdateOptions<CounterTestModel>>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public void IncrementById_WithAmbientSession_ShouldCallUpdateOneWithSession()
+    {
+        var mockSession = new Mock<IClientSessionHandle>().Object;
+        Meerkat.CurrentSession.Value = mockSession;
+        try
+        {
+            Meerkat.IncrementById<CounterTestModel, ObjectId, int>(ObjectId.GenerateNewId(), x => x.Value, 5);
+            _mockCollection.Verify(x => x.UpdateOne(
+                mockSession,
+                It.IsAny<FilterDefinition<CounterTestModel>>(),
+                It.IsAny<UpdateDefinition<CounterTestModel>>(),
+                It.IsAny<UpdateOptions>(),
+                It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            Meerkat.CurrentSession.Value = null;
+        }
+    }
+
+    [Fact]
+    public async Task IncrementByIdAsync_WithAmbientSession_ShouldCallUpdateOneAsyncWithSession()
+    {
+        var mockSession = new Mock<IClientSessionHandle>().Object;
+        Meerkat.CurrentSession.Value = mockSession;
+        try
+        {
+            await Meerkat.IncrementByIdAsync<CounterTestModel, ObjectId, int>(ObjectId.GenerateNewId(), x => x.Value, 5);
+            _mockCollection.Verify(x => x.UpdateOneAsync(
+                mockSession,
+                It.IsAny<FilterDefinition<CounterTestModel>>(),
+                It.IsAny<UpdateDefinition<CounterTestModel>>(),
+                It.IsAny<UpdateOptions>(),
+                It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            Meerkat.CurrentSession.Value = null;
+        }
+    }
+
+    [Fact]
+    public void IncrementMany_WithAmbientSession_ShouldCallUpdateManyWithSession()
+    {
+        var mockSession = new Mock<IClientSessionHandle>().Object;
+        Meerkat.CurrentSession.Value = mockSession;
+        try
+        {
+            Meerkat.IncrementMany<CounterTestModel, ObjectId, int>(x => x.Name == "group", x => x.Value, 10);
+            _mockCollection.Verify(x => x.UpdateMany(
+                mockSession,
+                It.IsAny<FilterDefinition<CounterTestModel>>(),
+                It.IsAny<UpdateDefinition<CounterTestModel>>(),
+                It.IsAny<UpdateOptions>(),
+                It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            Meerkat.CurrentSession.Value = null;
+        }
+    }
+
+    [Fact]
+    public async Task IncrementManyAsync_WithAmbientSession_ShouldCallUpdateManyAsyncWithSession()
+    {
+        var mockSession = new Mock<IClientSessionHandle>().Object;
+        Meerkat.CurrentSession.Value = mockSession;
+        try
+        {
+            await Meerkat.IncrementManyAsync<CounterTestModel, ObjectId, int>(x => x.Name == "group", x => x.Value, 10);
+            _mockCollection.Verify(x => x.UpdateManyAsync(
+                mockSession,
+                It.IsAny<FilterDefinition<CounterTestModel>>(),
+                It.IsAny<UpdateDefinition<CounterTestModel>>(),
+                It.IsAny<UpdateOptions>(),
+                It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            Meerkat.CurrentSession.Value = null;
+        }
+    }
+
+    [Fact]
+    public void IncrementByIdAndGetUpdated_WithAmbientSession_ShouldCallFindOneAndUpdateWithSession()
+    {
+        var mockSession = new Mock<IClientSessionHandle>().Object;
+        Meerkat.CurrentSession.Value = mockSession;
+        try
+        {
+            Meerkat.IncrementByIdAndGetUpdated<CounterTestModel, ObjectId, int>(ObjectId.GenerateNewId(), x => x.Value, 3);
+            _mockCollection.Verify(x => x.FindOneAndUpdate(
+                mockSession,
+                It.IsAny<FilterDefinition<CounterTestModel>>(),
+                It.IsAny<UpdateDefinition<CounterTestModel>>(),
+                It.IsAny<FindOneAndUpdateOptions<CounterTestModel>>(),
+                It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            Meerkat.CurrentSession.Value = null;
+        }
+    }
+
+    [Fact]
+    public async Task IncrementByIdAndGetUpdatedAsync_WithAmbientSession_ShouldCallFindOneAndUpdateAsyncWithSession()
+    {
+        var mockSession = new Mock<IClientSessionHandle>().Object;
+        Meerkat.CurrentSession.Value = mockSession;
+        try
+        {
+            await Meerkat.IncrementByIdAndGetUpdatedAsync<CounterTestModel, ObjectId, int>(ObjectId.GenerateNewId(), x => x.Value, 3);
+            _mockCollection.Verify(x => x.FindOneAndUpdateAsync(
+                mockSession,
+                It.IsAny<FilterDefinition<CounterTestModel>>(),
+                It.IsAny<UpdateDefinition<CounterTestModel>>(),
+                It.IsAny<FindOneAndUpdateOptions<CounterTestModel>>(),
+                It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            Meerkat.CurrentSession.Value = null;
+        }
+    }
+
+    [Fact]
+    public void DecrementById_WithAmbientSession_ShouldCallUpdateOneWithSession()
+    {
+        var mockSession = new Mock<IClientSessionHandle>().Object;
+        Meerkat.CurrentSession.Value = mockSession;
+        try
+        {
+            Meerkat.DecrementById<CounterTestModel, ObjectId, int>(ObjectId.GenerateNewId(), x => x.Value, 3);
+            _mockCollection.Verify(x => x.UpdateOne(
+                mockSession,
+                It.IsAny<FilterDefinition<CounterTestModel>>(),
+                It.IsAny<UpdateDefinition<CounterTestModel>>(),
+                It.IsAny<UpdateOptions>(),
+                It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            Meerkat.CurrentSession.Value = null;
+        }
+    }
+
+    [Fact]
+    public async Task DecrementByIdAsync_WithAmbientSession_ShouldCallUpdateOneAsyncWithSession()
+    {
+        var mockSession = new Mock<IClientSessionHandle>().Object;
+        Meerkat.CurrentSession.Value = mockSession;
+        try
+        {
+            await Meerkat.DecrementByIdAsync<CounterTestModel, ObjectId, int>(ObjectId.GenerateNewId(), x => x.Value, 3);
+            _mockCollection.Verify(x => x.UpdateOneAsync(
+                mockSession,
+                It.IsAny<FilterDefinition<CounterTestModel>>(),
+                It.IsAny<UpdateDefinition<CounterTestModel>>(),
+                It.IsAny<UpdateOptions>(),
+                It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            Meerkat.CurrentSession.Value = null;
+        }
+    }
+
+    [Fact]
+    public void IncrementByFilter_WithAmbientSession_ShouldCallUpdateOneWithSession()
+    {
+        var mockSession = new Mock<IClientSessionHandle>().Object;
+        Meerkat.CurrentSession.Value = mockSession;
+        try
+        {
+            var filter = Builders<CounterTestModel>.Filter.Eq(x => x.Name, "test");
+            Meerkat.IncrementByFilter<CounterTestModel, ObjectId, int>(filter, x => x.Value, 7);
+            _mockCollection.Verify(x => x.UpdateOne(
+                mockSession,
+                It.IsAny<FilterDefinition<CounterTestModel>>(),
+                It.IsAny<UpdateDefinition<CounterTestModel>>(),
+                It.IsAny<UpdateOptions>(),
+                It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            Meerkat.CurrentSession.Value = null;
+        }
+    }
+
+    [Fact]
+    public async Task IncrementByFilterAsync_WithAmbientSession_ShouldCallUpdateOneAsyncWithSession()
+    {
+        var mockSession = new Mock<IClientSessionHandle>().Object;
+        Meerkat.CurrentSession.Value = mockSession;
+        try
+        {
+            var filter = Builders<CounterTestModel>.Filter.Eq(x => x.Name, "test");
+            await Meerkat.IncrementByFilterAsync<CounterTestModel, ObjectId, int>(filter, x => x.Value, 7);
+            _mockCollection.Verify(x => x.UpdateOneAsync(
+                mockSession,
+                It.IsAny<FilterDefinition<CounterTestModel>>(),
+                It.IsAny<UpdateDefinition<CounterTestModel>>(),
+                It.IsAny<UpdateOptions>(),
+                It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            Meerkat.CurrentSession.Value = null;
+        }
+    }
+
+    [Fact]
+    public void DecrementByFilter_WithAmbientSession_ShouldCallUpdateOneWithSession()
+    {
+        var mockSession = new Mock<IClientSessionHandle>().Object;
+        Meerkat.CurrentSession.Value = mockSession;
+        try
+        {
+            var filter = Builders<CounterTestModel>.Filter.Eq(x => x.Name, "test");
+            Meerkat.DecrementByFilter<CounterTestModel, ObjectId, int>(filter, x => x.Value, 2);
+            _mockCollection.Verify(x => x.UpdateOne(
+                mockSession,
+                It.IsAny<FilterDefinition<CounterTestModel>>(),
+                It.IsAny<UpdateDefinition<CounterTestModel>>(),
+                It.IsAny<UpdateOptions>(),
+                It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            Meerkat.CurrentSession.Value = null;
+        }
+    }
+
+    [Fact]
+    public async Task DecrementByFilterAsync_WithAmbientSession_ShouldCallUpdateOneAsyncWithSession()
+    {
+        var mockSession = new Mock<IClientSessionHandle>().Object;
+        Meerkat.CurrentSession.Value = mockSession;
+        try
+        {
+            var filter = Builders<CounterTestModel>.Filter.Eq(x => x.Name, "test");
+            await Meerkat.DecrementByFilterAsync<CounterTestModel, ObjectId, int>(filter, x => x.Value, 2);
+            _mockCollection.Verify(x => x.UpdateOneAsync(
+                mockSession,
+                It.IsAny<FilterDefinition<CounterTestModel>>(),
+                It.IsAny<UpdateDefinition<CounterTestModel>>(),
+                It.IsAny<UpdateOptions>(),
+                It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            Meerkat.CurrentSession.Value = null;
+        }
+    }
+
+    [Fact]
+    public void IncrementOne_WithAmbientSession_ShouldCallUpdateOneWithSession()
+    {
+        var mockSession = new Mock<IClientSessionHandle>().Object;
+        Meerkat.CurrentSession.Value = mockSession;
+        try
+        {
+            Meerkat.IncrementOne<CounterTestModel, ObjectId, int>(x => x.Name == "test", x => x.Value, 4);
+            _mockCollection.Verify(x => x.UpdateOne(
+                mockSession,
+                It.IsAny<FilterDefinition<CounterTestModel>>(),
+                It.IsAny<UpdateDefinition<CounterTestModel>>(),
+                It.IsAny<UpdateOptions>(),
+                It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            Meerkat.CurrentSession.Value = null;
+        }
+    }
+
+    [Fact]
+    public async Task IncrementOneAsync_WithAmbientSession_ShouldCallUpdateOneAsyncWithSession()
+    {
+        var mockSession = new Mock<IClientSessionHandle>().Object;
+        Meerkat.CurrentSession.Value = mockSession;
+        try
+        {
+            await Meerkat.IncrementOneAsync<CounterTestModel, ObjectId, int>(x => x.Name == "test", x => x.Value, 4);
+            _mockCollection.Verify(x => x.UpdateOneAsync(
+                mockSession,
+                It.IsAny<FilterDefinition<CounterTestModel>>(),
+                It.IsAny<UpdateDefinition<CounterTestModel>>(),
+                It.IsAny<UpdateOptions>(),
+                It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            Meerkat.CurrentSession.Value = null;
+        }
+    }
+
+    [Fact]
+    public void DecrementOne_WithAmbientSession_ShouldCallUpdateOneWithSession()
+    {
+        var mockSession = new Mock<IClientSessionHandle>().Object;
+        Meerkat.CurrentSession.Value = mockSession;
+        try
+        {
+            Meerkat.DecrementOne<CounterTestModel, ObjectId, int>(x => x.Name == "test", x => x.Value, 1);
+            _mockCollection.Verify(x => x.UpdateOne(
+                mockSession,
+                It.IsAny<FilterDefinition<CounterTestModel>>(),
+                It.IsAny<UpdateDefinition<CounterTestModel>>(),
+                It.IsAny<UpdateOptions>(),
+                It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            Meerkat.CurrentSession.Value = null;
+        }
+    }
+
+    [Fact]
+    public async Task DecrementOneAsync_WithAmbientSession_ShouldCallUpdateOneAsyncWithSession()
+    {
+        var mockSession = new Mock<IClientSessionHandle>().Object;
+        Meerkat.CurrentSession.Value = mockSession;
+        try
+        {
+            await Meerkat.DecrementOneAsync<CounterTestModel, ObjectId, int>(x => x.Name == "test", x => x.Value, 1);
+            _mockCollection.Verify(x => x.UpdateOneAsync(
+                mockSession,
+                It.IsAny<FilterDefinition<CounterTestModel>>(),
+                It.IsAny<UpdateDefinition<CounterTestModel>>(),
+                It.IsAny<UpdateOptions>(),
+                It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            Meerkat.CurrentSession.Value = null;
+        }
+    }
+
+    [Fact]
+    public void DecrementMany_WithAmbientSession_ShouldCallUpdateManyWithSession()
+    {
+        var mockSession = new Mock<IClientSessionHandle>().Object;
+        Meerkat.CurrentSession.Value = mockSession;
+        try
+        {
+            Meerkat.DecrementMany<CounterTestModel, ObjectId, int>(x => x.Name == "group", x => x.Value, 5);
+            _mockCollection.Verify(x => x.UpdateMany(
+                mockSession,
+                It.IsAny<FilterDefinition<CounterTestModel>>(),
+                It.IsAny<UpdateDefinition<CounterTestModel>>(),
+                It.IsAny<UpdateOptions>(),
+                It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            Meerkat.CurrentSession.Value = null;
+        }
+    }
+
+    [Fact]
+    public async Task DecrementManyAsync_WithAmbientSession_ShouldCallUpdateManyAsyncWithSession()
+    {
+        var mockSession = new Mock<IClientSessionHandle>().Object;
+        Meerkat.CurrentSession.Value = mockSession;
+        try
+        {
+            await Meerkat.DecrementManyAsync<CounterTestModel, ObjectId, int>(x => x.Name == "group", x => x.Value, 5);
+            _mockCollection.Verify(x => x.UpdateManyAsync(
+                mockSession,
+                It.IsAny<FilterDefinition<CounterTestModel>>(),
+                It.IsAny<UpdateDefinition<CounterTestModel>>(),
+                It.IsAny<UpdateOptions>(),
+                It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            Meerkat.CurrentSession.Value = null;
+        }
+    }
+
+    [Fact]
+    public void DecrementByIdAndGetUpdated_WithAmbientSession_ShouldCallFindOneAndUpdateWithSession()
+    {
+        var mockSession = new Mock<IClientSessionHandle>().Object;
+        Meerkat.CurrentSession.Value = mockSession;
+        try
+        {
+            Meerkat.DecrementByIdAndGetUpdated<CounterTestModel, ObjectId, int>(ObjectId.GenerateNewId(), x => x.Value, 2);
+            _mockCollection.Verify(x => x.FindOneAndUpdate(
+                mockSession,
+                It.IsAny<FilterDefinition<CounterTestModel>>(),
+                It.IsAny<UpdateDefinition<CounterTestModel>>(),
+                It.IsAny<FindOneAndUpdateOptions<CounterTestModel>>(),
+                It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            Meerkat.CurrentSession.Value = null;
+        }
+    }
+
+    [Fact]
+    public async Task DecrementByIdAndGetUpdatedAsync_WithAmbientSession_ShouldCallFindOneAndUpdateAsyncWithSession()
+    {
+        var mockSession = new Mock<IClientSessionHandle>().Object;
+        Meerkat.CurrentSession.Value = mockSession;
+        try
+        {
+            await Meerkat.DecrementByIdAndGetUpdatedAsync<CounterTestModel, ObjectId, int>(ObjectId.GenerateNewId(), x => x.Value, 2);
+            _mockCollection.Verify(x => x.FindOneAndUpdateAsync(
+                mockSession,
+                It.IsAny<FilterDefinition<CounterTestModel>>(),
+                It.IsAny<UpdateDefinition<CounterTestModel>>(),
+                It.IsAny<FindOneAndUpdateOptions<CounterTestModel>>(),
+                It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            Meerkat.CurrentSession.Value = null;
+        }
+    }
+
+    [Fact]
+    public void IncrementOneAndGetUpdated_WithAmbientSession_ShouldCallFindOneAndUpdateWithSession()
+    {
+        var mockSession = new Mock<IClientSessionHandle>().Object;
+        Meerkat.CurrentSession.Value = mockSession;
+        try
+        {
+            Meerkat.IncrementOneAndGetUpdated<CounterTestModel, ObjectId, int>(x => x.Name == "test", x => x.Value, 5);
+            _mockCollection.Verify(x => x.FindOneAndUpdate(
+                mockSession,
+                It.IsAny<FilterDefinition<CounterTestModel>>(),
+                It.IsAny<UpdateDefinition<CounterTestModel>>(),
+                It.IsAny<FindOneAndUpdateOptions<CounterTestModel>>(),
+                It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            Meerkat.CurrentSession.Value = null;
+        }
+    }
+
+    [Fact]
+    public async Task IncrementOneAndGetUpdatedAsync_WithAmbientSession_ShouldCallFindOneAndUpdateAsyncWithSession()
+    {
+        var mockSession = new Mock<IClientSessionHandle>().Object;
+        Meerkat.CurrentSession.Value = mockSession;
+        try
+        {
+            await Meerkat.IncrementOneAndGetUpdatedAsync<CounterTestModel, ObjectId, int>(x => x.Name == "test", x => x.Value, 5);
+            _mockCollection.Verify(x => x.FindOneAndUpdateAsync(
+                mockSession,
+                It.IsAny<FilterDefinition<CounterTestModel>>(),
+                It.IsAny<UpdateDefinition<CounterTestModel>>(),
+                It.IsAny<FindOneAndUpdateOptions<CounterTestModel>>(),
+                It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            Meerkat.CurrentSession.Value = null;
+        }
+    }
+
+    [Fact]
+    public void DecrementOneAndGetUpdated_WithAmbientSession_ShouldCallFindOneAndUpdateWithSession()
+    {
+        var mockSession = new Mock<IClientSessionHandle>().Object;
+        Meerkat.CurrentSession.Value = mockSession;
+        try
+        {
+            Meerkat.DecrementOneAndGetUpdated<CounterTestModel, ObjectId, int>(x => x.Name == "test", x => x.Value, 1);
+            _mockCollection.Verify(x => x.FindOneAndUpdate(
+                mockSession,
+                It.IsAny<FilterDefinition<CounterTestModel>>(),
+                It.IsAny<UpdateDefinition<CounterTestModel>>(),
+                It.IsAny<FindOneAndUpdateOptions<CounterTestModel>>(),
+                It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            Meerkat.CurrentSession.Value = null;
+        }
+    }
+
+    [Fact]
+    public async Task DecrementOneAndGetUpdatedAsync_WithAmbientSession_ShouldCallFindOneAndUpdateAsyncWithSession()
+    {
+        var mockSession = new Mock<IClientSessionHandle>().Object;
+        Meerkat.CurrentSession.Value = mockSession;
+        try
+        {
+            await Meerkat.DecrementOneAndGetUpdatedAsync<CounterTestModel, ObjectId, int>(x => x.Name == "test", x => x.Value, 1);
+            _mockCollection.Verify(x => x.FindOneAndUpdateAsync(
+                mockSession,
+                It.IsAny<FilterDefinition<CounterTestModel>>(),
+                It.IsAny<UpdateDefinition<CounterTestModel>>(),
+                It.IsAny<FindOneAndUpdateOptions<CounterTestModel>>(),
+                It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            Meerkat.CurrentSession.Value = null;
+        }
+    }
 }

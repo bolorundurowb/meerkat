@@ -435,4 +435,64 @@ public class SchemaTests
         var document = entity.ToBsonDocument();
         document.Contains("DeletedAt").Must().BeFalse();
     }
+
+    public class LifecycleEntity : Schema<string>
+    {
+        public bool PreSaveCalled { get; private set; }
+        public bool PostSaveCalled { get; private set; }
+
+        public override void PreSave()
+        {
+            base.PreSave();
+            PreSaveCalled = true;
+        }
+
+        public override void PostSave()
+        {
+            base.PostSave();
+            PostSaveCalled = true;
+        }
+    }
+
+    [Fact]
+    public void Save_ShouldCallPreSaveAndPostSaveHooks()
+    {
+        var entity = new LifecycleEntity { Id = "lifecycle_1" };
+        entity.PreSaveCalled.Must().BeFalse();
+        entity.PostSaveCalled.Must().BeFalse();
+
+        entity.Save();
+
+        entity.PreSaveCalled.Must().BeTrue();
+        entity.PostSaveCalled.Must().BeTrue();
+    }
+
+    [Fact]
+    public async Task SaveAsync_ShouldCallPreSaveAndPostSaveHooks()
+    {
+        var entity = new LifecycleEntity { Id = "lifecycle_2" };
+        entity.PreSaveCalled.Must().BeFalse();
+        entity.PostSaveCalled.Must().BeFalse();
+
+        await entity.SaveAsync();
+
+        entity.PreSaveCalled.Must().BeTrue();
+        entity.PostSaveCalled.Must().BeTrue();
+    }
+
+    [Fact]
+    public void HandleLowercaseTransformations_ShouldHandleNullPropertyValue()
+    {
+        var entity = new TrackedEntity { Email = null!, Code = "ABC", Normal = "123" };
+        entity.HandleLowercaseTransformations();
+        entity.Email.Must().BeNull();
+    }
+
+    [Fact]
+    public void HandleUppercaseTransformations_ShouldHandleNullPropertyValue()
+    {
+        var entity = new TrackedEntity { Code = null!, Email = "abc", Normal = "123" };
+        entity.HandleUppercaseTransformations();
+        entity.Code.Must().BeNull();
+    }
 }

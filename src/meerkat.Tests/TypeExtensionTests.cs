@@ -72,6 +72,58 @@ public class TypeExtensionTests
         public int Age { get; set; }
     }
 
+    [Attributes.Collection(Name = " Order   Item   Details ")]
+    private class MultiWordItem : Schema<Guid> { }
+
+    [Fact]
+    public void GetCollectionName_ShouldReplaceInternalWhitespaceWithUnderscore()
+    {
+        typeof(MultiWordItem).GetCollectionName().Must().Be("order_item_details");
+    }
+
+    [Fact]
+    public void TypeExtensions_ShouldReturnCachedValuesOnSubsequentCalls()
+    {
+        var first = typeof(MultiWordItem).GetCollectionName();
+        var second = typeof(MultiWordItem).GetCollectionName();
+        first.Must().Be(second);
+
+        var trackFirst = typeof(CustomUser).ShouldTrackTimestamps();
+        var trackSecond = typeof(CustomUser).ShouldTrackTimestamps();
+        trackFirst.Must().Be(trackSecond);
+
+        var softDeleteFirst = typeof(SoftDeletedUser).ShouldSoftDelete();
+        var softDeleteSecond = typeof(SoftDeletedUser).ShouldSoftDelete();
+        softDeleteFirst.Must().Be(softDeleteSecond);
+    }
+
+    private class AttributedFieldsAndProps
+    {
+        [Lowercase]
+        public string PropertyField = string.Empty;
+
+        [Lowercase]
+        public string Name { get; set; } = string.Empty;
+
+        [Uppercase]
+        public string Sku = string.Empty;
+
+        public int Age = 25;
+    }
+
+    [Fact]
+    public void GetAttributedMembers_ShouldReturnBothPropertiesAndFields()
+    {
+        var lowercaseMembers = typeof(AttributedFieldsAndProps).GetAttributedMembers<LowercaseAttribute>();
+        lowercaseMembers.Must().HaveCount(2);
+        lowercaseMembers.Any(x => x.Value.Name == "PropertyField" && x.Key is LowercaseAttribute).Must().BeTrue();
+        lowercaseMembers.Any(x => x.Value.Name == "Name" && x.Key is LowercaseAttribute).Must().BeTrue();
+
+        var uppercaseMembers = typeof(AttributedFieldsAndProps).GetAttributedMembers<UppercaseAttribute>();
+        uppercaseMembers.Must().HaveCount(1);
+        uppercaseMembers[0].Value.Name.Must().Be("Sku");
+    }
+
     [Fact]
     public void AttributedWith_ShouldReturnCorrectProperties()
     {
